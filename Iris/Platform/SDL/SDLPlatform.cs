@@ -74,8 +74,8 @@ namespace Iris.Platform.SDL
 
         public void Dispose()
         {
-            _window?.Dispose();
-            _backend?.Dispose();
+            _window.Dispose();
+            _backend.Dispose();
             _sdl.Quit();
             _sdl.Dispose();
         }

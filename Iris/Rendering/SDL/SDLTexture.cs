@@ -1,4 +1,5 @@
-﻿using Silk.NET.Maths;
+﻿using Iris.Assets;
+using Silk.NET.Maths;
 using Silk.NET.SDL;
 using System;
 using Color = Iris.Core.Color;

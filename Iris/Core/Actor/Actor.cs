@@ -1,45 +1,40 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Security.Authentication;
 using System.Text;
 
 namespace Iris.Core
 {
-    public class SystemManager : IDisposable
+    public sealed class Actor : IDisposable
     {
-        public static SystemManager Instance { get; private set; }
-        private List<SystemBase> _systems = new();
+        public Transform Transform { get; private set; }
+        private List<Component> _components = new();
 
-        internal SystemManager()
+        internal Actor()
         {
-            Instance = this;
+            Transform = AddComponent<Transform>();
         }
 
-        public void CreateSystem<T>() where T : SystemBase, new()
+        public void AddComponent(Component component)
         {
-            var system = new T();
-            AddSystem(system);
+            component.Attach(this);
+            _components.Add(component);
         }
 
-        public void AddSystem(SystemBase system)
+        public T AddComponent<T>() where T : Component, new()
         {
-            _systems.Add(system);
-            _systems.Sort((s1, s2) => s1.Order.CompareTo(s2.Order));
-        }
+            var compo = new T();
+            AddComponent(compo);
 
-        public T GetSystem<T>() where T : SystemBase
-        {
-            return _systems.OfType<T>().FirstOrDefault();
+            return compo;
         }
 
         internal void Update()
         {
-            foreach (var system in _systems)
+            foreach (Component component in _components)
             {
                 try
                 {
-                    system.Update();
+                    component.Update();
                 }
                 catch(Exception ex)
                 {
@@ -51,11 +46,11 @@ namespace Iris.Core
 
         internal void FixedUpdate()
         {
-            foreach (var system in _systems)
+            foreach (Component component in _components)
             {
                 try
                 {
-                    system.FixedUpdate();
+                    component.FixedUpdate();
                 }
                 catch (Exception ex)
                 {
@@ -66,11 +61,11 @@ namespace Iris.Core
 
         internal void LateUpdate()
         {
-            foreach (var system in _systems)
+            foreach(Component component in _components)
             {
                 try
                 {
-                    system.LateUpdate();
+                    component.LateUpdate();
                 }
                 catch (Exception ex)
                 {
@@ -81,17 +76,19 @@ namespace Iris.Core
 
         public void Dispose()
         {
-            foreach (var system in _systems)
+            foreach (Component component in _components)
             {
                 try
                 {
-                    system.Dispose();
+                    component.Dispose();
                 }
                 catch (Exception ex)
                 {
                     Console.WriteLine(ex.ToString());
                 }
             }
+
+            _components.Clear();
         }
     }
 }

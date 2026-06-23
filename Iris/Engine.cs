@@ -1,4 +1,5 @@
-﻿using Iris.Core;
+﻿using Iris.Assets;
+using Iris.Core;
 using Iris.Platform;
 using Iris.Rendering;
 using System;
@@ -10,6 +11,7 @@ namespace Iris
     {
         private SystemManager _systemManager;
         private IPlatform _platform;
+        public TextureManager TextureMgr { get; internal set; }
         public event Action OnStart;
 
         public Engine(IPlatform platform)
@@ -22,8 +24,8 @@ namespace Iris
         {
             _platform.CreateWindow(config);
 
-            InitSystems();
-
+            InitSystems(config);
+            new World();
             bool running = true;
 
             var sw = Stopwatch.StartNew();
@@ -58,6 +60,7 @@ namespace Iris
                 }
 
                 Update();
+                LateUpdate();
             }
 
             _systemManager.Dispose();
@@ -66,10 +69,10 @@ namespace Iris
             return true;
         }
 
-        private void InitSystems()
+        private void InitSystems(WindowConfig config)
         {
-
-            var renderSystem = new RenderSystem(_platform.Backend);
+            var renderSystem = new RenderSystem(_platform.Backend, config.width, config.height);
+            TextureMgr = new TextureManager((ITextureFactory)_platform.Backend, new StbImageDecoder());
             var actionSystem = new ActionScriptSystem();
 
             _systemManager.AddSystem(renderSystem);
@@ -78,11 +81,19 @@ namespace Iris
 
         private void Update()
         {
+            World.CurrentWorld.Update();
             _systemManager.Update();
+        }
+
+        private void LateUpdate()
+        {
+            World.CurrentWorld.LateUpdate();
+            _systemManager.LateUpdate();
         }
 
         private void FixedUpdate()
         {
+            World.CurrentWorld.FixedUpdate();
             _systemManager.FixedUpdate();
         }
     }

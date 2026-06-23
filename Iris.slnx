@@ -1,3 +1,4 @@
 <Solution>
+  <Project Path="DummyClient/DummyClient.csproj" Id="214c9c95-28f0-4acb-b5c5-d820b58e5e62" />
   <Project Path="Iris/Iris.csproj" />
 </Solution>

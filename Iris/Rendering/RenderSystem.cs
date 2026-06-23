@@ -1,45 +1,44 @@
 ﻿using Iris.Core;
+using System;
 using System.Collections.Generic;
 
 namespace Iris.Rendering
 {
-    internal unsafe class RenderSystem : SystemBase
+    public class RenderSystem : SystemBase
     {
-        private List<IRenderObject> _renderObjects = new List<IRenderObject>();
+        private List<RenderCommand> _commands = new();
         private IRenderBackend _backend;
 
-        internal RenderSystem(IRenderBackend backend)
+        public Camera Camera { get; set; }
+
+        internal RenderSystem(IRenderBackend backend, int viewportWidth, int viewportHeight)
         {
-            Order = 999999999;
+            Order = int.MaxValue;
             _backend = backend;
+            Camera = new Camera(viewportWidth, viewportHeight);
         }
 
-        public override void Update()
+        public override void LateUpdate()
         {
             _backend.BeginFrame();
             _backend.Clear();
 
-            foreach (var ro in _renderObjects)
+            _commands.Sort((a, b) => a.order.CompareTo(b.order));
+
+            
+
+            foreach (var cmd in _commands)
             {
-                ro.Render(_backend);
+                _backend.DrawTexture(
+                    cmd.texture, Camera.WorldToScreen(cmd.dest),
+                    cmd.rotation, cmd.flipX, cmd.flipY);
             }
 
+
+            _commands.Clear();
             _backend.EndFrame();
         }
 
-        public void AddRenderObject(IRenderObject renderObject)
-        {
-            _renderObjects.Add(renderObject);
-            renderObject.Init(_backend);
-            _renderObjects.Sort((a, b) => a.Order.CompareTo(b.Order));
-        }
-
-        public override void Dispose()
-        {
-            foreach (var ro in _renderObjects)
-            {
-                ro.Dispose();
-            }
-        }
+        public void Submit(in RenderCommand cmd) => _commands.Add(cmd);
     }
 }

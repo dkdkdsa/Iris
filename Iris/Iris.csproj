@@ -9,6 +9,7 @@
 
   <ItemGroup>
     <PackageReference Include="Silk.NET.SDL" Version="2.23.0" />
+    <PackageReference Include="StbiSharp" Version="1.2.1" />
   </ItemGroup>
 
 </Project>

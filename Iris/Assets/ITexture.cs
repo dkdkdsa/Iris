@@ -1,7 +1,7 @@
 ﻿using Iris.Core;
 using System;
 
-namespace Iris.Rendering
+namespace Iris.Assets
 {
     public interface ITexture : IDisposable
     {

@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Iris.Core
 {
-    public abstract class Component
+    public abstract class Component : IDisposable
     {
         public Actor OwnerActor { get; private set; }
 
@@ -16,6 +16,8 @@ namespace Iris.Core
 
         protected virtual void OnAttached() { }
         public virtual void Update() { }
-        public  virtual void FixedUpdate() { }
+        public virtual void FixedUpdate() { }
+        public virtual void LateUpdate() { }
+        public virtual void Dispose() { }
     }
 }

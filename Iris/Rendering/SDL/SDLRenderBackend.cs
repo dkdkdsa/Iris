@@ -1,4 +1,5 @@
-﻿using Iris.Core;
+﻿using Iris.Assets;
+using Iris.Core;
 using Iris.Platform;
 using Iris.Platform.SDL;
 using Silk.NET.Maths;
@@ -6,7 +7,7 @@ using Silk.NET.SDL;
 
 namespace Iris.Rendering.SDL
 {
-    internal unsafe class SDLRenderBackend : IRenderBackend
+    internal unsafe class SDLRenderBackend : IRenderBackend, ITextureFactory
     {
 
         private Renderer* _renderer;
@@ -33,11 +34,14 @@ namespace Iris.Rendering.SDL
             _sdl.RenderClear(_renderer);
         }
 
-        public void DrawTexture(ITexture texture, in Rectangle<int> rect)
+        public void DrawTexture(ITexture texture, in Rectangle<int> rect, float angle, bool flipX, bool flipY)
         {
             if (texture is SDLTexture tex)
             {
-                _sdl.RenderCopy(_renderer, tex.GetNativeTexture(), null, in rect);
+                var flip = RendererFlip.None;
+                if (flipX) flip |= RendererFlip.Horizontal;
+                if (flipY) flip |= RendererFlip.Vertical;
+                _sdl.RenderCopyEx(_renderer, tex.GetNativeTexture(), null, in rect, angle, null, flip);
             }
         }
 
