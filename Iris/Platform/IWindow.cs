@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Iris.Platform
 {
-    internal interface IWindow : IDisposable
+    public interface IWindow : IDisposable
     {
         public int Width { get; }
         public int Height { get; }

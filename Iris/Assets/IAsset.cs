@@ -4,8 +4,7 @@ using System.Text;
 
 namespace Iris.Assets
 {
-    public interface IImageDecoder
+    public interface IAsset : IDisposable
     {
-        public ImageData Decode(ReadOnlySpan<byte> fileBytes);
     }
 }

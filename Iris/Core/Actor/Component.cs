@@ -7,6 +7,7 @@ namespace Iris.Core
     public abstract class Component : IDisposable
     {
         public Actor OwnerActor { get; private set; }
+        public Transform Transform => OwnerActor.Transform;
 
         internal void Attach(Actor actor)
         {
@@ -14,6 +15,7 @@ namespace Iris.Core
             OnAttached();
         }
 
+        protected T GetComponent<T>() where T : Component => OwnerActor.GetComponent<T>();
         protected virtual void OnAttached() { }
         public virtual void Update() { }
         public virtual void FixedUpdate() { }

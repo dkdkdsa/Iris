@@ -5,7 +5,7 @@ using System;
 
 namespace Iris.Rendering
 {
-    internal interface IRenderBackend : IDisposable
+    public interface IRenderBackend : IDisposable
     {
         public void Init(IWindow window);
         public void BeginFrame();

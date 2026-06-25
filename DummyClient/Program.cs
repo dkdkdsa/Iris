@@ -1,7 +1,10 @@
 ﻿using Iris;
+using Iris.Assets;
 using Iris.Core;
+using Iris.Platform;
 using Iris.Platform.SDL;
 using Silk.NET.Maths;
+using System.IO.Pipes;
 
 namespace DummyClient
 {
@@ -11,7 +14,7 @@ namespace DummyClient
         public static Engine engine;
         static void Main(string[] args)
         {
-            engine = new Engine(new SDLPlatform());
+            engine = new Engine(new DefaultPlatform());
             engine.OnStart += HandleStart;
             engine.Run(new Iris.Core.WindowConfig
             {
@@ -27,37 +30,55 @@ namespace DummyClient
 
             var actor = World.CurrentWorld.CreateActor();
             var renderer = actor.AddComponent<TextureRenderer>();
-            renderer.Texture = engine.TextureMgr.Load(@"C:\Users\bos94\Downloads\cog (1).png");
+            renderer.Texture = AssetManager.Load<ITexture>(@"C:\Users\bos94\Downloads\cog (1).png");
+            renderer.PixelPerUnit = 512;
+
+            var audio = actor.AddComponent<AudioPlayer>();
+            audio.Clip = AssetManager.Load<IAudioClip>(@"C:\Users\bos94\Downloads\laserShoot.wav");
+
             actor.AddComponent<TestCompo>();
         }
     }
 }
 
+
 public class TestCompo : Component
 {
+    private AudioPlayer _player;
+
+    protected override void OnAttached()
+    {
+        _player = GetComponent<AudioPlayer>();
+    }
+
     public override void Update()
     {
 
         if (Input.GetKey(Silk.NET.SDL.KeyCode.KW))
         {
-            OwnerActor.Transform.Position += new Vector2D<float>(0, 100) * Time.DeltaTime;
+            Transform.Position += new Vector2D<float>(0, 1) * Time.DeltaTime;
         }
         if (Input.GetKey(Silk.NET.SDL.KeyCode.KA))
         {
-            OwnerActor.Transform.Position += new Vector2D<float>(-100, 0) * Time.DeltaTime;
+            Transform.Position += new Vector2D<float>(-1, 0) * Time.DeltaTime;
         }
         if (Input.GetKey(Silk.NET.SDL.KeyCode.KS))
         {
-            OwnerActor.Transform.Position += new Vector2D<float>(0, -100) * Time.DeltaTime;
+            Transform.Position += new Vector2D<float>(0, -1) * Time.DeltaTime;
         }
         if (Input.GetKey(Silk.NET.SDL.KeyCode.KD))
         {
-            OwnerActor.Transform.Position += new Vector2D<float>(100, 0) * Time.DeltaTime;
+            Transform.Position += new Vector2D<float>(1, 0) * Time.DeltaTime;
         }
 
         if (Input.GetKey(Silk.NET.SDL.KeyCode.KR))
         {
-            OwnerActor.Transform.Rotation += Time.DeltaTime;
+            Transform.Rotation += 10 * Time.DeltaTime;
+        }
+
+        if (Input.GetKeyDown(Silk.NET.SDL.KeyCode.KG))
+        {
+            _player.Play();
         }
     }
 }

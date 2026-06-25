@@ -3,7 +3,7 @@ using System;
 
 namespace Iris.Assets
 {
-    public interface ITexture : IDisposable
+    public interface ITexture : IAsset
     {
         public int Width { get; }
         public int Height { get; }

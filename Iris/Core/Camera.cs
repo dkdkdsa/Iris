@@ -9,6 +9,8 @@ namespace Iris.Core
         public Vector2D<float> Position { get; set; } = Vector2D<float>.Zero;
         public float Zoom { get; set; } = 1f;
 
+        public float PixelPerUnit { get; set; } = 100f;
+
         private Vector2D<float> _viewport;
 
         public Camera(int viewportWidth, int viewportHeight)
@@ -20,11 +22,14 @@ namespace Iris.Core
         public Rectangle<int> WorldToScreen(in Rectangle<float> world)
         {
             var center = _viewport * 0.5f;
-            var origin = (world.Origin - Position) * Zoom + center;
-            var size = world.Size * Zoom;
+            float scale = PixelPerUnit * Zoom;
+
+            float screenX = (world.Origin.X - Position.X) * scale + center.X;
+            float screenY = (Position.Y - world.Origin.Y - world.Size.Y) * scale + center.Y;
+            var size = world.Size * scale;
 
             return new Rectangle<int>(
-                (int)MathF.Round(origin.X), (int)MathF.Round(origin.Y),
+                (int)MathF.Round(screenX), (int)MathF.Round(screenY),
                 (int)MathF.Round(size.X), (int)MathF.Round(size.Y));
         }
     }

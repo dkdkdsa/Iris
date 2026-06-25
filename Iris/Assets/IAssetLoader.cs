@@ -4,8 +4,8 @@ using System.Text;
 
 namespace Iris.Assets
 {
-    internal interface ITextureFactory
+    public interface IAssetLoader
     {
-        public ITexture CreateTexture(int width, int height);
+        public IAsset LoadAsset(string path);
     }
 }

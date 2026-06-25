@@ -10,7 +10,7 @@ namespace Iris.Core
     public sealed class TextureRenderer : RendererBase
     {
         public ITexture Texture { get; set; }
-
+        public float PixelPerUnit { get; set; } = 100f;
 
         protected override void Render()
         {
@@ -29,8 +29,8 @@ namespace Iris.Core
 
         private Rectangle<float> CreateDest(Transform transform, ITexture texture, Vector2D<float> pivot)
         {
-            float width = texture.Width * transform.Scale.X;
-            float height = texture.Height * transform.Scale.Y;
+            float width = texture.Width / PixelPerUnit * transform.Scale.X;
+            float height = texture.Height / PixelPerUnit * transform.Scale.Y;
             float x = transform.Position.X - width * pivot.X;
             float y = transform.Position.Y - height * pivot.Y;
             return new Rectangle<float>(x, y, width, height);

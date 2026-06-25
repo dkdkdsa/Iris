@@ -1,4 +1,5 @@
-﻿using Iris.Core;
+﻿using Iris.Audio;
+using Iris.Core;
 using Iris.Rendering;
 using System;
 using System.Collections.Generic;
@@ -9,10 +10,11 @@ namespace Iris.Platform
     public interface IPlatform : IDisposable
     {
 
-        internal IWindow Window { get; }
-        internal IRenderBackend Backend { get; }
-        internal void CreateWindow(WindowConfig config);
-        internal void PumpEvents();
-        internal bool IsCloseRequested { get; }
+        public IWindow Window { get; }
+        public IRenderBackend RenderBackend { get; }
+        public IAudioBackend AudioBackend { get; }
+        public void CreateWindow(WindowConfig config);
+        public void PumpEvents();
+        public bool IsCloseRequested { get; }
     }
 }

@@ -1,44 +1,46 @@
 ﻿using Iris.Audio;
+using Iris.Audio.NAudio;
 using Iris.Core;
+using Iris.Platform.SDL;
 using Iris.Rendering;
 using Iris.Rendering.SDL;
 using Silk.NET.SDL;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
-namespace Iris.Platform.SDL
+namespace Iris.Platform
 {
-    public class SDLPlatform : IPlatform
+    public class DefaultPlatform : IPlatform
     {
         private bool _closed = false;
         private SDLWindow _window;
-        private SDLRenderBackend _backend;
+        private SDLRenderBackend _renderBackend;
+        private NAudioAudioBackend _audioBackend;
         private Sdl _sdl;
         private Event _evt;
 
-        public SDLPlatform()
+        public DefaultPlatform()
         {
             _sdl = Sdl.GetApi();
             _sdl.Init(Sdl.InitAudio);
             _sdl.Init(Sdl.InitVideo);
-            _backend = new SDLRenderBackend(_sdl);
+            _renderBackend = new SDLRenderBackend(_sdl);
+            _audioBackend = new NAudioAudioBackend();
 
-            Factorys.Register(_backend);
+            _audioBackend.Init();
+
+            Factorys.Register(_renderBackend);
+            Factorys.Register(_audioBackend);
         }
 
         public bool IsCloseRequested => _closed;
 
         public IWindow Window => _window;
-
-        public IRenderBackend RenderBackend => _backend;
-
-        public IAudioBackend AudioBackend => throw new NotImplementedException();
+        public IRenderBackend RenderBackend => _renderBackend;
+        public IAudioBackend AudioBackend => _audioBackend;
 
         public void CreateWindow(WindowConfig config)
         {
             _window = new SDLWindow(_sdl, config);
-            _backend.Init(_window);
+            _renderBackend.Init(_window);
         }
 
         public void PumpEvents()
@@ -80,7 +82,7 @@ namespace Iris.Platform.SDL
         public void Dispose()
         {
             _window.Dispose();
-            _backend.Dispose();
+            _renderBackend.Dispose();
             _sdl.Quit();
             _sdl.Dispose();
         }

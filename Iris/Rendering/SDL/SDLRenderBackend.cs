@@ -1,4 +1,5 @@
 ﻿using Iris.Assets;
+using Iris.Assets.SDL;
 using Iris.Core;
 using Iris.Platform;
 using Iris.Platform.SDL;
@@ -7,12 +8,11 @@ using Silk.NET.SDL;
 
 namespace Iris.Rendering.SDL
 {
-    internal unsafe class SDLRenderBackend : IRenderBackend, ITextureFactory
+    internal unsafe class SDLRenderBackend : IRenderBackend, IFactory<ITexture, Vector2D<int>>
     {
-
+        private readonly Sdl _sdl;
         private Renderer* _renderer;
         private SDLWindow _window;
-        private Sdl _sdl;
 
         public SDLRenderBackend(Sdl sdl)
         {
@@ -50,14 +50,14 @@ namespace Iris.Rendering.SDL
             _sdl.RenderPresent(_renderer);
         }
 
-        public ITexture CreateTexture(int width, int height)
-        {
-            return new SDLTexture(_sdl, _renderer, width, height);
-        }
-
         public void Dispose()
         {
             _sdl.DestroyRenderer(_renderer);
+        }
+
+        public ITexture Create(Vector2D<int> request)
+        {
+            return new SDLTexture(_sdl, _renderer, request.X, request.Y);
         }
     }
 }

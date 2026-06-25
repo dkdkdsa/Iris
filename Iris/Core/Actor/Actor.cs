@@ -28,6 +28,11 @@ namespace Iris.Core
             return compo;
         }
 
+        public T GetComponent<T>() where T : Component
+        {
+            return _components.Find(x => x.GetType() == typeof(T)) as T;
+        }
+
         internal void Update()
         {
             foreach (Component component in _components)

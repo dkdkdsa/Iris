@@ -4,7 +4,7 @@ using Silk.NET.SDL;
 using System;
 using Color = Iris.Core.Color;
 
-namespace Iris.Rendering.SDL
+namespace Iris.Assets.SDL
 {
     internal unsafe class SDLTexture : ITexture
     {
@@ -19,7 +19,6 @@ namespace Iris.Rendering.SDL
             _sdl = sdl;
             Width = width;
             Height = height;
-
             _texture = _sdl.CreateTexture(renderer,
                 Sdl.PixelformatAbgr8888,
                 (int)TextureAccess.Streaming, width, height);

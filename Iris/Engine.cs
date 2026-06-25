@@ -1,4 +1,5 @@
 ﻿using Iris.Assets;
+using Iris.Audio;
 using Iris.Core;
 using Iris.Platform;
 using Iris.Rendering;
@@ -11,7 +12,6 @@ namespace Iris
     {
         private SystemManager _systemManager;
         private IPlatform _platform;
-        public TextureManager TextureMgr { get; internal set; }
         public event Action OnStart;
 
         public Engine(IPlatform platform)
@@ -23,6 +23,8 @@ namespace Iris
         public bool Run(WindowConfig config)
         {
             _platform.CreateWindow(config);
+            AssetAPI.ActiveAPI = new InternalAssetAPI();
+            AssetAPI.ActiveAPI.Init();
 
             InitSystems(config);
             new World();
@@ -71,11 +73,12 @@ namespace Iris
 
         private void InitSystems(WindowConfig config)
         {
-            var renderSystem = new RenderSystem(_platform.Backend, config.width, config.height);
-            TextureMgr = new TextureManager((ITextureFactory)_platform.Backend, new StbImageDecoder());
+            var renderSystem = new RenderSystem(_platform.RenderBackend, config.width, config.height);
+            var audioSystem = new AudioSystem(_platform.AudioBackend);
             var actionSystem = new ActionScriptSystem();
 
             _systemManager.AddSystem(renderSystem);
+            _systemManager.AddSystem(audioSystem);
             _systemManager.AddSystem(actionSystem);
         }
 
