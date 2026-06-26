@@ -36,6 +36,9 @@ namespace DummyClient
             var audio = actor.AddComponent<AudioPlayer>();
             audio.Clip = AssetManager.Load<IAudioClip>(@"C:\Users\bos94\Downloads\laserShoot.wav");
 
+            actor.AddComponent<Rigidbody>();
+            actor.AddComponent<BoxCollider>();
+
             actor.AddComponent<TestCompo>();
         }
     }

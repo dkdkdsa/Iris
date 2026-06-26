@@ -25,15 +25,12 @@ namespace Iris.Rendering
 
             _commands.Sort((a, b) => a.order.CompareTo(b.order));
 
-            
-
             foreach (var cmd in _commands)
             {
                 _backend.DrawTexture(
-                    cmd.texture, Camera.WorldToScreen(cmd.dest),
+                    cmd.texture, cmd.src, Camera.WorldToScreen(cmd.dest),
                     cmd.rotation, cmd.flipX, cmd.flipY);
             }
-
 
             _commands.Clear();
             _backend.EndFrame();

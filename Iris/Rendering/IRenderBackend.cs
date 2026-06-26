@@ -10,7 +10,7 @@ namespace Iris.Rendering
         public void Init(IWindow window);
         public void BeginFrame();
         public void Clear();
-        public void DrawTexture(ITexture texture, in Rectangle<int> rect, float angle, bool flipX, bool flipY);
+        public void DrawTexture(ITexture texture, Rectangle<int>? src, in Rectangle<int> rect, float angle, bool flipX, bool flipY);
         public void EndFrame();
     }
 }

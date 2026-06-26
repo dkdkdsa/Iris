@@ -34,14 +34,23 @@ namespace Iris.Rendering.SDL
             _sdl.RenderClear(_renderer);
         }
 
-        public void DrawTexture(ITexture texture, in Rectangle<int> rect, float angle, bool flipX, bool flipY)
+        public void DrawTexture(ITexture texture, Rectangle<int>? src, in Rectangle<int> rect, float angle, bool flipX, bool flipY)
         {
             if (texture is SDLTexture tex)
             {
                 var flip = RendererFlip.None;
                 if (flipX) flip |= RendererFlip.Horizontal;
                 if (flipY) flip |= RendererFlip.Vertical;
-                _sdl.RenderCopyEx(_renderer, tex.GetNativeTexture(), null, in rect, angle, null, flip);
+
+                if (src.HasValue)
+                {
+                    var srcRect = src.Value;
+                    _sdl.RenderCopyEx(_renderer, tex.GetNativeTexture(), &srcRect, in rect, angle, null, flip);
+                }
+                else
+                {
+                    _sdl.RenderCopyEx(_renderer, tex.GetNativeTexture(), null, in rect, angle, null, flip);
+                }
             }
         }
 

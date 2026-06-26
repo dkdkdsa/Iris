@@ -6,6 +6,7 @@ namespace Iris.Rendering
     public struct RenderCommand
     {
         public ITexture texture;
+        public Rectangle<int>? src;
         public Rectangle<float> dest;
         public float rotation;
         public int order;

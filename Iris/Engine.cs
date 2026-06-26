@@ -1,6 +1,7 @@
 ﻿using Iris.Assets;
 using Iris.Audio;
 using Iris.Core;
+using Iris.Physics;
 using Iris.Platform;
 using Iris.Rendering;
 using System;
@@ -80,23 +81,22 @@ namespace Iris
             _systemManager.AddSystem(renderSystem);
             _systemManager.AddSystem(audioSystem);
             _systemManager.AddSystem(actionSystem);
+            _systemManager.CreateSystem<WorldUpdateSystem>();
+            _systemManager.CreateSystem<PhysicsSystem>();
         }
 
         private void Update()
         {
-            World.CurrentWorld.Update();
             _systemManager.Update();
         }
 
         private void LateUpdate()
         {
-            World.CurrentWorld.LateUpdate();
             _systemManager.LateUpdate();
         }
 
         private void FixedUpdate()
         {
-            World.CurrentWorld.FixedUpdate();
             _systemManager.FixedUpdate();
         }
     }
