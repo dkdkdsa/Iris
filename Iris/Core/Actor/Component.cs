@@ -21,5 +21,10 @@ namespace Iris.Core
         public virtual void FixedUpdate() { }
         public virtual void LateUpdate() { }
         public virtual void Dispose() { }
+
+        public void Destroy()
+        {
+            OwnerActor.Destroy();
+        }
     }
 }

@@ -28,7 +28,7 @@ namespace DummyClient
         {
             Console.WriteLine(1);
 
-            var actor = World.CurrentWorld.CreateActor();
+            var actor = Actor.Create();
             var renderer = actor.AddComponent<TextureRenderer>();
             renderer.Texture = AssetManager.Load<ITexture>(@"C:\Users\bos94\Downloads\cog (1).png");
             renderer.PixelPerUnit = 512;

@@ -7,6 +7,7 @@ namespace Iris.Core
     public sealed class Actor : IDisposable
     {
         public Transform Transform { get; private set; }
+        public bool DestroyFlag { get; private set; }
         private List<Component> _components = new();
 
         internal Actor()
@@ -79,6 +80,12 @@ namespace Iris.Core
             }
         }
 
+        public void Destroy()
+        {
+            Dispose();
+            DestroyFlag = true;
+        }
+
         public void Dispose()
         {
             foreach (Component component in _components)
@@ -94,6 +101,11 @@ namespace Iris.Core
             }
 
             _components.Clear();
+        }
+
+        public static Actor Create()
+        {
+            return SystemManager.Instance.GetSystem<ActorSystem>().CreateActor();
         }
     }
 }

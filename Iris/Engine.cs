@@ -28,7 +28,6 @@ namespace Iris
             AssetAPI.ActiveAPI.Init();
 
             InitSystems(config);
-            new World();
             bool running = true;
 
             var sw = Stopwatch.StartNew();
@@ -81,7 +80,7 @@ namespace Iris
             _systemManager.AddSystem(renderSystem);
             _systemManager.AddSystem(audioSystem);
             _systemManager.AddSystem(actionSystem);
-            _systemManager.CreateSystem<WorldUpdateSystem>();
+            _systemManager.CreateSystem<ActorSystem>();
             _systemManager.CreateSystem<PhysicsSystem>();
         }
 

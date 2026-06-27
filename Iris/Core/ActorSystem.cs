@@ -1,19 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace Iris.Core
 {
-    public class World : IDisposable
+    public sealed class ActorSystem : SystemBase
     {
-        private readonly List<Actor> _actors = new();
-
-        public static World CurrentWorld { get; internal set; }
-
-        internal World()
-        {
-            CurrentWorld = this;
-        }
+        private readonly List<Actor> _actors = new(); //나중에 씬 핸들링 방식으로 바꾸기
 
         public Actor CreateActor()
         {
@@ -22,7 +14,7 @@ namespace Iris.Core
             return actor;
         }
 
-        internal void Update()
+        public override void Update()
         {
             foreach (var item in _actors)
             {
@@ -36,9 +28,9 @@ namespace Iris.Core
                 }
             }
         }
-        
 
-        internal void FixedUpdate()
+
+        public override void FixedUpdate()
         {
             foreach (var item in _actors)
             {
@@ -53,7 +45,7 @@ namespace Iris.Core
             }
         }
 
-        internal void LateUpdate()
+        public override void LateUpdate()
         {
             foreach (var item in _actors)
             {
@@ -66,9 +58,11 @@ namespace Iris.Core
                     Console.WriteLine(ex);
                 }
             }
+
+            _actors.RemoveAll(x => x.DestroyFlag);
         }
 
-        public void Dispose()
+        public override void Dispose()
         {
             foreach (var item in _actors)
             {
@@ -81,7 +75,8 @@ namespace Iris.Core
                     Console.WriteLine(ex);
                 }
             }
+
+            _actors.Clear();
         }
     }
-
 }
