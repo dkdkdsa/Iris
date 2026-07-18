@@ -13,6 +13,8 @@ namespace Iris.Platform
         public IWindow Window { get; }
         public IRenderBackend RenderBackend { get; }
         public IAudioBackend AudioBackend { get; }
+        public IInputBackend InputBackend { get; }
+        public IClipboard Clipboard { get; }
         public void CreateWindow(WindowConfig config);
         public void PumpEvents();
         public bool IsCloseRequested { get; }

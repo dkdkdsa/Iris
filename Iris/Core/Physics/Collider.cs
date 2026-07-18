@@ -1,5 +1,4 @@
 ﻿using Box2D.NET;
-using Silk.NET.SDL;
 using System;
 
 namespace Iris.Core
@@ -27,7 +26,7 @@ namespace Iris.Core
             }
         }
 
-        public bool IsSencer
+        public bool IsSensor
         {
             get
             {
@@ -67,11 +66,12 @@ namespace Iris.Core
                 OnContactEnd?.Invoke(other);
         }
 
-
         public override void Dispose()
         {
-            B2Shapes.b2DestroyShape(shapeId, false);
+            if (B2Worlds.b2Shape_IsValid(shapeId))
+            {
+                B2Shapes.b2DestroyShape(shapeId, false);
+            }
         }
-
     }
 }

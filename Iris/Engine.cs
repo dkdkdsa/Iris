@@ -1,102 +1,97 @@
-﻿using Iris.Assets;
+using Iris.Assets;
 using Iris.Audio;
 using Iris.Core;
 using Iris.Physics;
 using Iris.Platform;
 using Iris.Rendering;
+using Silk.NET.Maths;
 using System;
-using System.Diagnostics;
 
 namespace Iris
 {
     public class Engine
     {
         private SystemManager _systemManager;
-        private IPlatform _platform;
+        private AppHost _host;
+        private RenderSystem _renderSystem;
+
+        private Vector2D<int> _backbufferSize;
+        private double _fixedAccumulator;
+
         public event Action OnStart;
+
+        public ImGuiHost ImGui => _host.ImGui;
 
         public Engine(IPlatform platform)
         {
             _systemManager = new SystemManager();
-            _platform = platform;
+            _host = new AppHost(platform);
         }
 
         public bool Run(WindowConfig config)
         {
-            _platform.CreateWindow(config);
+            Initialize(config);
+
+            while (!_host.IsCloseRequested)
+                Tick();
+
+            Shutdown();
+            return true;
+        }
+
+        public void Initialize(WindowConfig config)
+        {
+            _host.Initialize(config);
+
             AssetAPI.ActiveAPI = new InternalAssetAPI();
             AssetAPI.ActiveAPI.Init();
 
+            _backbufferSize = new Vector2D<int>(config.width, config.height);
             InitSystems(config);
-            bool running = true;
-
-            var sw = Stopwatch.StartNew();
-            double previousTime = sw.Elapsed.TotalSeconds;
-            double fixedAccumulator = 0.0;
 
             OnStart?.Invoke();
+        }
 
-            while (running)
+        public void Tick()
+        {
+            if (!_host.BeginFrame())
+                return;
+
+            Time.DeltaTime = _host.DeltaTime;
+            _fixedAccumulator += _host.DeltaTime;
+
+            while (_fixedAccumulator >= Time.FixedTimeStep)
             {
-                double currentTime = sw.Elapsed.TotalSeconds;
-                double frameTime = currentTime - previousTime;
-                previousTime = currentTime;
-
-                if (frameTime > 0.25)
-                    frameTime = 0.25;
-
-                Time.DeltaTime = (float)frameTime;
-                fixedAccumulator += frameTime;
-
-                Input.BeginFrame();
-                _platform.PumpEvents();
-
-                running = !_platform.IsCloseRequested;
-                if (!running)
-                    break;
-
-                while (fixedAccumulator >= Time.FixedTimeStep)
-                {
-                    FixedUpdate();
-                    fixedAccumulator -= Time.FixedTimeStep;
-                }
-
-                Update();
-                LateUpdate();
+                _systemManager.FixedUpdate();
+                _fixedAccumulator -= Time.FixedTimeStep;
             }
 
-            _systemManager.Dispose();
-            _platform.Dispose();
+            _systemManager.Update();
+            _systemManager.LateUpdate();
 
-            return true;
+            _renderSystem.Viewport = _backbufferSize;
+            _host.Present(_renderSystem.Flush);
+        }
+
+        public void Shutdown()
+        {
+            _systemManager.Dispose();
+            _host.Dispose();
         }
 
         private void InitSystems(WindowConfig config)
         {
-            var renderSystem = new RenderSystem(_platform.RenderBackend, config.width, config.height);
-            var audioSystem = new AudioSystem(_platform.AudioBackend);
+            var platform = _host.Platform;
+
+            _renderSystem = new RenderSystem(platform.RenderBackend, config.width, config.height);
+            var audioSystem = new AudioSystem(platform.AudioBackend);
             var actionSystem = new ActionScriptSystem();
 
-            _systemManager.AddSystem(renderSystem);
+            _systemManager.AddSystem(_renderSystem);
             _systemManager.AddSystem(audioSystem);
             _systemManager.AddSystem(actionSystem);
             _systemManager.CreateSystem<ActorSystem>();
             _systemManager.CreateSystem<PhysicsSystem>();
-        }
-
-        private void Update()
-        {
-            _systemManager.Update();
-        }
-
-        private void LateUpdate()
-        {
-            _systemManager.LateUpdate();
-        }
-
-        private void FixedUpdate()
-        {
-            _systemManager.FixedUpdate();
         }
     }
 }

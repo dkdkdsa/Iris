@@ -28,6 +28,7 @@ namespace Iris.Core
             shapeDef.density = 1f;
             shapeDef.enableSensorEvents = true;
             shapeDef.enableContactEvents = true;
+            shapeDef.isSensor = IsSensor;
             B2Polygon box = B2Geometries.b2MakeBox(_size.X / 2, _size.Y / 2);
             return B2Shapes.b2CreatePolygonShape(id, in shapeDef, in box);
         }

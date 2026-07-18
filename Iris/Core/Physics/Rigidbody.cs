@@ -8,6 +8,7 @@ namespace Iris.Core
     {
         private Vector2D<float> _linearVelocity;
         private float _angularVelocity;
+        private float _gravityScale;
         private B2BodyId _id;
 
         public Vector2D<float> LinearVelocity
@@ -22,6 +23,21 @@ namespace Iris.Core
                 B2Bodies.b2Body_SetLinearVelocity(_id, new B2Vec2(value.X, value.Y));
             }
         }
+
+        public Vector2D<float> Position
+        {
+            get
+            {
+                return Transform.Position;
+            }
+            set
+            {
+
+                B2Bodies.b2Body_SetTransform(_id, new B2Vec2(value.X, value.Y), B2MathFunction.b2MakeRot(Transform.Rotation));
+                Transform.Position = value;
+            }
+        }
+
         public float AngularVelocity
         {
             get
@@ -35,16 +51,31 @@ namespace Iris.Core
             }
         }
 
+        public float GravityScale
+        {
+            get
+            {
+                return _gravityScale;
+            }
+            set
+            {
+                _gravityScale = value;
+                B2Bodies.b2Body_SetGravityScale(_id, value);
+            }
+        }
+
+
         protected override void OnAttached()
         {
             var sys = SystemManager.Instance.GetSystem<PhysicsSystem>();
             var def = B2Types.b2DefaultBodyDef();
             def.type = B2BodyType.b2_dynamicBody;
-            def.gravityScale = 1;
+            def.gravityScale = _gravityScale;
             def.position = new B2Vec2(Transform.Position.X, Transform.Position.Y);
             def.rotation = B2MathFunction.b2MakeRot(Transform.Rotation);
             _id = sys.CreateBody(def);
         }
+
 
         public override void FixedUpdate()
         {

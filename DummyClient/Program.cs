@@ -28,6 +28,8 @@ namespace DummyClient
         {
             Console.WriteLine(1);
 
+            Actor.Create().AddComponent<Camera>();
+
             var actor = Actor.Create();
             var renderer = actor.AddComponent<TextureRenderer>();
             renderer.Texture = AssetManager.Load<ITexture>(@"C:\Users\bos94\Downloads\cog (1).png");
@@ -57,29 +59,29 @@ public class TestCompo : Component
     public override void Update()
     {
 
-        if (Input.GetKey(Silk.NET.SDL.KeyCode.KW))
+        if (Input.GetKey(KeyCode.W))
         {
             Transform.Position += new Vector2D<float>(0, 1) * Time.DeltaTime;
         }
-        if (Input.GetKey(Silk.NET.SDL.KeyCode.KA))
+        if (Input.GetKey(KeyCode.A))
         {
             Transform.Position += new Vector2D<float>(-1, 0) * Time.DeltaTime;
         }
-        if (Input.GetKey(Silk.NET.SDL.KeyCode.KS))
+        if (Input.GetKey(KeyCode.S))
         {
             Transform.Position += new Vector2D<float>(0, -1) * Time.DeltaTime;
         }
-        if (Input.GetKey(Silk.NET.SDL.KeyCode.KD))
+        if (Input.GetKey(KeyCode.D))
         {
             Transform.Position += new Vector2D<float>(1, 0) * Time.DeltaTime;
         }
 
-        if (Input.GetKey(Silk.NET.SDL.KeyCode.KR))
+        if (Input.GetKey(KeyCode.R))
         {
             Transform.Rotation += 10 * Time.DeltaTime;
         }
 
-        if (Input.GetKeyDown(Silk.NET.SDL.KeyCode.KG))
+        if (Input.GetKeyDown(KeyCode.G))
         {
             _player.Play();
         }

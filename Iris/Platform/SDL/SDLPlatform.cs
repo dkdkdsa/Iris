@@ -14,6 +14,8 @@ namespace Iris.Platform.SDL
         private bool _closed = false;
         private SDLWindow _window;
         private SDLRenderBackend _backend;
+        private SDLInputBackend _inputBackend;
+        private SDLClipboard _clipboard;
         private Sdl _sdl;
         private Event _evt;
 
@@ -23,6 +25,8 @@ namespace Iris.Platform.SDL
             _sdl.Init(Sdl.InitAudio);
             _sdl.Init(Sdl.InitVideo);
             _backend = new SDLRenderBackend(_sdl);
+            _inputBackend = new SDLInputBackend();
+            _clipboard = new SDLClipboard(_sdl);
 
             Factorys.Register(_backend);
         }
@@ -35,10 +39,15 @@ namespace Iris.Platform.SDL
 
         public IAudioBackend AudioBackend => throw new NotImplementedException();
 
+        public IInputBackend InputBackend => _inputBackend;
+
+        public IClipboard Clipboard => _clipboard;
+
         public void CreateWindow(WindowConfig config)
         {
             _window = new SDLWindow(_sdl, config);
             _backend.Init(_window);
+            _sdl.StartTextInput(); // 이게 있어야 SDL이 Textinput 이벤트를 보낸다.
         }
 
         public void PumpEvents()
@@ -50,30 +59,7 @@ namespace Iris.Platform.SDL
                     _closed = true;
                 }
 
-                if (_evt.Type == (uint)EventType.Keydown)
-                {
-                    Input.NotifyKeyDown((KeyCode)_evt.Key.Keysym.Sym, _evt.Key.Repeat != 0);
-                }
-
-                if (_evt.Type == (uint)EventType.Keyup)
-                {
-                    Input.NotifyKeyUp((KeyCode)_evt.Key.Keysym.Sym);
-                }
-
-                if (_evt.Type == (uint)EventType.Mousebuttondown)
-                {
-                    Input.NotifyMouseButtonDown(_evt.Button.Button, _evt.Button.X, _evt.Button.Y);
-                }
-
-                if (_evt.Type == (uint)EventType.Mousebuttonup)
-                {
-                    Input.NotifyMouseButtonUp(_evt.Button.Button, _evt.Button.X, _evt.Button.Y);
-                }
-
-                if (_evt.Type == (uint)EventType.Mousemotion)
-                {
-                    Input.NotifyMouseMove(_evt.Motion.X, _evt.Motion.Y, _evt.Motion.Xrel, _evt.Motion.Yrel);
-                }
+                _inputBackend.ProcessEvent(_evt);
             }
         }
 

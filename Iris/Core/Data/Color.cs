@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Iris.Core
+﻿namespace Iris.Core
 {
     public struct Color
     {

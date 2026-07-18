@@ -16,8 +16,9 @@ namespace Iris.Core
 
         public override void Update()
         {
-            foreach (var item in _actors)
+            for (int i = 0; i < _actors.Count; i++)
             {
+                Actor item = _actors[i];
                 try
                 {
                     item.Update();
@@ -32,8 +33,9 @@ namespace Iris.Core
 
         public override void FixedUpdate()
         {
-            foreach (var item in _actors)
+            for (int i = 0; i < _actors.Count; i++)
             {
+                Actor item = _actors[i];
                 try
                 {
                     item.FixedUpdate();
@@ -47,11 +49,15 @@ namespace Iris.Core
 
         public override void LateUpdate()
         {
-            foreach (var item in _actors)
+            for (int i = 0; i < _actors.Count; i++)
             {
+                Actor item = _actors[i];
                 try
                 {
-                    item.LateUpdate();
+                    if (!item.DestroyFlag)
+                        item.LateUpdate();
+                    else
+                        item.Dispose();
                 }
                 catch (Exception ex)
                 {
@@ -64,8 +70,9 @@ namespace Iris.Core
 
         public override void Dispose()
         {
-            foreach (var item in _actors)
+            for (int i = 0; i < _actors.Count; i++)
             {
+                Actor item = _actors[i];
                 try
                 {
                     item.Dispose();
