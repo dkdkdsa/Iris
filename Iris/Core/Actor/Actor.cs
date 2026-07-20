@@ -4,9 +4,10 @@ using System.Text;
 
 namespace Iris.Core
 {
-    public sealed class Actor : IDisposable
+    public sealed class Actor : EngineObject, IDisposable
     {
         private List<Component> _components = new();
+        public string Name { get; set; } = "Actor";
         public Transform Transform { get; private set; }
         public bool DestroyFlag { get; private set; }
 
@@ -110,7 +111,7 @@ namespace Iris.Core
 
         public static Actor Create()
         {
-            return SystemManager.Instance.GetSystem<ActorSystem>().CreateActor();
+            return SystemManager.Instance.GetSystem<SceneSystem>().ActiveScene.CreateActor();
         }
     }
 }

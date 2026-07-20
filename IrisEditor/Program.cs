@@ -1,4 +1,5 @@
 using Iris;
+using Iris.Assets;
 using Iris.Core;
 using Iris.Platform;
 
@@ -17,7 +18,10 @@ namespace IrisEditor
                 title = "Iris Editor"
             });
 
-            var editor = new EditorApp();
+            AssetManager.Initialize();
+
+            var context = new EditorContext();
+            var editor = new EditorApp(context);
 
             while (!host.IsCloseRequested)
             {

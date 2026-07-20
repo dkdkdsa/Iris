@@ -1,11 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Numerics;
+using System.Text;
 
 namespace Iris.Core
 {
-    public sealed class ActorSystem : SystemBase
+    public sealed class Scene : IDisposable
     {
-        private readonly List<Actor> _actors = new(); //나중에 씬 핸들링 방식으로 바꾸기
+        private readonly List<Actor> _actors = new();
+
+        public IReadOnlyList<Actor> Actors => _actors;
 
         public Actor CreateActor()
         {
@@ -14,7 +18,7 @@ namespace Iris.Core
             return actor;
         }
 
-        public override void Update()
+        internal void Update()
         {
             for (int i = 0; i < _actors.Count; i++)
             {
@@ -30,8 +34,7 @@ namespace Iris.Core
             }
         }
 
-
-        public override void FixedUpdate()
+        internal void FixedUpdate()
         {
             for (int i = 0; i < _actors.Count; i++)
             {
@@ -47,7 +50,7 @@ namespace Iris.Core
             }
         }
 
-        public override void LateUpdate()
+        internal void LateUpdate()
         {
             for (int i = 0; i < _actors.Count; i++)
             {
@@ -68,7 +71,7 @@ namespace Iris.Core
             _actors.RemoveAll(x => x.DestroyFlag);
         }
 
-        public override void Dispose()
+        public void Dispose()
         {
             for (int i = 0; i < _actors.Count; i++)
             {

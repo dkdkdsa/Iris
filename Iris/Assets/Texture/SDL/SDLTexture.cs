@@ -11,8 +11,10 @@ namespace Iris.Assets.SDL
         private Texture* _texture;
         private Sdl _sdl;
 
-        public int Width { get; init; }
+        public int Width { get; init; } 
         public int Height { get; init; }
+
+        public nint Handle => (nint)_texture;
 
         public SDLTexture(Sdl sdl, Renderer* renderer, int width, int height)
         {

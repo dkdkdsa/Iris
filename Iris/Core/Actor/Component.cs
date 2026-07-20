@@ -1,10 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Iris.Core
 {
-    public abstract class Component : IDisposable
+    public abstract class Component : EngineObject, IDisposable
     {
         public Actor OwnerActor { get; private set; }
         public Transform Transform => OwnerActor.Transform;

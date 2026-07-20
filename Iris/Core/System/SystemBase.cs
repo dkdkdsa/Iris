@@ -2,7 +2,7 @@
 
 namespace Iris.Core
 {
-    public abstract class SystemBase : IDisposable
+    public abstract class SystemBase : EngineObject, IDisposable
     {
         public int Order { get; protected set; }
         public virtual void Update() { }

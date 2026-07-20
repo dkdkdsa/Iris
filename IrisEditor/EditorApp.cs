@@ -1,37 +1,57 @@
 using Hexa.NET.ImGui;
 using IrisEditor.Panels;
+using IrisEditor.Platform;
+using IrisEditor.Rendering;
+using IrisEditor.Workspace;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Numerics;
 
 namespace IrisEditor
 {
-    /// <summary>메뉴바·도킹 레이아웃·패널 목록을 소유하는 에디터 셸.</summary>
-    public sealed unsafe class EditorApp
+    internal sealed unsafe class EditorApp
     {
-        private readonly HierarchyPanel _hierarchy = new();
-        private readonly ScenePanel _scene = new();
-        private readonly InspectorPanel _inspector = new();
-        private readonly ProjectPanel _project = new();
+        private readonly EditorContext _context;
+        private readonly HierarchyPanel _hierarchy;
+        private readonly ScenePanel _scene;
+        private readonly CameraPanel _camera;
+        private readonly InspectorPanel _inspector;
+        private readonly ProjectPanel _project;
 
         private readonly List<EditorPanel> _panels;
         private bool _resetLayout;
 
-        public EditorApp()
+        public EditorApp(EditorContext context)
         {
+            _context = context;
+            var renderer = new SceneRenderer(context);
+
+            _hierarchy = new HierarchyPanel(context);
+            _inspector = new InspectorPanel(context);
+            _scene = new ScenePanel(context, renderer);
+            _camera = new CameraPanel(renderer);
+            _project = new ProjectPanel(context);
+
             var io = ImGui.GetIO();
             io.ConfigFlags |= ImGuiConfigFlags.DockingEnable;
 
-            // 기본 폰트에는 한글 글리프가 없다. 1.92 동적 폰트라 범위 지정 없이 로드만 하면 된다.
             var fontPath = @"C:\Windows\Fonts\malgun.ttf";
             if (File.Exists(fontPath))
                 io.Fonts.AddFontFromFileTTF(fontPath, 16f);
 
-            _panels = new List<EditorPanel> { _hierarchy, _scene, _inspector, _project };
+            _panels = new List<EditorPanel> { _hierarchy, _scene, _camera, _inspector, _project };
         }
 
         public void Draw()
         {
+            FileDialog.Update();
+            _context.Scripts.Update();
+            _context.Builder.Update();
+
+            if (ImGui.GetIO().KeyCtrl && ImGui.IsKeyPressed(ImGuiKey.S) && _context.Dirty)
+                SaveScene(saveAs: false);
+
             DrawMainMenuBar();
             DrawDockspace();
 
@@ -46,11 +66,30 @@ namespace IrisEditor
 
             if (ImGui.BeginMenu("파일"))
             {
-                ImGui.MenuItem("새 씬");
-                ImGui.MenuItem("씬 열기");
-                ImGui.MenuItem("씬 저장");
+                if (ImGui.MenuItem("새 프로젝트"))
+                    _context.CreateProjectWithDialog();
+
                 ImGui.Separator();
-                ImGui.MenuItem("빌드");
+
+                if (ImGui.MenuItem("씬 저장", "Ctrl+S"))
+                    SaveScene(saveAs: false);
+
+                if (ImGui.MenuItem("다른 이름으로 저장"))
+                    SaveScene(saveAs: true);
+
+                ImGui.Separator();
+
+                if (ImGui.MenuItem("프로젝트 열기"))
+                    _context.OpenProjectWithDialog();
+
+                if (ImGui.MenuItem("스크립트 새로고침", string.Empty, false, !_context.Scripts.Building))
+                    _context.RefreshScripts();
+
+                ImGui.Separator();
+
+                if (ImGui.MenuItem(_context.Builder.Building ? "빌드 중..." : "빌드", string.Empty, false, !_context.Builder.Building))
+                    _context.BuildGameWithDialog();
+
                 ImGui.EndMenu();
             }
 
@@ -67,7 +106,40 @@ namespace IrisEditor
                 ImGui.EndMenu();
             }
 
+            string sceneLabel = _context.ScenePath == null ? "제목 없는 씬" : Path.GetFileName(_context.ScenePath);
+            if (_context.Dirty)
+                sceneLabel += " *";
+
+            ImGui.TextDisabled(sceneLabel);
+
             ImGui.EndMainMenuBar();
+        }
+
+        private void SaveScene(bool saveAs)
+        {
+            if (!saveAs && _context.ScenePath != null)
+            {
+                TrySave(_context.ScenePath);
+                return;
+            }
+
+            FileDialog.Save(path =>
+            {
+                if (path != null)
+                    TrySave(path);
+            });
+        }
+
+        private void TrySave(string path)
+        {
+            try
+            {
+                _context.SaveScene(path);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[에디터] 씬 저장 실패: {ex.Message}");
+            }
         }
 
         private void DrawDockspace()
@@ -91,7 +163,6 @@ namespace IrisEditor
 
             uint dockspaceId = ImGui.GetID("EditorDockspace");
 
-            // 저장된 레이아웃(imgui.ini)이 없을 때만 기본 배치를 만든다.
             if (_resetLayout || ImGuiP.DockBuilderGetNode(dockspaceId).IsNull)
             {
                 _resetLayout = false;
@@ -104,12 +175,10 @@ namespace IrisEditor
 
         private void BuildDefaultLayout(uint dockspaceId, Vector2 size)
         {
-            // 1 << 10 = ImGuiDockNodeFlags_DockSpace. imgui_internal의 private 플래그라 바인딩 enum에 없다.
             ImGuiP.DockBuilderRemoveNode(dockspaceId);
             ImGuiP.DockBuilderAddNode(dockspaceId, (ImGuiDockNodeFlags)(1 << 10));
             ImGuiP.DockBuilderSetNodeSize(dockspaceId, size);
 
-            // 오른쪽 인스펙터(전체 높이) → 남은 영역 아래 프로젝트 → 남은 영역을 하이어라키/씬으로.
             uint main = dockspaceId;
             uint inspector, project, hierarchy, scene;
 
@@ -121,8 +190,11 @@ namespace IrisEditor
             ImGuiP.DockBuilderDockWindow(_project.Title, project);
             ImGuiP.DockBuilderDockWindow(_hierarchy.Title, hierarchy);
             ImGuiP.DockBuilderDockWindow(_scene.Title, scene);
+            ImGuiP.DockBuilderDockWindow(_camera.Title, scene);
 
             ImGuiP.DockBuilderFinish(dockspaceId);
+
+            ImGui.SetWindowFocus(_scene.Title);
         }
     }
 }

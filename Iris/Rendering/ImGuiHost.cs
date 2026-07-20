@@ -8,10 +8,6 @@ using System.Runtime.InteropServices;
 
 namespace Iris.Rendering
 {
-    /// <summary>
-    /// ImGui 컨텍스트 수명과 입력/렌더 연결을 담당한다. 수명은 <see cref="AppHost"/>가 굴린다.
-    /// 입력은 SDL 이벤트가 아니라 엔진의 <see cref="Input"/> 을 거쳐 들어오므로 백엔드가 바뀌어도 그대로 동작한다.
-    /// </summary>
     public sealed unsafe class ImGuiHost : IDisposable
     {
         private static readonly KeyValuePair<KeyCode, ImGuiKey>[] _keyMap = CreateKeyMap();

@@ -43,8 +43,7 @@ namespace Iris
         {
             _host.Initialize(config);
 
-            AssetAPI.ActiveAPI = new InternalAssetAPI();
-            AssetAPI.ActiveAPI.Init();
+            AssetManager.Initialize();
 
             _backbufferSize = new Vector2D<int>(config.width, config.height);
             InitSystems(config);
@@ -90,7 +89,7 @@ namespace Iris
             _systemManager.AddSystem(_renderSystem);
             _systemManager.AddSystem(audioSystem);
             _systemManager.AddSystem(actionSystem);
-            _systemManager.CreateSystem<ActorSystem>();
+            _systemManager.CreateSystem<SceneSystem>();
             _systemManager.CreateSystem<PhysicsSystem>();
         }
     }

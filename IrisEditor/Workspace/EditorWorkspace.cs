@@ -1,0 +1,158 @@
+using Iris.Assets;
+using IrisEditor.Data;
+using System;
+using System.Collections.Generic;
+using System.IO;
+
+namespace IrisEditor.Workspace
+{
+    internal class EditorWorkspace
+    {
+        private static readonly HashSet<string> _ignoredDirectories = new(StringComparer.OrdinalIgnoreCase)
+        {
+            ".git", ".vs", "bin", "obj",
+        };
+
+        private static readonly Dictionary<string, Type> _typesByExtension = new(StringComparer.OrdinalIgnoreCase)
+        {
+            [".png"] = typeof(ITexture),
+            [".jpg"] = typeof(ITexture),
+            [".jpeg"] = typeof(ITexture),
+            [".bmp"] = typeof(ITexture),
+            [".tga"] = typeof(ITexture),
+            [".gif"] = typeof(ITexture),
+            [".wav"] = typeof(IAudioClip),
+            [".mp3"] = typeof(IAudioClip),
+            [".scene"] = typeof(SceneData),
+        };
+
+        private List<AssetEntry> _assets = new();
+        private List<string> _directories = new();
+
+        public string RootPath { get; set; }
+
+        public string ProjectFile { get; private set; }
+
+        public IReadOnlyList<AssetEntry> Assets => _assets;
+
+        public IReadOnlyList<string> Directories => _directories;
+
+        public EditorWorkspace(string rootPath)
+        {
+            RootPath = rootPath;
+            Refresh();
+        }
+
+        public string ToAbsolute(string relativePath)
+        {
+            return System.IO.Path.GetFullPath(System.IO.Path.Combine(RootPath, relativePath));
+        }
+
+        public bool TryRename(string relativePath, string newName, bool isDirectory, out string error)
+        {
+            error = null;
+
+            if (string.IsNullOrWhiteSpace(newName))
+            {
+                error = "이름이 비어 있습니다.";
+                return false;
+            }
+
+            if (newName.IndexOfAny(System.IO.Path.GetInvalidFileNameChars()) >= 0)
+            {
+                error = "이름에 사용할 수 없는 문자가 있습니다.";
+                return false;
+            }
+
+            string oldFull = ToAbsolute(relativePath);
+            string newFull = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(oldFull), newName);
+
+            if (string.Equals(oldFull, newFull, StringComparison.Ordinal))
+                return true;
+
+            bool caseOnly = string.Equals(oldFull, newFull, StringComparison.OrdinalIgnoreCase);
+
+            try
+            {
+                if (isDirectory)
+                {
+                    if (!caseOnly && (Directory.Exists(newFull) || File.Exists(newFull)))
+                    {
+                        error = "같은 이름이 이미 있습니다.";
+                        return false;
+                    }
+
+                    if (caseOnly)
+                    {
+                        // Windows는 대소문자만 다른 폴더 이동을 거부하므로 임시 이름을 경유한다.
+                        string temp = newFull + "~renaming";
+                        Directory.Move(oldFull, temp);
+                        Directory.Move(temp, newFull);
+                    }
+                    else
+                    {
+                        Directory.Move(oldFull, newFull);
+                    }
+                }
+                else
+                {
+                    if (!caseOnly && (File.Exists(newFull) || Directory.Exists(newFull)))
+                    {
+                        error = "같은 이름이 이미 있습니다.";
+                        return false;
+                    }
+
+                    File.Move(oldFull, newFull);
+                }
+
+                Refresh();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                error = ex.Message;
+                return false;
+            }
+        }
+
+        public void Refresh()
+        {
+            _assets.Clear();
+            _directories.Clear();
+            ProjectFile = null;
+
+            if (string.IsNullOrEmpty(RootPath) || !Directory.Exists(RootPath))
+                return;
+
+            var projects = Directory.GetFiles(RootPath, "*.csproj");
+            ProjectFile = projects.Length > 0 ? projects[0] : null;
+
+            ScanDirectory(RootPath);
+
+            _assets.Sort((a, b) => string.Compare(a.Path, b.Path, StringComparison.OrdinalIgnoreCase));
+            _directories.Sort(StringComparer.OrdinalIgnoreCase);
+        }
+
+        private void ScanDirectory(string directory)
+        {
+            foreach (var file in Directory.EnumerateFiles(directory))
+            {
+                _assets.Add(new AssetEntry
+                {
+                    Id = Guid.NewGuid(),
+                    Path = System.IO.Path.GetRelativePath(RootPath, file).Replace('\\', '/'),
+                    AssetType = _typesByExtension.GetValueOrDefault(System.IO.Path.GetExtension(file)),
+                });
+            }
+
+            foreach (var sub in Directory.EnumerateDirectories(directory))
+            {
+                if (_ignoredDirectories.Contains(System.IO.Path.GetFileName(sub)))
+                    continue;
+
+                _directories.Add(System.IO.Path.GetRelativePath(RootPath, sub).Replace('\\', '/'));
+                ScanDirectory(sub);
+            }
+        }
+    }
+}

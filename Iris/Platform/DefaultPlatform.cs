@@ -47,7 +47,7 @@ namespace Iris.Platform
         {
             _window = new SDLWindow(_sdl, config);
             _renderBackend.Init(_window);
-            _sdl.StartTextInput(); // 이게 있어야 SDL이 Textinput 이벤트를 보낸다.
+            _sdl.StartTextInput();
         }
 
         public void PumpEvents()
