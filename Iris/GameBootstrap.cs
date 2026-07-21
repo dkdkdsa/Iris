@@ -42,20 +42,16 @@ namespace Iris
 
             engine.Run(new WindowConfig
             {
-                width = config.Width,
-                height = config.Height,
+                width = config.DefaultWidth,
+                height = config.DefaultHeight,
                 title = config.Title,
+                resizable = config.Resizable,
+                fullscreen = config.Fullscreen,
             });
         }
 
         //이거 외부로 빼기
-        private sealed class ProjectConfig
-        {
-            public string StartScene;
-            public int Width = 1280;
-            public int Height = 720;
-            public string Title = "Iris";
-        }
+
 
         private static ProjectConfig LoadConfig()
         {
@@ -70,9 +66,11 @@ namespace Iris
                 if (JsonNode.Parse(File.ReadAllText(path)) is JsonObject obj)
                 {
                     config.StartScene = obj["startScene"]?.GetValue<string>() ?? config.StartScene;
-                    config.Width = (int)(obj["width"]?.GetValue<float>() ?? config.Width);
-                    config.Height = (int)(obj["height"]?.GetValue<float>() ?? config.Height);
+                    config.DefaultWidth = (int)(obj["width"]?.GetValue<float>() ?? config.DefaultWidth);
+                    config.DefaultHeight = (int)(obj["height"]?.GetValue<float>() ?? config.DefaultHeight);
                     config.Title = obj["title"]?.GetValue<string>() ?? config.Title;
+                    config.Fullscreen = obj["fullscreen"]?.GetValue<bool>() ?? config.Fullscreen;
+                    config.Resizable = obj["resizable"]?.GetValue<bool>() ?? config.Resizable;
                 }
             }
             catch (Exception ex)

@@ -84,7 +84,6 @@ namespace IrisEditor.Workspace
 
                     if (caseOnly)
                     {
-                        // Windows는 대소문자만 다른 폴더 이동을 거부하므로 임시 이름을 경유한다.
                         string temp = newFull + "~renaming";
                         Directory.Move(oldFull, temp);
                         Directory.Move(temp, newFull);

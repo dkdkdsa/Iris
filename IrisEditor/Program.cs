@@ -15,7 +15,8 @@ namespace IrisEditor
             {
                 width = 1280,
                 height = 720,
-                title = "Iris Editor"
+                title = "Iris Editor",
+                resizable = true,
             });
 
             AssetManager.Initialize();

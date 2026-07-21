@@ -15,7 +15,7 @@ namespace Iris
         private AppHost _host;
         private RenderSystem _renderSystem;
 
-        private Vector2D<int> _backbufferSize;
+        private Vector2D<int> _backBufferSize;
         private double _fixedAccumulator;
 
         public event Action OnStart;
@@ -45,7 +45,7 @@ namespace Iris
 
             AssetManager.Initialize();
 
-            _backbufferSize = new Vector2D<int>(config.width, config.height);
+            _backBufferSize = new Vector2D<int>(config.width, config.height);
             InitSystems(config);
 
             OnStart?.Invoke();
@@ -68,7 +68,10 @@ namespace Iris
             _systemManager.Update();
             _systemManager.LateUpdate();
 
-            _renderSystem.Viewport = _backbufferSize;
+            var window = _host.Platform.Window;
+            _backBufferSize = new Vector2D<int>(window.Width, window.Height);
+
+            _renderSystem.Viewport = _backBufferSize;
             _host.Present(_renderSystem.Flush);
         }
 

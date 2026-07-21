@@ -46,7 +46,6 @@ namespace IrisEditor.Workspace
                     if (method.ReturnType != typeof(void) || parameters.Length != 1 ||
                         parameters[0].ParameterType != typeof(string))
                     {
-                        Console.WriteLine($"[에디터] AssetCreator 시그니처가 잘못되어 무시함: {type.Name}.{method.Name} — static void (string path) 여야 함");
                         continue;
                     }
 

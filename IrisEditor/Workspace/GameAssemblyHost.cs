@@ -67,7 +67,6 @@ namespace IrisEditor.Workspace
             }
         }
 
-        // 매 프레임 호출. 빌드가 끝났으면 결과를 처리한다.
         public void Update()
         {
             if (_buildProcess == null || !_buildProcess.HasExited)

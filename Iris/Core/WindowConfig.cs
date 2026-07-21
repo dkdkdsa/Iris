@@ -9,5 +9,7 @@ namespace Iris.Core
         public int width;
         public int height;
         public string title = "";
+        public bool resizable;
+        public bool fullscreen;
     }
 }

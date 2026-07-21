@@ -141,7 +141,9 @@ namespace IrisEditor.Workspace
                   "startScene": "Scenes/Main.scene",
                   "width": 1280,
                   "height": 720,
-                  "title": "{{name}}"
+                  "title": "{{name}}",
+                  "fullscreen": false,
+                  "resizable": false
                 }
                 """;
         }

@@ -20,6 +20,7 @@ namespace Iris.Core
 
         public float Zoom { get; set; } = 1f;
         public float PixelPerUnit { get; set; } = 100f;
+        public Color BackgroundColor { get; set; }
 
         public Vector2D<int> Viewport { get; private set; }
 
