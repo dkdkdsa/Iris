@@ -4,6 +4,7 @@ using Iris.Core;
 using Iris.Physics;
 using Iris.Platform;
 using Iris.Rendering;
+using Iris.UI.Events;
 using Silk.NET.Maths;
 using System;
 
@@ -94,6 +95,7 @@ namespace Iris
             _systemManager.AddSystem(actionSystem);
             _systemManager.CreateSystem<SceneSystem>();
             _systemManager.CreateSystem<PhysicsSystem>();
+            _systemManager.CreateSystem<EventSystem>();
         }
     }
 }

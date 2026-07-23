@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 namespace Iris.Core
 {
@@ -6,14 +6,28 @@ namespace Iris.Core
     {
         public Scene ActiveScene { get; private set; }
 
+        private Scene _pendingScene;
+        private bool _hasPending;
+
         public void LoadScene(Scene scene)
         {
-            ActiveScene?.Dispose();
-            ActiveScene = scene;
+            if (ActiveScene == null)
+            {
+                ActiveScene = scene;
+                return;
+            }
+
+            if (_hasPending && _pendingScene != scene)
+                _pendingScene?.Dispose();
+
+            _pendingScene = scene;
+            _hasPending = true;
         }
 
         public override void Update()
         {
+            ApplyPending();
+
             try
             {
                 ActiveScene?.Update();
@@ -26,6 +40,8 @@ namespace Iris.Core
 
         public override void FixedUpdate()
         {
+            ApplyPending();
+
             try
             {
                 ActiveScene?.FixedUpdate();
@@ -38,6 +54,8 @@ namespace Iris.Core
 
         public override void LateUpdate()
         {
+            ApplyPending();
+
             try
             {
                 ActiveScene?.LateUpdate();
@@ -48,10 +66,27 @@ namespace Iris.Core
             }
         }
 
+        private void ApplyPending()
+        {
+            if (!_hasPending)
+                return;
+
+            var next = _pendingScene;
+            _pendingScene = null;
+            _hasPending = false;
+
+            ActiveScene?.Dispose();
+            ActiveScene = next;
+        }
+
         public override void Dispose()
         {
             try
             {
+                _pendingScene?.Dispose();
+                _pendingScene = null;
+                _hasPending = false;
+
                 ActiveScene?.Dispose();
                 ActiveScene = null;
             }

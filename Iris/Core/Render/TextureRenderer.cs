@@ -1,9 +1,6 @@
-﻿using Iris.Assets;
+using Iris.Assets;
 using Iris.Rendering;
 using Silk.NET.Maths;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Iris.Core
 {
@@ -11,6 +8,11 @@ namespace Iris.Core
     {
         public ITexture Texture { get; set; }
         public float PixelPerUnit { get; set; } = 100f;
+        public Vector2D<float> Pivot { get; set; } = new Vector2D<float>(0.5f, 0.5f);
+        public bool FlipX { get; set; }
+        public bool FlipY { get; set; }
+        public int Order { get; set; }
+        public Color Color { get; set; } = new Color(255, 255, 255, 255);
 
         protected override void Render()
         {
@@ -21,11 +23,14 @@ namespace Iris.Core
             system.Submit(new RenderCommand
             {
                 texture = Texture,
-                dest = CreateDest(trm, Texture, new Vector2D<float>(0.5f, 0.5f)),
+                dest = CreateDest(trm, Texture, Pivot),
                 rotation = trm.Rotation,
+                flipX = FlipX,
+                flipY = FlipY,
+                order = Order,
+                color = Color,
             });
         }
-
 
         private Rectangle<float> CreateDest(Transform transform, ITexture texture, Vector2D<float> pivot)
         {

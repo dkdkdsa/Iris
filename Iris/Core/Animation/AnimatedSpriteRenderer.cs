@@ -12,23 +12,32 @@ namespace Iris.Core
         public bool FlipX { get; set; }
         public bool FlipY { get; set; }
         public int Order { get; set; }
+        public Color Color { get; set; } = new Color(255, 255, 255, 255);
 
         public float Speed { get; set; } = 1f;
+        public SpriteAnimation Clip { get; set; }
+        public bool PlayOnStart { get; set; } = true;
 
         public event Action OnComplete;
 
-        public SpriteAnimation Clip { get; private set; }
         public int CurrentFrame { get; private set; }
         public bool IsPlaying { get; private set; }
 
+        private SpriteAnimation _activeClip;
         private float _timer;
 
         public void Play(SpriteAnimation clip)
         {
             Clip = clip;
+            Play();
+        }
+
+        public void Play()
+        {
+            _activeClip = Clip;
             CurrentFrame = 0;
             _timer = 0f;
-            IsPlaying = clip != null && clip.FrameCount > 0;
+            IsPlaying = Clip != null && Clip.FrameCount > 0;
         }
 
         public void Pause() => IsPlaying = false;
@@ -43,6 +52,14 @@ namespace Iris.Core
 
         public override void Update()
         {
+            if (Clip != _activeClip)
+            {
+                _activeClip = Clip;
+                CurrentFrame = 0;
+                _timer = 0f;
+                IsPlaying = PlayOnStart && Clip != null && Clip.FrameCount > 0;
+            }
+
             if (!IsPlaying || Clip == null || Clip.FrameCount == 0)
                 return;
 
@@ -80,7 +97,7 @@ namespace Iris.Core
                 return;
 
             var trm = OwnerActor.Transform;
-            var frame = Clip.GetFrame(CurrentFrame);
+            var frame = Clip.GetFrame(Math.Min(CurrentFrame, Clip.FrameCount - 1));
 
             system.Submit(new RenderCommand
             {
@@ -91,6 +108,7 @@ namespace Iris.Core
                 flipX = FlipX,
                 flipY = FlipY,
                 order = Order,
+                color = Color,
             });
         }
 

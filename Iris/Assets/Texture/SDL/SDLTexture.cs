@@ -24,6 +24,8 @@ namespace Iris.Assets.SDL
             _texture = _sdl.CreateTexture(renderer,
                 Sdl.PixelformatAbgr8888,
                 (int)TextureAccess.Streaming, width, height);
+
+            _sdl.SetTextureBlendMode(_texture, BlendMode.Blend);
         }
 
         public void UpdateTexture(ReadOnlySpan<Color> data)

@@ -65,7 +65,7 @@ namespace Iris
 
             backend.SetRenderTarget(null);
             backend.BeginFrame();
-            backend.Clear();
+            backend.Clear(Camera.Main?.BackgroundColor ?? new Color(0, 0, 0, 255));
 
             drawBackbuffer?.Invoke();
             ImGui?.Render();

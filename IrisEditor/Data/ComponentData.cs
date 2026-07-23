@@ -19,12 +19,26 @@ namespace IrisEditor.Data
             return fallback;
         }
 
+        public bool GetBool(string key, bool fallback)
+        {
+            if (Properties is JsonObject obj && obj[key] is JsonValue v && v.TryGetValue(out bool b))
+                return b;
+
+            return fallback;
+        }
+
         public string GetString(string key, string fallback)
         {
             if (Properties is JsonObject obj && obj[key] is JsonValue v && v.TryGetValue(out string s))
                 return s;
 
             return fallback;
+        }
+
+        public void SetFloat(string key, float value)
+        {
+            if (Properties is JsonObject obj)
+                obj[key] = JsonValue.Create(value);
         }
 
         public void SetString(string key, string value)

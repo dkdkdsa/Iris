@@ -35,9 +35,20 @@ namespace Iris.Core
             set
             {
                 _isSencer = value;
-                B2Shapes.b2DestroyShape(shapeId, false);
-                shapeId = CreateShape(rigid.GetBodyId());
+                ApplySensor();
             }
+        }
+
+        protected virtual void ApplySensor()
+        {
+            if (OwnerActor == null)
+                return;
+
+            if (B2Worlds.b2Shape_IsValid(shapeId))
+                B2Shapes.b2DestroyShape(shapeId, false);
+
+            shapeId = CreateShape(rigid.GetBodyId());
+            B2Shapes.b2Shape_SetUserData(shapeId, new B2UserData(this));
         }
 
 

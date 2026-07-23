@@ -27,6 +27,7 @@ namespace IrisEditor.Data
             _byFullName = null;
             _templates.Clear();
             _assetProperties.Clear();
+            HiddenMembers.Clear();
         }
 
         private static List<Type> Scan()
@@ -78,6 +79,15 @@ namespace IrisEditor.Data
                         map[prop.Name] = prop.PropertyType;
                 }
 
+                foreach (var field in type.GetFields(BindingFlags.Public | BindingFlags.Instance))
+                {
+                    if (field.IsInitOnly)
+                        continue;
+
+                    if (typeof(IAsset).IsAssignableFrom(field.FieldType))
+                        map[field.Name] = field.FieldType;
+                }
+
                 _assetProperties[type] = map;
             }
 
@@ -111,6 +121,14 @@ namespace IrisEditor.Data
             return template.DeepClone().AsObject();
         }
 
+        public static void ApplyMissingDefaults(JsonObject properties, Type type)
+        {
+            if (properties == null || type == null)
+                return;
+
+            PropertyMerge.Apply(properties, DefaultProperties(type));
+        }
+
         private static JsonObject BuildTemplate(Type type)
         {
             var result = new JsonObject();
@@ -124,6 +142,9 @@ namespace IrisEditor.Data
             {
                 return result;
             }
+
+            var entries = new List<(long Order, string Name, JsonNode Node)>();
+            var seen = new HashSet<string>(StringComparer.Ordinal);
 
             foreach (var prop in type.GetProperties(BindingFlags.Public | BindingFlags.Instance))
             {
@@ -139,13 +160,36 @@ namespace IrisEditor.Data
                 try
                 {
                     var node = ToJson(prop.PropertyType, prop.GetValue(instance));
-                    if (node != null)
-                        result[prop.Name] = node;
+                    if (node != null && seen.Add(prop.Name))
+                        entries.Add((MemberOrder.KeyOf(prop), prop.Name, node));
                 }
                 catch
                 {
                 }
             }
+
+            foreach (var field in type.GetFields(BindingFlags.Public | BindingFlags.Instance))
+            {
+                if (field.IsInitOnly || field.IsLiteral)
+                    continue;
+                if (field.DeclaringType == typeof(Component) || field.DeclaringType == typeof(EngineObject))
+                    continue;
+
+                try
+                {
+                    var node = ToJson(field.FieldType, field.GetValue(instance));
+                    if (node != null && seen.Add(field.Name))
+                        entries.Add((MemberOrder.KeyOf(field), field.Name, node));
+                }
+                catch
+                {
+                }
+            }
+
+            entries.Sort((a, b) => a.Order.CompareTo(b.Order));
+
+            foreach (var entry in entries)
+                result[entry.Name] = entry.Node;
 
             return result;
         }
@@ -186,7 +230,8 @@ namespace IrisEditor.Data
                 int i => JsonValue.Create((float)i),
                 bool b => JsonValue.Create(b),
                 Vector2D<float> v => new JsonArray(v.X, v.Y),
-                Color c => new JsonArray(c.r, c.g, c.b, c.a),
+                Vector2D<int> vi => new JsonArray((float)vi.X, (float)vi.Y),
+                Color c => new JsonArray((float)c.r, (float)c.g, (float)c.b, (float)c.a),
                 _ => null,
             };
         }

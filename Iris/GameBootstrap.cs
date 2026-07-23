@@ -12,6 +12,10 @@ namespace Iris
         {
             args ??= Array.Empty<string>();
 
+            string contentRoot = GetArg(args, "--content");
+            if (!string.IsNullOrEmpty(contentRoot))
+                SceneLoader.ContentRoot = Path.GetFullPath(contentRoot);
+
             var config = LoadConfig();
             string scenePath = GetArg(args, "--scene") ?? config.StartScene;
 
@@ -49,8 +53,6 @@ namespace Iris
                 fullscreen = config.Fullscreen,
             });
         }
-
-        //이거 외부로 빼기
 
 
         private static ProjectConfig LoadConfig()

@@ -11,11 +11,25 @@ namespace Iris.Core
         public IAudioClip Clip { get; set; }
         public float Volume { get; set; } = 1;
         public bool Loop { get; set; } = false;
+        public bool PlayOnStart { get; set; } = false;
         public bool IsPlaying { get; private set; } = false;
+
+        private bool _autoPlayed;
 
         protected override void OnAttached()
         {
             _system = SystemManager.Instance.GetSystem<AudioSystem>();
+        }
+
+        public override void Update()
+        {
+            if (_autoPlayed)
+                return;
+
+            _autoPlayed = true;
+
+            if (PlayOnStart)
+                Play();
         }
 
         public void Play()
@@ -38,6 +52,7 @@ namespace Iris.Core
                 return;
 
             _system.Stop(_id);
+            IsPlaying = false;
         }
     }
 }

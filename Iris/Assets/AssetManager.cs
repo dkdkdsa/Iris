@@ -8,7 +8,6 @@ namespace Iris.Assets
     {
         private static Dictionary<string, IAsset> _assetContainer = new();
 
-        /// <summary>Engine 없이(에디터 등) 에셋 로딩만 쓸 때의 초기화 진입점.</summary>
         public static void Initialize()
         {
             AssetAPI.ActiveAPI = new InternalAssetAPI();

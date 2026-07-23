@@ -17,6 +17,12 @@ namespace IrisEditor.Panels
         private string _renameBuffer = string.Empty;
         private bool _renameFocusPending;
 
+        private const string DeletePopupId = "삭제 확인###DeleteConfirmPopup";
+
+        private string _deletePath;
+        private bool _deleteIsDirectory;
+        private bool _deletePopupPending;
+
         public ProjectPanel(EditorContext context)
         {
             _context = context;
@@ -68,6 +74,90 @@ namespace IrisEditor.Panels
                 _pendingAction = null;
                 action();
             }
+
+            if (_deletePopupPending)
+            {
+                _deletePopupPending = false;
+                ImGui.OpenPopup(DeletePopupId);
+            }
+
+            DrawDeleteConfirm(workspace);
+        }
+
+        private void DrawDeleteConfirm(EditorWorkspace workspace)
+        {
+            var viewport = ImGui.GetMainViewport();
+            ImGui.SetNextWindowPos(viewport.WorkPos + viewport.WorkSize * 0.5f, ImGuiCond.Appearing,
+                new System.Numerics.Vector2(0.5f, 0.5f));
+
+            if (!ImGui.BeginPopupModal(DeletePopupId))
+                return;
+
+            if (_deletePath == null)
+            {
+                ImGui.CloseCurrentPopup();
+                ImGui.EndPopup();
+                return;
+            }
+
+            ImGui.Text($"'{Path.GetFileName(Path.TrimEndingDirectorySeparator(_deletePath))}' 을(를) 삭제할까요?");
+
+            if (_deleteIsDirectory)
+                ImGui.TextDisabled("폴더 안의 모든 파일이 함께 삭제됩니다.");
+
+            ImGui.TextDisabled("이 작업은 되돌릴 수 없습니다.");
+            ImGui.Separator();
+
+            if (ImGui.Button("삭제", new System.Numerics.Vector2(120f, 0f)))
+            {
+                ApplyDelete(workspace);
+                ImGui.CloseCurrentPopup();
+            }
+
+            ImGui.SameLine();
+
+            if (ImGui.Button("취소", new System.Numerics.Vector2(120f, 0f)))
+            {
+                _deletePath = null;
+                ImGui.CloseCurrentPopup();
+            }
+
+            ImGui.EndPopup();
+        }
+
+        private void ApplyDelete(EditorWorkspace workspace)
+        {
+            string absolute = workspace.ToAbsolute(_deletePath);
+
+            try
+            {
+                if (_deleteIsDirectory)
+                {
+                    if (Directory.Exists(absolute))
+                        Directory.Delete(absolute, true);
+                }
+                else if (File.Exists(absolute))
+                {
+                    File.Delete(absolute);
+                }
+
+                _context.HandlePathDeleted(absolute, _deleteIsDirectory);
+                workspace.Refresh();
+                Console.WriteLine($"[에디터] 삭제됨: {_deletePath}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[에디터] 삭제 실패: {ex.Message}");
+            }
+
+            _deletePath = null;
+        }
+
+        private void RequestDelete(string relativePath, bool isDirectory)
+        {
+            _deletePath = relativePath;
+            _deleteIsDirectory = isDirectory;
+            _deletePopupPending = true;
         }
 
         private void DrawCreateMenu(EditorWorkspace workspace, string prefix)
@@ -130,6 +220,9 @@ namespace IrisEditor.Panels
                     if (ImGui.MenuItem("이름 변경"))
                         StartRename(dir, isDirectory: true);
 
+                    if (ImGui.MenuItem("삭제"))
+                        RequestDelete(dir, isDirectory: true);
+
                     ImGui.EndPopup();
                 }
 
@@ -172,6 +265,9 @@ namespace IrisEditor.Panels
                 {
                     if (ImGui.MenuItem("이름 변경"))
                         StartRename(asset.Path, isDirectory: false);
+
+                    if (ImGui.MenuItem("삭제"))
+                        RequestDelete(asset.Path, isDirectory: false);
 
                     ImGui.EndPopup();
                 }
@@ -251,8 +347,17 @@ namespace IrisEditor.Panels
                 return;
             }
 
-            if (asset.Path.EndsWith(".cs", StringComparison.OrdinalIgnoreCase))
+            if (asset.Path.EndsWith(".cs", StringComparison.OrdinalIgnoreCase) ||
+                asset.Path.EndsWith(".anim", StringComparison.OrdinalIgnoreCase) ||
+                asset.Path.EndsWith(".tile", StringComparison.OrdinalIgnoreCase) ||
+                asset.Path.EndsWith(".prefab", StringComparison.OrdinalIgnoreCase))
+            {
                 ExternalEditor.OpenScript(workspace.ProjectFile, workspace.ToAbsolute(asset.Path));
+                return;
+            }
+
+            if (asset.Path.EndsWith(".ui", StringComparison.OrdinalIgnoreCase))
+                _context.RequestOpenUILayout(workspace.ToAbsolute(asset.Path));
         }
 
         private void OpenScene(EditorWorkspace workspace, AssetEntry asset)

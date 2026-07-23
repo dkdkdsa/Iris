@@ -10,7 +10,7 @@ namespace IrisEditor.Panels
 
         protected virtual ImGuiWindowFlags WindowFlags => ImGuiWindowFlags.None;
 
-        public void Draw()
+        public virtual void Draw()
         {
             if (!IsOpen)
                 return;

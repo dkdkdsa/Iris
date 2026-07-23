@@ -57,7 +57,7 @@ namespace IrisEditor.Panels
             var screenMin = origin + (size - screenSize) * 0.5f;
             var screenMax = screenMin + screenSize;
 
-            draw.AddRectFilled(screenMin, screenMax, 0xFF000000);
+            draw.AddRectFilled(screenMin, screenMax, _renderer.GetCameraBackground());
             draw.AddRect(screenMin - Vector2.One, screenMax + Vector2.One, 0xFF404040);
 
             if (!_renderer.TryGetCamera(out var camPos, out float scale))

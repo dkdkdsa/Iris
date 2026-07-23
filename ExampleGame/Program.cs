@@ -17,6 +17,7 @@ namespace ExampleGame
                 width = 800,
                 height = 600,
                 title = "Hello",
+                resizable = true,
             });
         }
 

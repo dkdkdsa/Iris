@@ -19,6 +19,49 @@ namespace IrisEditor.Workspace
             SceneSerializer.Save(new SceneData(), path);
         }
 
+        [AssetCreator("UI 레이아웃", "NewLayout.ui")]
+        private static void CreateUILayout(string path)
+        {
+            File.WriteAllText(path, """
+                {
+                  "uiObjects": []
+                }
+                """);
+        }
+
+        [AssetCreator("스프라이트 애니메이션", "NewAnimation.anim")]
+        private static void CreateSpriteAnimation(string path)
+        {
+            File.WriteAllText(path, """
+                {
+                  "texture": "",
+                  "fps": 12,
+                  "loop": true,
+                  "frameWidth": 0,
+                  "frameHeight": 0,
+                  "frameCount": 0,
+                  "offsetX": 0,
+                  "offsetY": 0,
+                  "columns": 0,
+                  "frames": []
+                }
+                """);
+        }
+
+        [AssetCreator("타일", "NewTile.tile")]
+        private static void CreateTile(string path)
+        {
+            File.WriteAllText(path, """
+                {
+                  "texture": "",
+                  "x": 0,
+                  "y": 0,
+                  "width": 0,
+                  "height": 0
+                }
+                """);
+        }
+
         [AssetCreator("C# 스크립트", "NewScript.cs")]
         private static void CreateScript(string path)
         {

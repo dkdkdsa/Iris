@@ -31,18 +31,24 @@ namespace Iris.Rendering.SDL
             _sdl.SetRenderDrawColor(_renderer, 0, 0, 0, 255);
         }
 
-        public void Clear()
+        public void Clear(Iris.Core.Color clearColor)
         {
+            _sdl.SetRenderDrawColor(_renderer, clearColor.r, clearColor.g, clearColor.b, 255);
             _sdl.RenderClear(_renderer);
         }
 
-        public void DrawTexture(ITexture texture, Rectangle<int>? src, in Rectangle<int> rect, float angle, bool flipX, bool flipY)
+        public void DrawTexture(ITexture texture, Rectangle<int>? src, in Rectangle<int> rect, float angle, bool flipX, bool flipY, Iris.Core.Color? tint = null)
         {
             if (texture is SDLTexture tex)
             {
                 var flip = RendererFlip.None;
                 if (flipX) flip |= RendererFlip.Horizontal;
                 if (flipY) flip |= RendererFlip.Vertical;
+
+                var native = tex.GetNativeTexture();
+                var mod = tint ?? new Iris.Core.Color(255, 255, 255, 255);
+                _sdl.SetTextureColorMod(native, mod.r, mod.g, mod.b);
+                _sdl.SetTextureAlphaMod(native, mod.a);
 
                 if (src.HasValue)
                 {
@@ -98,23 +104,23 @@ namespace Iris.Rendering.SDL
                 for (int c = 0; c < cl.CmdBuffer.Size; c++)
                 {
                     var cmd = cl.CmdBuffer[c];
-                    var clip = new Rectangle<int>(                 // DisplayPos 빼주기
+                    var clip = new Rectangle<int>(
                         (int)(cmd.ClipRect.X - off.X), (int)(cmd.ClipRect.Y - off.Y),
                         (int)(cmd.ClipRect.Z - cmd.ClipRect.X), (int)(cmd.ClipRect.W - cmd.ClipRect.Y));
                     _sdl.RenderSetClipRect(_renderer, &clip);
 
-                    byte* @base = (byte*)(vtx + cmd.VtxOffset);    // VtxOffset은 base 밀어서 처리
+                    byte* @base = (byte*)(vtx + cmd.VtxOffset);
                     _sdl.RenderGeometryRaw(_renderer, (Texture*)(nint)cmd.GetTexID(),
-                        (float*)(@base + 0), sizeof(ImDrawVert),          // xy
-                        (Color*)(@base + 16), sizeof(ImDrawVert),          // color (packed u32 RGBA)
-                        (float*)(@base + 8), sizeof(ImDrawVert),          // uv
+                        (float*)(@base + 0), sizeof(ImDrawVert),
+                        (Color*)(@base + 16), sizeof(ImDrawVert),
+                        (float*)(@base + 8), sizeof(ImDrawVert),
                         (int)(cl.VtxBuffer.Size - cmd.VtxOffset),
                         idx + cmd.IdxOffset, (int)cmd.ElemCount, sizeof(ushort));
                 }
             }
         }
 
-        void UpdateTexture(ImTextureDataPtr tex)
+        private void UpdateTexture(ImTextureDataPtr tex)
         {
             if (tex.Status == ImTextureStatus.WantCreate)
             {
@@ -128,7 +134,6 @@ namespace Iris.Rendering.SDL
             }
             else if (tex.Status == ImTextureStatus.WantUpdates)
             {
-                // 첫 업로드 이후에 래스터라이즈된 글리프들. 더티 영역만 다시 올린다.
                 var t = (Texture*)(nint)tex.TexID;
                 for (int i = 0; i < tex.Updates.Size; i++)
                 {

@@ -23,6 +23,12 @@ namespace IrisEditor.Workspace
             [".gif"] = typeof(ITexture),
             [".wav"] = typeof(IAudioClip),
             [".mp3"] = typeof(IAudioClip),
+            [".ttf"] = typeof(IFont),
+            [".otf"] = typeof(IFont),
+            [".ui"] = typeof(Iris.UI.IUILayout),
+            [".anim"] = typeof(Iris.Core.SpriteAnimation),
+            [".tile"] = typeof(Iris.Core.Tile),
+            [".prefab"] = typeof(Iris.Core.Prefab),
             [".scene"] = typeof(SceneData),
         };
 

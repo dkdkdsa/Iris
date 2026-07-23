@@ -18,8 +18,10 @@ namespace IrisEditor
         private readonly CameraPanel _camera;
         private readonly InspectorPanel _inspector;
         private readonly ProjectPanel _project;
+        private readonly TilePalettePanel _tiles;
 
         private readonly List<EditorPanel> _panels;
+        private readonly UIEditorPanel _uiEditor;
         private bool _resetLayout;
 
         public EditorApp(EditorContext context)
@@ -28,10 +30,12 @@ namespace IrisEditor
             var renderer = new SceneRenderer(context);
 
             _hierarchy = new HierarchyPanel(context);
-            _inspector = new InspectorPanel(context);
+            _tiles = new TilePalettePanel(context);
+            _inspector = new InspectorPanel(context, _tiles);
             _scene = new ScenePanel(context, renderer);
             _camera = new CameraPanel(renderer);
             _project = new ProjectPanel(context);
+            _uiEditor = new UIEditorPanel(context, renderer);
 
             var io = ImGui.GetIO();
             io.ConfigFlags |= ImGuiConfigFlags.DockingEnable;
@@ -40,7 +44,7 @@ namespace IrisEditor
             if (File.Exists(fontPath))
                 io.Fonts.AddFontFromFileTTF(fontPath, 16f);
 
-            _panels = new List<EditorPanel> { _hierarchy, _scene, _camera, _inspector, _project };
+            _panels = new List<EditorPanel> { _hierarchy, _scene, _camera, _inspector, _project, _tiles };
         }
 
         public void Draw()
@@ -52,11 +56,16 @@ namespace IrisEditor
             if (ImGui.GetIO().KeyCtrl && ImGui.IsKeyPressed(ImGuiKey.S) && _context.Dirty)
                 SaveScene(saveAs: false);
 
+            if (ImGui.IsKeyPressed(ImGuiKey.F5, false))
+                _context.RunGame();
+
             DrawMainMenuBar();
             DrawDockspace();
 
             foreach (var panel in _panels)
                 panel.Draw();
+
+            _uiEditor.Draw();
         }
 
         private void DrawMainMenuBar()
@@ -84,6 +93,11 @@ namespace IrisEditor
 
                 if (ImGui.MenuItem("스크립트 새로고침", string.Empty, false, !_context.Scripts.Building))
                     _context.RefreshScripts();
+
+                ImGui.Separator();
+
+                if (ImGui.MenuItem("현재 씬 실행", "F5", false, !_context.Scripts.Building && !_context.Builder.Building))
+                    _context.RunGame();
 
                 ImGui.Separator();
 
@@ -188,6 +202,7 @@ namespace IrisEditor
 
             ImGuiP.DockBuilderDockWindow(_inspector.Title, inspector);
             ImGuiP.DockBuilderDockWindow(_project.Title, project);
+            ImGuiP.DockBuilderDockWindow(_tiles.Title, project);
             ImGuiP.DockBuilderDockWindow(_hierarchy.Title, hierarchy);
             ImGuiP.DockBuilderDockWindow(_scene.Title, scene);
             ImGuiP.DockBuilderDockWindow(_camera.Title, scene);

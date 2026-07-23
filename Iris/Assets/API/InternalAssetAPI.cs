@@ -12,6 +12,11 @@ namespace Iris.Assets
         {
             _loaders.Add(typeof(ITexture), new StbTextureLoader());
             _loaders.Add(typeof(IAudioClip), new NAudioAudioLoader());
+            _loaders.Add(typeof(IFont), new StbFontLoader());
+            _loaders.Add(typeof(Iris.UI.IUILayout), new Iris.UI.UILayoutLoader());
+            _loaders.Add(typeof(Iris.Core.SpriteAnimation), new SpriteAnimationLoader());
+            _loaders.Add(typeof(Iris.Core.Tile), new TileLoader());
+            _loaders.Add(typeof(Iris.Core.Prefab), new PrefabLoader());
         }
 
         internal override T LoadAsset<T>(string path)

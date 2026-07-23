@@ -1,19 +1,58 @@
-﻿using System;
+using Silk.NET.Maths;
+using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace Iris.Core
 {
     public sealed class Actor : EngineObject, IDisposable
     {
         private List<Component> _components = new();
+        private readonly List<Actor> _children = new();
+
         public string Name { get; set; } = "Actor";
         public Transform Transform { get; private set; }
         public bool DestroyFlag { get; private set; }
 
+        public Actor Parent { get; private set; }
+        public IReadOnlyList<Actor> Children => _children;
+
         internal Actor()
         {
             Transform = AddComponent<Transform>();
+        }
+
+        public void SetParent(Actor parent, bool worldPositionStays = true)
+        {
+            if (parent == this || Parent == parent)
+                return;
+
+            for (var ancestor = parent; ancestor != null; ancestor = ancestor.Parent)
+            {
+                if (ancestor == this)
+                    return;
+            }
+
+            Vector2D<float> position = default;
+            float rotation = 0f;
+            Vector2D<float> scale = default;
+
+            if (worldPositionStays)
+            {
+                position = Transform.Position;
+                rotation = Transform.Rotation;
+                scale = Transform.Scale;
+            }
+
+            Parent?._children.Remove(this);
+            Parent = parent;
+            parent?._children.Add(this);
+
+            if (worldPositionStays)
+            {
+                Transform.Scale = scale;
+                Transform.Rotation = rotation;
+                Transform.Position = position;
+            }
         }
 
         public void AddComponent(Component component)
@@ -89,11 +128,20 @@ namespace Iris.Core
 
         public void Destroy()
         {
+            if (DestroyFlag)
+                return;
+
             DestroyFlag = true;
+
+            foreach (var child in _children)
+                child.Destroy();
         }
 
         public void Dispose()
         {
+            Parent?._children.Remove(this);
+            Parent = null;
+
             foreach (Component component in _components)
             {
                 try

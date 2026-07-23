@@ -24,21 +24,30 @@ namespace Iris.Rendering
             var camera = Camera.Main;
 
             if (camera != null)
-            {
                 camera.SetViewport(Viewport);
+            else if (!_warnedNoCamera)
+                _warnedNoCamera = true;
 
-                _commands.Sort((a, b) => a.order.CompareTo(b.order));
+            _commands.Sort((a, b) => a.order.CompareTo(b.order));
 
-                foreach (var cmd in _commands)
+            foreach (var cmd in _commands)
+            {
+                if (cmd.screenSpace)
+                {
+                    // 화면 픽셀 좌표 그대로. 카메라가 없어도 UI는 그려진다(메뉴 씬 등).
+                    var d = cmd.dest;
+                    var dest = new Rectangle<int>(
+                        (int)MathF.Round(d.Origin.X), (int)MathF.Round(d.Origin.Y),
+                        (int)MathF.Round(d.Size.X), (int)MathF.Round(d.Size.Y));
+
+                    _backend.DrawTexture(cmd.texture, cmd.src, dest, cmd.rotation, cmd.flipX, cmd.flipY, cmd.color);
+                }
+                else if (camera != null)
                 {
                     _backend.DrawTexture(
                         cmd.texture, cmd.src, camera.WorldToScreen(cmd.dest),
-                        cmd.rotation, cmd.flipX, cmd.flipY);
+                        cmd.rotation, cmd.flipX, cmd.flipY, cmd.color);
                 }
-            }
-            else if (!_warnedNoCamera)
-            {
-                _warnedNoCamera = true;
             }
 
             _commands.Clear();

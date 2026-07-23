@@ -4,7 +4,7 @@ using System;
 
 namespace Iris.Core
 {
-    public sealed class SpriteAnimation
+    public sealed class SpriteAnimation : IAsset
     {
         public ITexture Texture { get; }
         public float Fps { get; set; }
@@ -22,6 +22,11 @@ namespace Iris.Core
         }
 
         public Rectangle<int> GetFrame(int index) => _frames[index];
+
+        public void Dispose()
+        {
+        }
+
         public static SpriteAnimation FromGrid(
             ITexture texture,
             int frameWidth, int frameHeight, int frameCount,

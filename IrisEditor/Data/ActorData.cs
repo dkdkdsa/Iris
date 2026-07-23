@@ -8,6 +8,8 @@ namespace IrisEditor.Data
     {
         public Guid Id { get; set; }
         public string Name { get; set; }
+        public Guid? ParentId { get; set; }
+        public string PrefabSource { get; set; }
         public List<ComponentData> Components { get; set; } = new();
 
         public ComponentData GetComponent(Type type)

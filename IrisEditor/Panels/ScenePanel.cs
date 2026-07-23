@@ -2,6 +2,7 @@ using Hexa.NET.ImGui;
 using Iris.Core;
 using IrisEditor.Data;
 using IrisEditor.Rendering;
+using IrisEditor.Workspace;
 using System;
 using System.Numerics;
 
@@ -17,6 +18,7 @@ namespace IrisEditor.Panels
 
         private ActorData _dragActor;
         private Vector2 _dragOffset;
+        private (int X, int Y)? _lastPaintCell;
 
         public ScenePanel(EditorContext context, SceneRenderer renderer)
         {
@@ -37,10 +39,27 @@ namespace IrisEditor.Panels
 
             var center = origin + size * 0.5f;
 
+            ImGui.InvisibleButton("##SceneCanvas", size);
+
+            if (ImGui.BeginDragDropTarget())
+            {
+                var payload = ImGui.AcceptDragDropPayload(AssetDragDrop.PayloadType);
+
+                if (!payload.IsNull && AssetDragDrop.Current != null &&
+                    AssetDragDrop.Current.AssetType == typeof(Prefab))
+                {
+                    var world = SceneRenderer.PanelToWorld(ImGui.GetMousePos(), _viewPos, _viewScale, center);
+                    _context.InstantiatePrefab(AssetDragDrop.Current.Path, world);
+                }
+
+                ImGui.EndDragDropTarget();
+            }
+
             HandleInput(center);
 
             draw.AddRectFilled(origin, origin + size, 0xFF202020);
 
+            DrawCameraBackground(draw, center);
             _renderer.DrawSprites(draw, _viewPos, _viewScale, center, showSelection: true);
             DrawCameraMarker(draw, center);
             SceneRenderer.DrawGrid(draw, origin, size, _viewPos, _viewScale, center);
@@ -69,6 +88,9 @@ namespace IrisEditor.Panels
                     _viewPos.Y = worldUnderMouse.Y + (mouse.Y - center.Y) / _viewScale;
                 }
 
+                if (HandleTilePaint(center))
+                    return;
+
                 if (ImGui.IsMouseClicked(ImGuiMouseButton.Left))
                 {
                     var mouse = ImGui.GetMousePos();
@@ -77,9 +99,8 @@ namespace IrisEditor.Panels
 
                     if (picked != null)
                     {
-                        var transform = picked.GetComponent(typeof(Transform));
                         var world = SceneRenderer.PanelToWorld(mouse, _viewPos, _viewScale, center);
-                        _dragOffset = transform.GetVector2("Position", Vector2.Zero) - world;
+                        _dragOffset = SceneTransforms.GetWorld(_context.Scene, picked).Position - world;
                         _dragActor = picked;
                     }
                 }
@@ -100,12 +121,65 @@ namespace IrisEditor.Panels
                 var world = SceneRenderer.PanelToWorld(ImGui.GetMousePos(), _viewPos, _viewScale, center);
                 var newPosition = world + _dragOffset;
 
-                if (newPosition != dragTransform.GetVector2("Position", Vector2.Zero))
+                if (newPosition != SceneTransforms.GetWorld(_context.Scene, _dragActor).Position)
                 {
-                    dragTransform.SetVector2("Position", newPosition);
+                    SceneTransforms.SetWorldPosition(_context.Scene, _dragActor, newPosition);
                     _context.MarkDirty();
                 }
             }
+        }
+
+        private bool HandleTilePaint(Vector2 center)
+        {
+            if (!TileBrush.Active)
+                return false;
+
+            var actor = _context.Selected;
+            var tilemap = actor?.GetComponent(typeof(Tilemap));
+
+            if (tilemap == null)
+                return false;
+
+            var (origin, cellSize) = TilemapEdit.FindGrid(_context.Scene, actor);
+            var mouseWorld = SceneRenderer.PanelToWorld(ImGui.GetMousePos(), _viewPos, _viewScale, center);
+            var cell = TilemapEdit.WorldToCell(mouseWorld, origin, cellSize);
+
+            DrawCellHighlight(origin, cellSize, cell, center);
+
+            if (ImGui.IsMouseDown(ImGuiMouseButton.Left))
+            {
+                if (_lastPaintCell != cell || ImGui.IsMouseClicked(ImGuiMouseButton.Left))
+                {
+                    _lastPaintCell = cell;
+
+                    bool changed = TileBrush.Eraser
+                        ? TilemapEdit.Erase(tilemap, cell)
+                        : TilemapEdit.Paint(tilemap, cell, TileBrush.TilePath);
+
+                    if (changed)
+                        _context.MarkDirty();
+                }
+            }
+            else
+            {
+                _lastPaintCell = null;
+            }
+
+            return true;
+        }
+
+        private void DrawCellHighlight(Vector2 origin, Vector2 cellSize, (int X, int Y) cell, Vector2 center)
+        {
+            float sizeX = cellSize.X > 0f ? cellSize.X : 1f;
+            float sizeY = cellSize.Y > 0f ? cellSize.Y : 1f;
+
+            var worldMin = new Vector2(origin.X + cell.X * sizeX, origin.Y + cell.Y * sizeY);
+            var worldMax = worldMin + new Vector2(sizeX, sizeY);
+
+            var topLeft = SceneRenderer.WorldToPanel(new Vector2(worldMin.X, worldMax.Y), _viewPos, _viewScale, center);
+            var bottomRight = SceneRenderer.WorldToPanel(new Vector2(worldMax.X, worldMin.Y), _viewPos, _viewScale, center);
+
+            ImGui.GetWindowDrawList().AddRect(topLeft, bottomRight, 0xFF00A0FF);
         }
 
         private ActorData PickActor(Vector2 mouse, Vector2 center)
@@ -119,9 +193,7 @@ namespace IrisEditor.Panels
                 if (transform == null)
                     continue;
 
-                var position = transform.GetVector2("Position", Vector2.Zero);
-                var actorScale = transform.GetVector2("Scale", Vector2.One);
-                float rotation = transform.GetFloat("Rotation", 0f);
+                var (position, rotation, actorScale) = SceneTransforms.GetWorld(_context.Scene, actor);
                 var screenPos = SceneRenderer.WorldToPanel(position, _viewPos, _viewScale, center);
 
                 foreach (var comp in actor.Components)
@@ -162,6 +234,23 @@ namespace IrisEditor.Panels
             }
 
             return null;
+        }
+
+        private void DrawCameraBackground(ImDrawListPtr draw, Vector2 center)
+        {
+            if (!_renderer.TryGetCamera(out var camWorld, out float camScale))
+                return;
+
+            if (camScale <= 0f)
+                return;
+
+            float halfWidth = _renderer.ReferenceWidth / camScale * 0.5f;
+            float halfHeight = _renderer.ReferenceHeight / camScale * 0.5f;
+
+            var min = SceneRenderer.WorldToPanel(camWorld + new Vector2(-halfWidth, halfHeight), _viewPos, _viewScale, center);
+            var max = SceneRenderer.WorldToPanel(camWorld + new Vector2(halfWidth, -halfHeight), _viewPos, _viewScale, center);
+
+            draw.AddRectFilled(min, max, _renderer.GetCameraBackground());
         }
 
         private void DrawCameraMarker(ImDrawListPtr draw, Vector2 center)
