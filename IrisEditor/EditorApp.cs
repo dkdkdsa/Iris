@@ -22,6 +22,8 @@ namespace IrisEditor
 
         private readonly List<EditorPanel> _panels;
         private readonly UIEditorPanel _uiEditor;
+        private readonly SpriteSlicerPanel _spriteSlicer;
+        private readonly ProjectSettingsPanel _projectSettings;
         private bool _resetLayout;
 
         public EditorApp(EditorContext context)
@@ -36,6 +38,8 @@ namespace IrisEditor
             _camera = new CameraPanel(renderer);
             _project = new ProjectPanel(context);
             _uiEditor = new UIEditorPanel(context, renderer);
+            _spriteSlicer = new SpriteSlicerPanel(context);
+            _projectSettings = new ProjectSettingsPanel(context);
 
             var io = ImGui.GetIO();
             io.ConfigFlags |= ImGuiConfigFlags.DockingEnable;
@@ -66,6 +70,8 @@ namespace IrisEditor
                 panel.Draw();
 
             _uiEditor.Draw();
+            _spriteSlicer.Draw();
+            _projectSettings.Draw();
         }
 
         private void DrawMainMenuBar()
@@ -107,10 +113,22 @@ namespace IrisEditor
                 ImGui.EndMenu();
             }
 
+            if (ImGui.BeginMenu("프로젝트"))
+            {
+                if (ImGui.MenuItem("프로젝트 설정", string.Empty, false, _context.Workspace != null))
+                    _projectSettings.Open();
+
+                ImGui.EndMenu();
+            }
+
             if (ImGui.BeginMenu("보기"))
             {
                 foreach (var panel in _panels)
                     ImGui.MenuItem(panel.Title, string.Empty, ref panel.IsOpen);
+
+                ImGui.Separator();
+
+                ImGui.MenuItem("콜라이더 표시", string.Empty, ref _scene.ShowColliders);
 
                 ImGui.Separator();
 

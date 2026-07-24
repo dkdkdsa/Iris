@@ -22,6 +22,10 @@ namespace Iris.Core
             _attached = true;
         }
 
+        protected override void Awake()
+        {
+        }
+
         public override void FixedUpdate()
         {
             if (_built)
@@ -61,6 +65,7 @@ namespace Iris.Core
                 shapeDef.enableSensorEvents = true;
                 shapeDef.enableContactEvents = true;
                 shapeDef.isSensor = IsSensor;
+                shapeDef.material.friction = Friction;
 
                 var box = B2Geometries.b2MakeOffsetBox(width / 2f, height / 2f,
                     new B2Vec2(centerX, centerY), B2MathFunction.b2MakeRot(0f));
@@ -75,6 +80,15 @@ namespace Iris.Core
         {
             if (_attached)
                 Rebuild();
+        }
+
+        protected override void ApplyFriction()
+        {
+            foreach (var shape in _shapes)
+            {
+                if (B2Worlds.b2Shape_IsValid(shape))
+                    B2Shapes.b2Shape_SetFriction(shape, Friction);
+            }
         }
 
         protected override B2ShapeId CreateShape(B2BodyId id)

@@ -31,8 +31,8 @@ namespace DummyClient
             Actor.Create().AddComponent<Camera>();
 
             var actor = Actor.Create();
-            var renderer = actor.AddComponent<TextureRenderer>();
-            renderer.Texture = AssetManager.Load<ITexture>(@"C:\Users\bos94\Downloads\cog (1).png");
+            var renderer = actor.AddComponent<SpriteRenderer>();
+            renderer.Sprite = AssetManager.Load<Sprite>(@"C:\Users\bos94\Downloads\cog (1).png");
             renderer.PixelPerUnit = 512;
 
             var audio = actor.AddComponent<AudioPlayer>();
@@ -51,7 +51,7 @@ public class TestCompo : Component
 {
     private AudioPlayer _player;
 
-    protected override void OnAttached()
+    protected override void Awake()
     {
         _player = GetComponent<AudioPlayer>();
     }

@@ -1,12 +1,11 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace Iris.Assets
 {
     public static class AssetManager
     {
-        private static Dictionary<string, IAsset> _assetContainer = new();
+        private static Dictionary<(Type Type, string Path), IAsset> _assetContainer = new();
 
         public static void Initialize()
         {
@@ -16,23 +15,31 @@ namespace Iris.Assets
 
         public static T Load<T>(string path) where T : IAsset
         {
-            if (_assetContainer.ContainsKey(path))
-            {
-                return (T)_assetContainer[path];
-            }
+            var key = (typeof(T), path);
+
+            if (_assetContainer.TryGetValue(key, out var cached))
+                return (T)cached;
 
             var asset = AssetAPI.ActiveAPI.LoadAsset<T>(path);
-            _assetContainer.Add(path, asset);
+            _assetContainer.Add(key, asset);
 
             return asset;
         }
 
         public static void Unload(string path)
         {
-            if (_assetContainer.ContainsKey(path))
+            var keys = new List<(Type Type, string Path)>();
+
+            foreach (var pair in _assetContainer)
             {
-                _assetContainer[path].Dispose();
-                _assetContainer.Remove(path);
+                if (pair.Key.Path == path)
+                    keys.Add(pair.Key);
+            }
+
+            foreach (var key in keys)
+            {
+                _assetContainer[key]?.Dispose();
+                _assetContainer.Remove(key);
             }
         }
     }

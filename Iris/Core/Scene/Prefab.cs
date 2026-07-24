@@ -38,6 +38,7 @@ namespace Iris.Core
             var byId = new Dictionary<string, Actor>(StringComparer.OrdinalIgnoreCase);
             var links = new List<(Actor Child, string ParentId)>();
             var roots = new List<Actor>();
+            var built = new List<Actor>();
 
             foreach (var node in _actors)
             {
@@ -47,6 +48,7 @@ namespace Iris.Core
                 try
                 {
                     var actor = SceneLoader.BuildActor(scene, actorObj);
+                    built.Add(actor);
 
                     string id = actorObj["id"]?.GetValue<string>();
                     if (!string.IsNullOrEmpty(id))
@@ -83,6 +85,9 @@ namespace Iris.Core
                 if (position.HasValue)
                     root.Transform.Position = position.Value;
             }
+
+            foreach (var actor in built)
+                actor.Awake();
 
             return root;
         }

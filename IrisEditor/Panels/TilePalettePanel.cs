@@ -80,8 +80,14 @@ namespace IrisEditor.Panels
                     TileBrush.TilePath = null;
             }
 
-            if (TileBrush.Active && _context.Selected?.GetComponent(typeof(Tilemap)) == null)
+            var selected = _context.Selected;
+            bool hasTilemap = selected?.GetComponent(typeof(Tilemap)) != null;
+
+            if (TileBrush.Active && !hasTilemap)
                 ImGui.TextDisabled("Tilemap 컴포넌트가 있는 액터를 선택하세요");
+
+            if (hasTilemap && selected.GetComponent(typeof(TilemapRenderer)) == null)
+                ImGui.TextDisabled("TilemapRenderer가 없어 게임에서는 보이지 않습니다");
 
             ImGui.Separator();
 

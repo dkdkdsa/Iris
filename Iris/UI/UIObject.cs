@@ -1,4 +1,4 @@
-using Iris.Assets;
+using Iris.Core;
 using Iris.Rendering;
 using Silk.NET.Maths;
 using System;
@@ -18,24 +18,33 @@ namespace Iris.UI
         public float Rotation { get; set; } = 0f;
         public int Order { get; set; } = 0;
         public bool Visible { get; set; } = true;
-        public ITexture Texture { get; set; }
+        public Sprite Sprite { get; set; }
 
         public virtual Vector2D<float> GetSize()
         {
-            if (Texture == null)
+            var texture = Sprite?.Texture;
+
+            if (texture == null)
                 return Vector2D<float>.Zero;
 
-            return new Vector2D<float>(Texture.Width * Scale.X, Texture.Height * Scale.Y);
+            var src = Sprite.SrcRect;
+            float width = src.HasValue ? src.Value.Size.X : texture.Width;
+            float height = src.HasValue ? src.Value.Size.Y : texture.Height;
+
+            return new Vector2D<float>(width * Scale.X, height * Scale.Y);
         }
 
         public virtual void Render(Rectangle<float> screenRect, List<RenderCommand> output)
         {
-            if (Texture == null)
+            var texture = Sprite?.Texture;
+
+            if (texture == null)
                 return;
 
             output.Add(new RenderCommand
             {
-                texture = Texture,
+                texture = texture,
+                src = Sprite.SrcRect,
                 dest = screenRect,
                 rotation = Rotation,
                 order = Order,

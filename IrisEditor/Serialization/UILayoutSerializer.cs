@@ -31,6 +31,13 @@ namespace IrisEditor.Serialization
                     Console.WriteLine($"[에디터] 알 수 없는 UI 오브젝트 타입(데이터는 보존됨): {typeName}");
 
                 var properties = obj["properties"]?.DeepClone() as JsonObject ?? new JsonObject();
+
+                if (properties["Sprite"] == null && properties["Texture"] is JsonNode textureNode)
+                {
+                    properties.Remove("Texture");
+                    properties["Sprite"] = textureNode;
+                }
+
                 UIObjectCatalog.ApplyMissingDefaults(properties, type);
 
                 entries.Add(new ComponentData

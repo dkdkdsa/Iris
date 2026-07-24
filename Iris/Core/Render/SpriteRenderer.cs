@@ -1,12 +1,11 @@
-using Iris.Assets;
 using Iris.Rendering;
 using Silk.NET.Maths;
 
 namespace Iris.Core
 {
-    public sealed class TextureRenderer : RendererBase
+    public sealed class SpriteRenderer : RendererBase
     {
-        public ITexture Texture { get; set; }
+        public Sprite Sprite { get; set; }
         public float PixelPerUnit { get; set; } = 100f;
         public Vector2D<float> Pivot { get; set; } = new Vector2D<float>(0.5f, 0.5f);
         public bool FlipX { get; set; }
@@ -16,29 +15,32 @@ namespace Iris.Core
 
         protected override void Render()
         {
-            if (Texture == null)
+            var texture = Sprite?.Texture;
+
+            if (texture == null)
                 return;
 
+            var src = Sprite.SrcRect;
+            float pixelWidth = src.HasValue ? src.Value.Size.X : texture.Width;
+            float pixelHeight = src.HasValue ? src.Value.Size.Y : texture.Height;
+
             var trm = OwnerActor.Transform;
+            float width = pixelWidth / PixelPerUnit * trm.Scale.X;
+            float height = pixelHeight / PixelPerUnit * trm.Scale.Y;
+            float x = trm.Position.X - width * Pivot.X;
+            float y = trm.Position.Y - height * Pivot.Y;
+
             system.Submit(new RenderCommand
             {
-                texture = Texture,
-                dest = CreateDest(trm, Texture, Pivot),
+                texture = texture,
+                src = src,
+                dest = new Rectangle<float>(x, y, width, height),
                 rotation = trm.Rotation,
                 flipX = FlipX,
                 flipY = FlipY,
                 order = Order,
                 color = Color,
             });
-        }
-
-        private Rectangle<float> CreateDest(Transform transform, ITexture texture, Vector2D<float> pivot)
-        {
-            float width = texture.Width / PixelPerUnit * transform.Scale.X;
-            float height = texture.Height / PixelPerUnit * transform.Scale.Y;
-            float x = transform.Position.X - width * pivot.X;
-            float y = transform.Position.Y - height * pivot.Y;
-            return new Rectangle<float>(x, y, width, height);
         }
     }
 }

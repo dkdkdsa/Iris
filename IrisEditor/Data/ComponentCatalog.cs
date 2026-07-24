@@ -1,4 +1,5 @@
 using Iris.Assets;
+using Iris.Attributes;
 using Iris.Core;
 using Silk.NET.Maths;
 using System;
@@ -154,7 +155,7 @@ namespace IrisEditor.Data
                     continue;
                 if (prop.DeclaringType == typeof(Component) || prop.DeclaringType == typeof(EngineObject))
                     continue;
-                if(!IsAutoProperty(prop))
+                if (!IsAutoProperty(prop) && !Attribute.IsDefined(prop, typeof(ShowAttribute), true))
                     continue;
 
                 try

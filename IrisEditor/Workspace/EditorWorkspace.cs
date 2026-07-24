@@ -27,6 +27,7 @@ namespace IrisEditor.Workspace
             [".otf"] = typeof(IFont),
             [".ui"] = typeof(Iris.UI.IUILayout),
             [".anim"] = typeof(Iris.Core.SpriteAnimation),
+            [".sprite"] = typeof(Iris.Core.Sprite),
             [".tile"] = typeof(Iris.Core.Tile),
             [".prefab"] = typeof(Iris.Core.Prefab),
             [".scene"] = typeof(SceneData),

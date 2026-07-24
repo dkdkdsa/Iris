@@ -20,7 +20,7 @@ namespace Iris.Core
 
         public string CurrentName => _current?.Name;
 
-        protected override void OnAttached()
+        protected override void Awake()
         {
             Renderer = GetComponent<AnimatedSpriteRenderer>()
                        ?? OwnerActor.AddComponent<AnimatedSpriteRenderer>();

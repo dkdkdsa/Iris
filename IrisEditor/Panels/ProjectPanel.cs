@@ -263,6 +263,9 @@ namespace IrisEditor.Panels
 
                 if (ImGui.BeginPopupContextItem())
                 {
+                    if (asset.AssetType == typeof(Iris.Assets.ITexture) && ImGui.MenuItem("스프라이트 슬라이스"))
+                        _context.RequestOpenSpriteSlicer(asset.Path);
+
                     if (ImGui.MenuItem("이름 변경"))
                         StartRename(asset.Path, isDirectory: false);
 
@@ -350,6 +353,7 @@ namespace IrisEditor.Panels
             if (asset.Path.EndsWith(".cs", StringComparison.OrdinalIgnoreCase) ||
                 asset.Path.EndsWith(".anim", StringComparison.OrdinalIgnoreCase) ||
                 asset.Path.EndsWith(".tile", StringComparison.OrdinalIgnoreCase) ||
+                asset.Path.EndsWith(".sprite", StringComparison.OrdinalIgnoreCase) ||
                 asset.Path.EndsWith(".prefab", StringComparison.OrdinalIgnoreCase))
             {
                 ExternalEditor.OpenScript(workspace.ProjectFile, workspace.ToAbsolute(asset.Path));

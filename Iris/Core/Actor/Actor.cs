@@ -8,6 +8,7 @@ namespace Iris.Core
     {
         private List<Component> _components = new();
         private readonly List<Actor> _children = new();
+        private bool _awake;
 
         public string Name { get; set; } = "Actor";
         public Transform Transform { get; private set; }
@@ -16,8 +17,9 @@ namespace Iris.Core
         public Actor Parent { get; private set; }
         public IReadOnlyList<Actor> Children => _children;
 
-        internal Actor()
+        internal Actor(bool deferAwake = false)
         {
+            _awake = !deferAwake;
             Transform = AddComponent<Transform>();
         }
 
@@ -59,6 +61,20 @@ namespace Iris.Core
         {
             component.Attach(this);
             _components.Add(component);
+
+            if (_awake)
+                component.InvokeAwake();
+        }
+
+        internal void Awake()
+        {
+            if (_awake)
+                return;
+
+            _awake = true;
+
+            for (int i = 0; i < _components.Count; i++)
+                _components[i].InvokeAwake();
         }
 
         public T AddComponent<T>() where T : Component, new()
@@ -69,9 +85,15 @@ namespace Iris.Core
             return compo;
         }
 
-        public T GetComponent<T>() where T : Component
+        public T GetComponent<T>() where T : class
         {
-            return _components.Find(x => x.GetType() == typeof(T)) as T;
+            for (int i = 0; i < _components.Count; i++)
+            {
+                if (_components[i] is T match)
+                    return match;
+            }
+
+            return null;
         }
 
         internal void Update()

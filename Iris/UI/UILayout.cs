@@ -27,7 +27,15 @@ namespace Iris.UI
                 if (typeName == null)
                     continue;
 
-                _entries.Add((typeName, obj["properties"]?.DeepClone() as JsonObject));
+                var properties = obj["properties"]?.DeepClone() as JsonObject;
+
+                if (properties != null && properties["Sprite"] == null && properties["Texture"] is JsonNode textureNode)
+                {
+                    properties.Remove("Texture");
+                    properties["Sprite"] = textureNode;
+                }
+
+                _entries.Add((typeName, properties));
             }
         }
 

@@ -10,6 +10,8 @@ namespace IrisEditor.Panels
 {
     internal sealed class ScenePanel : EditorPanel
     {
+        public bool ShowColliders = true;
+
         private readonly EditorContext _context;
         private readonly SceneRenderer _renderer;
 
@@ -39,20 +41,23 @@ namespace IrisEditor.Panels
 
             var center = origin + size * 0.5f;
 
-            ImGui.InvisibleButton("##SceneCanvas", size);
-
-            if (ImGui.BeginDragDropTarget())
+            if (!ImGui.GetDragDropPayload().IsNull)
             {
-                var payload = ImGui.AcceptDragDropPayload(AssetDragDrop.PayloadType);
+                ImGui.InvisibleButton("##SceneCanvas", size);
 
-                if (!payload.IsNull && AssetDragDrop.Current != null &&
-                    AssetDragDrop.Current.AssetType == typeof(Prefab))
+                if (ImGui.BeginDragDropTarget())
                 {
-                    var world = SceneRenderer.PanelToWorld(ImGui.GetMousePos(), _viewPos, _viewScale, center);
-                    _context.InstantiatePrefab(AssetDragDrop.Current.Path, world);
-                }
+                    var payload = ImGui.AcceptDragDropPayload(AssetDragDrop.PayloadType);
 
-                ImGui.EndDragDropTarget();
+                    if (!payload.IsNull && AssetDragDrop.Current != null &&
+                        AssetDragDrop.Current.AssetType == typeof(Prefab))
+                    {
+                        var world = SceneRenderer.PanelToWorld(ImGui.GetMousePos(), _viewPos, _viewScale, center);
+                        _context.InstantiatePrefab(AssetDragDrop.Current.Path, world);
+                    }
+
+                    ImGui.EndDragDropTarget();
+                }
             }
 
             HandleInput(center);
@@ -61,6 +66,10 @@ namespace IrisEditor.Panels
 
             DrawCameraBackground(draw, center);
             _renderer.DrawSprites(draw, _viewPos, _viewScale, center, showSelection: true);
+
+            if (ShowColliders)
+                _renderer.DrawColliders(draw, _viewPos, _viewScale, center);
+
             DrawCameraMarker(draw, center);
             SceneRenderer.DrawGrid(draw, origin, size, _viewPos, _viewScale, center);
         }
@@ -198,10 +207,11 @@ namespace IrisEditor.Panels
 
                 foreach (var comp in actor.Components)
                 {
-                    if (comp.TargetType != typeof(TextureRenderer))
+                    if (comp.TargetType != typeof(SpriteRenderer))
                         continue;
 
-                    var texture = _renderer.GetTexture(comp.GetString("Texture", null));
+                    var sprite = _renderer.GetSprite(comp.GetString("Sprite", null));
+                    var texture = sprite?.Texture;
                     if (texture == null)
                         continue;
 
@@ -209,8 +219,12 @@ namespace IrisEditor.Panels
                     if (ppu <= 0f)
                         continue;
 
-                    float halfWidth = texture.Width / ppu * actorScale.X * _viewScale * 0.5f;
-                    float halfHeight = texture.Height / ppu * actorScale.Y * _viewScale * 0.5f;
+                    var src = sprite?.SrcRect;
+                    float pixelWidth = src.HasValue ? src.Value.Size.X : texture.Width;
+                    float pixelHeight = src.HasValue ? src.Value.Size.Y : texture.Height;
+
+                    float halfWidth = pixelWidth / ppu * actorScale.X * _viewScale * 0.5f;
+                    float halfHeight = pixelHeight / ppu * actorScale.Y * _viewScale * 0.5f;
 
                     if (halfWidth <= 0f || halfHeight <= 0f)
                         continue;

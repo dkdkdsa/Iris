@@ -28,13 +28,16 @@ namespace IrisEditor.Rendering
             public bool Selected;
         }
 
+        private const uint ColliderColor = 0xFF00FF00;
+        private const uint SensorColor = 0xFFFFFF00;
+
         public float ReferenceWidth = 800f;
         public float ReferenceHeight = 600f;
 
         private readonly EditorContext _context;
-        private readonly Dictionary<string, ITexture> _textures = new();
         private readonly Dictionary<string, SpriteAnimation> _clips = new();
         private readonly Dictionary<string, Tile> _tileAssets = new();
+        private readonly Dictionary<string, Sprite> _spriteAssets = new();
         private readonly List<SpritePreview> _previews = new();
         private EditorWorkspace _cacheWorkspace;
 
@@ -76,13 +79,20 @@ namespace IrisEditor.Rendering
 
                 foreach (var comp in actor.Components)
                 {
-                    if (comp.TargetType == typeof(TextureRenderer))
+                    if (comp.TargetType == typeof(SpriteRenderer))
                     {
-                        var texture = GetTexture(comp.GetString("Texture", null));
+                        var sprite = GetSprite(comp.GetString("Sprite", null));
+                        var texture = sprite?.Texture;
 
                         if (texture != null)
-                            AddPreview(comp, texture, null, texture.Width, texture.Height,
+                        {
+                            var src = sprite.SrcRect;
+                            float pixelWidth = src.HasValue ? src.Value.Size.X : texture.Width;
+                            float pixelHeight = src.HasValue ? src.Value.Size.Y : texture.Height;
+
+                            AddPreview(comp, texture, src, pixelWidth, pixelHeight,
                                 position, actorScale, rotation, camPos, scale, center, selected);
+                        }
                     }
                     else if (comp.TargetType == typeof(AnimatedSpriteRenderer))
                     {
@@ -95,12 +105,9 @@ namespace IrisEditor.Rendering
                                 position, actorScale, rotation, camPos, scale, center, selected);
                         }
                     }
-                    else if (comp.TargetType == typeof(TilemapRenderer))
+                    else if (comp.TargetType == typeof(Tilemap))
                     {
-                        var tilemap = actor.GetComponent(typeof(Tilemap));
-
-                        if (tilemap != null)
-                            AddTilemapPreviews(actor, comp, tilemap, camPos, scale, center);
+                        AddTilemapPreviews(actor, actor.GetComponent(typeof(TilemapRenderer)), comp, camPos, scale, center);
                     }
                 }
 
@@ -172,8 +179,8 @@ namespace IrisEditor.Rendering
             if (cellSize.X <= 0f || cellSize.Y <= 0f)
                 return;
 
-            uint tint = GetTint(renderer);
-            int order = (int)renderer.GetFloat("Order", 0f);
+            uint tint = renderer != null ? GetTint(renderer) : 0xFFFFFFFF;
+            int order = renderer != null ? (int)renderer.GetFloat("Order", 0f) : 0;
 
             foreach (var ((x, y), index) in cells)
             {
@@ -201,6 +208,61 @@ namespace IrisEditor.Rendering
                     Sequence = _previews.Count,
                 });
             }
+        }
+
+        public void DrawColliders(ImDrawListPtr draw, Vector2 camPos, float scale, Vector2 center)
+        {
+            foreach (var actor in _context.Scene.Actors)
+            {
+                if (actor.GetComponent(typeof(Transform)) == null)
+                    continue;
+
+                var (position, rotation, _) = SceneTransforms.GetWorld(_context.Scene, actor);
+
+                foreach (var comp in actor.Components)
+                {
+                    if (comp.TargetType == null || !typeof(BoxCollider).IsAssignableFrom(comp.TargetType))
+                        continue;
+
+                    DrawBoxCollider(draw, comp, position, rotation, camPos, scale, center);
+                }
+            }
+        }
+
+        private static void DrawBoxCollider(ImDrawListPtr draw, ComponentData comp, Vector2 position, float rotation,
+            Vector2 camPos, float scale, Vector2 center)
+        {
+            var size = comp.GetVector2("Size", Vector2.One);
+
+            if (size.X <= 0f || size.Y <= 0f)
+                return;
+
+            uint color = comp.GetBool("IsSensor", false) ? SensorColor : ColliderColor;
+
+            var offset = comp.GetVector2("Offset", Vector2.Zero);
+            var origin = WorldToPanel(position, camPos, scale, center);
+            var local = new Vector2(offset.X * scale, -offset.Y * scale);
+            var half = size * scale * 0.5f;
+
+            if (rotation == 0f)
+            {
+                var screen = origin + local;
+                draw.AddRect(screen - half, screen + half, color);
+                return;
+            }
+
+            float rad = rotation * MathF.PI / 180f;
+            float cos = MathF.Cos(rad);
+            float sin = MathF.Sin(rad);
+
+            Vector2 Rotate(float x, float y) => new Vector2(x * cos - y * sin, x * sin + y * cos);
+
+            var boxCenter = origin + Rotate(local.X, local.Y);
+
+            draw.AddQuad(
+                boxCenter + Rotate(-half.X, -half.Y), boxCenter + Rotate(half.X, -half.Y),
+                boxCenter + Rotate(half.X, half.Y), boxCenter + Rotate(-half.X, half.Y),
+                color);
         }
 
         private static uint GetTint(ComponentData comp)
@@ -323,32 +385,6 @@ namespace IrisEditor.Rendering
                 preview.Tint);
         }
 
-        public ITexture GetTexture(string path)
-        {
-            EnsureCache();
-
-            if (string.IsNullOrWhiteSpace(path))
-                return null;
-
-            if (_textures.TryGetValue(path, out var cached))
-                return cached;
-
-            ITexture texture = null;
-
-            try
-            {
-                string fullPath = ResolvePath(path);
-                if (File.Exists(fullPath))
-                    texture = AssetManager.Load<ITexture>(fullPath);
-            }
-            catch
-            {
-            }
-
-            _textures[path] = texture;
-            return texture;
-        }
-
         public SpriteAnimation GetClip(string path)
         {
             EnsureCache();
@@ -373,6 +409,32 @@ namespace IrisEditor.Rendering
 
             _clips[path] = clip;
             return clip;
+        }
+
+        public Sprite GetSprite(string path)
+        {
+            EnsureCache();
+
+            if (string.IsNullOrWhiteSpace(path))
+                return null;
+
+            if (_spriteAssets.TryGetValue(path, out var cached))
+                return cached;
+
+            Sprite sprite = null;
+
+            try
+            {
+                string fullPath = ResolvePath(path);
+                if (File.Exists(fullPath))
+                    sprite = AssetManager.Load<Sprite>(fullPath);
+            }
+            catch
+            {
+            }
+
+            _spriteAssets[path] = sprite;
+            return sprite;
         }
 
         public Tile GetTile(string path)
@@ -406,9 +468,9 @@ namespace IrisEditor.Rendering
             if (_cacheWorkspace == _context.Workspace)
                 return;
 
-            _textures.Clear();
             _clips.Clear();
             _tileAssets.Clear();
+            _spriteAssets.Clear();
             _cacheWorkspace = _context.Workspace;
         }
 

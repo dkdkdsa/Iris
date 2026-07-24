@@ -1,0 +1,258 @@
+using Hexa.NET.ImGui;
+using Iris;
+using IrisEditor.Data;
+using IrisEditor.Serialization;
+using System;
+using System.IO;
+using System.Numerics;
+using System.Text.Json.Nodes;
+
+namespace IrisEditor.Panels
+{
+    internal sealed class ProjectSettingsPanel
+    {
+        private static readonly (string Label, int Width, int Height)[] _resolutions =
+        {
+            ("800 × 600", 800, 600),
+            ("1024 × 768", 1024, 768),
+            ("1280 × 720", 1280, 720),
+            ("1600 × 900", 1600, 900),
+            ("1920 × 1080", 1920, 1080),
+        };
+
+        private readonly EditorContext _context;
+
+        private bool _open;
+        private string _path;
+        private string _rootPath;
+        private ProjectConfig _config = new();
+        private JsonObject _raw = new();
+        private bool _dirty;
+
+        public ProjectSettingsPanel(EditorContext context)
+        {
+            _context = context;
+        }
+
+        public void Open()
+        {
+            var workspace = _context.Workspace;
+
+            if (workspace == null)
+            {
+                Console.WriteLine("[에디터] 열린 프로젝트가 없습니다. 프로젝트를 먼저 여세요.");
+                return;
+            }
+
+            Reload();
+            _open = true;
+        }
+
+        public void Draw()
+        {
+            if (!_open)
+                return;
+
+            var workspace = _context.Workspace;
+
+            if (workspace != null && !string.Equals(workspace.RootPath, _rootPath, StringComparison.OrdinalIgnoreCase))
+                Reload();
+
+            ImGui.SetNextWindowSize(new Vector2(520f, 0f), ImGuiCond.FirstUseEver);
+
+            string title = $"프로젝트 설정{(_dirty ? " *" : "")}###ProjectSettingsWindow";
+
+            if (ImGui.Begin(title, ref _open))
+                DrawContent();
+
+            ImGui.End();
+        }
+
+        private void Reload()
+        {
+            var workspace = _context.Workspace;
+
+            if (workspace == null)
+            {
+                _path = null;
+                _rootPath = null;
+                _config = new ProjectConfig();
+                _raw = new JsonObject();
+                _dirty = false;
+                return;
+            }
+
+            _rootPath = workspace.RootPath;
+            _path = Path.Combine(workspace.RootPath, ProjectConfigSerializer.FileName);
+
+            try
+            {
+                _config = ProjectConfigSerializer.Load(_path, out _raw);
+                _dirty = false;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[에디터] project.json 읽기 실패: {ex.Message}");
+                _config = new ProjectConfig();
+                _raw = new JsonObject();
+                _dirty = false;
+            }
+        }
+
+        private void Save()
+        {
+            if (_path == null)
+                return;
+
+            bool created = !File.Exists(_path);
+
+            try
+            {
+                ProjectConfigSerializer.Save(_path, _config, _raw);
+                _config = ProjectConfigSerializer.Load(_path, out _raw);
+                _dirty = false;
+
+                if (created)
+                    _context.Workspace?.Refresh();
+
+                Console.WriteLine($"[에디터] 프로젝트 설정 저장: {_path}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[에디터] project.json 저장 실패: {ex.Message}");
+            }
+        }
+
+        private void DrawContent()
+        {
+            var workspace = _context.Workspace;
+
+            if (workspace == null)
+            {
+                ImGui.TextDisabled("열린 프로젝트가 없습니다");
+                return;
+            }
+
+            ImGui.TextDisabled(_path);
+            ImGui.Separator();
+
+            ImGui.SetNextItemWidth(-160f);
+            string title = _config.Title ?? string.Empty;
+
+            if (ImGui.InputText("창 제목", ref title, 128))
+            {
+                _config.Title = title;
+                _dirty = true;
+            }
+
+            ImGui.SetNextItemWidth(-160f);
+            var picked = AssetPicker.Draw("시작 씬", _config.StartScene, typeof(SceneData), workspace);
+
+            if (picked is JsonValue value && value.TryGetValue(out string scenePath))
+            {
+                _config.StartScene = scenePath;
+                _dirty = true;
+            }
+
+            if (!string.IsNullOrEmpty(_config.StartScene))
+            {
+                ImGui.SameLine();
+
+                if (ImGui.SmallButton("지우기"))
+                {
+                    _config.StartScene = null;
+                    _dirty = true;
+                }
+            }
+
+            ImGui.Spacing();
+            ImGui.SeparatorText("창");
+
+            ImGui.SetNextItemWidth(-160f);
+            int width = _config.DefaultWidth;
+
+            if (ImGui.InputInt("너비", ref width))
+            {
+                _config.DefaultWidth = Math.Max(1, width);
+                _dirty = true;
+            }
+
+            ImGui.SetNextItemWidth(-160f);
+            int height = _config.DefaultHeight;
+
+            if (ImGui.InputInt("높이", ref height))
+            {
+                _config.DefaultHeight = Math.Max(1, height);
+                _dirty = true;
+            }
+
+            ImGui.SetNextItemWidth(-160f);
+
+            if (ImGui.BeginCombo("프리셋", CurrentResolutionLabel()))
+            {
+                foreach (var resolution in _resolutions)
+                {
+                    bool selected = resolution.Width == _config.DefaultWidth &&
+                                    resolution.Height == _config.DefaultHeight;
+
+                    if (ImGui.Selectable(resolution.Label, selected))
+                    {
+                        _config.DefaultWidth = resolution.Width;
+                        _config.DefaultHeight = resolution.Height;
+                        _dirty = true;
+                    }
+                }
+
+                ImGui.EndCombo();
+            }
+
+            bool fullscreen = _config.Fullscreen;
+
+            if (ImGui.Checkbox("전체 화면", ref fullscreen))
+            {
+                _config.Fullscreen = fullscreen;
+                _dirty = true;
+            }
+
+            bool resizable = _config.Resizable;
+
+            if (ImGui.Checkbox("크기 조절 가능", ref resizable))
+            {
+                _config.Resizable = resizable;
+                _dirty = true;
+            }
+
+            ImGui.Spacing();
+            ImGui.Separator();
+
+            ImGui.BeginDisabled(!_dirty);
+
+            if (ImGui.Button("저장", new Vector2(120f, 0f)))
+                Save();
+
+            ImGui.SameLine();
+
+            if (ImGui.Button("되돌리기", new Vector2(120f, 0f)))
+                Reload();
+
+            ImGui.EndDisabled();
+
+            if (_dirty)
+            {
+                ImGui.SameLine();
+                ImGui.TextDisabled("저장 안 된 변경사항");
+            }
+        }
+
+        private string CurrentResolutionLabel()
+        {
+            foreach (var resolution in _resolutions)
+            {
+                if (resolution.Width == _config.DefaultWidth && resolution.Height == _config.DefaultHeight)
+                    return resolution.Label;
+            }
+
+            return "사용자 지정";
+        }
+    }
+}

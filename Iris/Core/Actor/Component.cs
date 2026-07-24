@@ -4,6 +4,8 @@ namespace Iris.Core
 {
     public abstract class Component : EngineObject, IDisposable
     {
+        private bool _awakened;
+
         public Actor OwnerActor { get; private set; }
         public Transform Transform => OwnerActor.Transform;
 
@@ -13,8 +15,26 @@ namespace Iris.Core
             OnAttached();
         }
 
-        protected T GetComponent<T>() where T : Component => OwnerActor.GetComponent<T>();
+        internal void InvokeAwake()
+        {
+            if (_awakened)
+                return;
+
+            _awakened = true;
+
+            try
+            {
+                Awake();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.ToString());
+            }
+        }
+
+        protected T GetComponent<T>() where T : class => OwnerActor.GetComponent<T>();
         protected virtual void OnAttached() { }
+        protected virtual void Awake() { }
         public virtual void Update() { }
         public virtual void FixedUpdate() { }
         public virtual void LateUpdate() { }

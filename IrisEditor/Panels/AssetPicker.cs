@@ -1,6 +1,8 @@
 using Hexa.NET.ImGui;
 using Iris.Assets;
+using Iris.Core;
 using IrisEditor.Workspace;
+using Silk.NET.Maths;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -50,7 +52,7 @@ namespace IrisEditor.Panels
                 var payload = ImGui.AcceptDragDropPayload(AssetDragDrop.PayloadType);
 
                 if (!payload.IsNull && AssetDragDrop.Current != null &&
-                    assetType.IsAssignableFrom(AssetDragDrop.Current.AssetType))
+                    Matches(assetType, AssetDragDrop.Current.AssetType))
                     result = JsonValue.Create(AssetDragDrop.Current.Path);
 
                 ImGui.EndDragDropTarget();
@@ -85,18 +87,19 @@ namespace IrisEditor.Panels
 
             float textX = min.X + style.FramePadding.X;
 
-            if (currentPath != null && typeof(ITexture).IsAssignableFrom(assetType))
+            if (currentPath != null && IsSpriteLike(assetType) &&
+                TryGetThumbnail(workspace, currentPath, out var thumb, out var thumbSrc))
             {
-                var thumb = LoadThumbnail(workspace, currentPath);
+                GetThumbUv(thumb, thumbSrc, out var uv0, out var uv1, out float pixelWidth, out float pixelHeight);
 
-                if (thumb != null && thumb.Width > 0 && thumb.Height > 0)
+                if (pixelWidth > 0f && pixelHeight > 0f)
                 {
                     float box = max.Y - min.Y - 4f;
-                    float scale = MathF.Min(box / thumb.Width, box / thumb.Height);
-                    var size = new Vector2(thumb.Width, thumb.Height) * scale;
+                    float scale = MathF.Min(box / pixelWidth, box / pixelHeight);
+                    var size = new Vector2(pixelWidth, pixelHeight) * scale;
                     var iconMin = new Vector2(textX, min.Y + 2f) + (new Vector2(box, box) - size) * 0.5f;
 
-                    drawList.AddImage(new ImTextureRef(null, thumb.Handle), iconMin, iconMin + size);
+                    drawList.AddImage(new ImTextureRef(null, thumb.Handle), iconMin, iconMin + size, uv0, uv1);
                     textX += box + style.ItemInnerSpacing.X;
                 }
             }
@@ -158,7 +161,7 @@ namespace IrisEditor.Panels
 
                 ImGui.Spacing();
 
-                bool useGrid = typeof(ITexture).IsAssignableFrom(assetType);
+                bool useGrid = IsSpriteLike(assetType);
 
                 var style = ImGui.GetStyle();
                 float availWidth = ImGui.GetContentRegionAvail().X;
@@ -169,7 +172,7 @@ namespace IrisEditor.Panels
 
                 foreach (var asset in workspace.Assets)
                 {
-                    if (asset.AssetType == null || !assetType.IsAssignableFrom(asset.AssetType))
+                    if (!Matches(assetType, asset.AssetType))
                         continue;
 
                     string name = Path.GetFileNameWithoutExtension(asset.Path);
@@ -226,17 +229,26 @@ namespace IrisEditor.Panels
 
             var drawList = ImGui.GetWindowDrawList();
             var thumbMin = ImGui.GetItemRectMin();
-            var thumb = LoadThumbnail(workspace, asset.Path);
 
-            if (thumb != null && thumb.Width > 0 && thumb.Height > 0)
+            bool drewThumb = false;
+
+            if (TryGetThumbnail(workspace, asset.Path, out var thumb, out var thumbSrc) &&
+                thumb.Width > 0 && thumb.Height > 0)
             {
-                float scale = MathF.Min(ThumbSize / thumb.Width, ThumbSize / thumb.Height) * 0.92f;
-                var size = new Vector2(thumb.Width, thumb.Height) * scale;
-                var offset = (new Vector2(ThumbSize, ThumbSize) - size) * 0.5f;
+                GetThumbUv(thumb, thumbSrc, out var uv0, out var uv1, out float pixelWidth, out float pixelHeight);
 
-                drawList.AddImage(new ImTextureRef(null, thumb.Handle), thumbMin + offset, thumbMin + offset + size);
+                if (pixelWidth > 0f && pixelHeight > 0f)
+                {
+                    float scale = MathF.Min(ThumbSize / pixelWidth, ThumbSize / pixelHeight) * 0.92f;
+                    var size = new Vector2(pixelWidth, pixelHeight) * scale;
+                    var offset = (new Vector2(ThumbSize, ThumbSize) - size) * 0.5f;
+
+                    drawList.AddImage(new ImTextureRef(null, thumb.Handle), thumbMin + offset, thumbMin + offset + size, uv0, uv1);
+                    drewThumb = true;
+                }
             }
-            else
+
+            if (!drewThumb)
             {
                 var center = thumbMin + new Vector2(ThumbSize, ThumbSize) * 0.5f;
                 var textSize = ImGui.CalcTextSize("?");
@@ -257,23 +269,72 @@ namespace IrisEditor.Panels
             return clicked;
         }
 
-        private static ITexture LoadThumbnail(EditorWorkspace workspace, string relativePath)
+        private static bool IsSpriteLike(Type assetType)
         {
-            if (workspace == null || string.IsNullOrEmpty(relativePath))
-                return null;
+            return typeof(ITexture).IsAssignableFrom(assetType) || typeof(Sprite).IsAssignableFrom(assetType);
+        }
 
-            if (_brokenThumbnails.Contains(relativePath))
-                return null;
+        private static bool Matches(Type fieldType, Type assetType)
+        {
+            if (assetType == null)
+                return false;
+
+            if (fieldType.IsAssignableFrom(assetType))
+                return true;
+
+            return fieldType == typeof(Sprite) && assetType == typeof(ITexture);
+        }
+
+        private static bool TryGetThumbnail(EditorWorkspace workspace, string relativePath, out ITexture texture, out Rectangle<int>? src)
+        {
+            texture = null;
+            src = null;
+
+            if (workspace == null || string.IsNullOrEmpty(relativePath) || _brokenThumbnails.Contains(relativePath))
+                return false;
 
             try
             {
-                return AssetManager.Load<ITexture>(Path.Combine(workspace.RootPath, relativePath));
+                string ext = Path.GetExtension(relativePath);
+
+                if (ext.Equals(".sprite", StringComparison.OrdinalIgnoreCase) ||
+                    ext.Equals(".tile", StringComparison.OrdinalIgnoreCase))
+                {
+                    var sprite = AssetManager.Load<Sprite>(Path.Combine(workspace.RootPath, relativePath));
+                    texture = sprite?.Texture;
+                    src = sprite?.SrcRect;
+                }
+                else
+                {
+                    texture = AssetManager.Load<ITexture>(Path.Combine(workspace.RootPath, relativePath));
+                }
             }
             catch
             {
                 _brokenThumbnails.Add(relativePath);
-                return null;
+                return false;
             }
+
+            return texture != null;
+        }
+
+        private static void GetThumbUv(ITexture texture, Rectangle<int>? src, out Vector2 uv0, out Vector2 uv1,
+            out float pixelWidth, out float pixelHeight)
+        {
+            uv0 = Vector2.Zero;
+            uv1 = Vector2.One;
+            pixelWidth = texture.Width;
+            pixelHeight = texture.Height;
+
+            if (!src.HasValue || texture.Width <= 0 || texture.Height <= 0)
+                return;
+
+            var rect = src.Value;
+            uv0 = new Vector2(rect.Origin.X / (float)texture.Width, rect.Origin.Y / (float)texture.Height);
+            uv1 = new Vector2((rect.Origin.X + rect.Size.X) / (float)texture.Width,
+                (rect.Origin.Y + rect.Size.Y) / (float)texture.Height);
+            pixelWidth = rect.Size.X;
+            pixelHeight = rect.Size.Y;
         }
 
         private static string TruncateToWidth(string text, float width)

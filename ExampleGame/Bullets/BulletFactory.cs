@@ -13,8 +13,8 @@ namespace ExampleGame.Bullets
         {
             Actor actor = Actor.Create();
 
-            var render = actor.AddComponent<TextureRenderer>();
-            render.Texture = GetAsset<ITexture>("Resources/DummyBox.png");
+            var render = actor.AddComponent<SpriteRenderer>();
+            render.Sprite = GetAsset<Sprite>("Resources/DummyBox.png");
             render.PixelPerUnit = 32;
 
             var rigid = actor.AddComponent<Rigidbody>();

@@ -48,6 +48,20 @@ namespace IrisEditor.Workspace
                 """);
         }
 
+        [AssetCreator("스프라이트", "NewSprite.sprite")]
+        private static void CreateSprite(string path)
+        {
+            File.WriteAllText(path, """
+                {
+                  "texture": "",
+                  "x": 0,
+                  "y": 0,
+                  "width": 0,
+                  "height": 0
+                }
+                """);
+        }
+
         [AssetCreator("타일", "NewTile.tile")]
         private static void CreateTile(string path)
         {

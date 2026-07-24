@@ -46,7 +46,7 @@ namespace ExampleGame
             canvas.ReferenceSize = new Vector2D<int>(800, 600);
             canvas.Match = 0.5f;
 
-            var texture = Helper.GetAsset<ITexture>("Resources/DummyBox.png");
+            var sprite = Helper.GetAsset<Sprite>("Resources/DummyBox.png");
 
             var hearts = new List<UIObject>();
 
@@ -54,7 +54,7 @@ namespace ExampleGame
             {
                 var heart = new UIObject
                 {
-                    Texture = texture,
+                    Sprite = sprite,
                     Anchor = new Vector2D<float>(0f, 0f),
                     Position = new Vector2D<float>(16f + i * 40f, 16f),
                     Scale = new Vector2D<float>(2f, 2f),
@@ -67,7 +67,7 @@ namespace ExampleGame
             int visibleHearts = 3;
             var button = new Button
             {
-                Texture = texture,
+                Sprite = sprite,
                 Anchor = new Vector2D<float>(1f, 0f),
                 Position = new Vector2D<float>(-16f, 16f),
                 Scale = new Vector2D<float>(2f, 2f),
@@ -101,7 +101,7 @@ namespace ExampleGame
 
             canvas.AddUIObject(new UIObject
             {
-                Texture = texture,
+                Sprite = sprite,
                 Anchor = new Vector2D<float>(0f, 1f),
                 Position = new Vector2D<float>(16f, -16f),
                 Scale = new Vector2D<float>(2f, 2f),
@@ -109,7 +109,7 @@ namespace ExampleGame
 
             canvas.AddUIObject(new UIObject
             {
-                Texture = texture,
+                Sprite = sprite,
                 Anchor = new Vector2D<float>(0.5f, 1f),
                 Position = new Vector2D<float>(0f, -16f),
                 Scale = new Vector2D<float>(12f, 1f),
@@ -120,8 +120,8 @@ namespace ExampleGame
         {
             var player = Actor.Create();
 
-            var render = player.AddComponent<TextureRenderer>();
-            render.Texture = Helper.GetAsset<ITexture>("Resources/DummyBox.png");
+            var render = player.AddComponent<SpriteRenderer>();
+            render.Sprite = Helper.GetAsset<Sprite>("Resources/DummyBox.png");
             render.PixelPerUnit = 16;
 
 

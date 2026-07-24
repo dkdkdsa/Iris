@@ -12,6 +12,7 @@ namespace Iris.Core
 
         private Rigidbody _rigid;
         private bool _isSencer;
+        private float _friction = 0.6f;
 
         protected B2ShapeId shapeId;
 
@@ -26,6 +27,7 @@ namespace Iris.Core
             }
         }
 
+        [Iris.Attributes.Show]
         public bool IsSensor
         {
             get
@@ -37,6 +39,28 @@ namespace Iris.Core
                 _isSencer = value;
                 ApplySensor();
             }
+        }
+
+        [Iris.Attributes.Show]
+        public float Friction
+        {
+            get
+            {
+                return B2Worlds.b2Shape_IsValid(shapeId)
+                    ? B2Shapes.b2Shape_GetFriction(shapeId)
+                    : _friction;
+            }
+            set
+            {
+                _friction = value;
+                ApplyFriction();
+            }
+        }
+
+        protected virtual void ApplyFriction()
+        {
+            if (B2Worlds.b2Shape_IsValid(shapeId))
+                B2Shapes.b2Shape_SetFriction(shapeId, _friction);
         }
 
         protected virtual void ApplySensor()
@@ -52,7 +76,7 @@ namespace Iris.Core
         }
 
 
-        protected override void OnAttached()
+        protected override void Awake()
         {
             shapeId = CreateShape(rigid.GetBodyId());
             B2Shapes.b2Shape_SetUserData(shapeId, new B2UserData(this));

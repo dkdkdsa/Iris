@@ -11,6 +11,11 @@ namespace Iris.Core
         private static Dictionary<string, Type> _components;
         private static Dictionary<string, Type> _uiObjects;
 
+        private static readonly Dictionary<string, string> _componentAliases = new(StringComparer.Ordinal)
+        {
+            ["Iris.Core.TextureRenderer"] = "Iris.Core.SpriteRenderer",
+        };
+
         static RuntimeTypeResolver()
         {
             var entry = Assembly.GetEntryAssembly();
@@ -32,7 +37,14 @@ namespace Iris.Core
         public static Type ResolveComponent(string fullName)
         {
             _components ??= BuildMap(typeof(Component), includeBase: false);
-            return fullName != null ? _components.GetValueOrDefault(fullName) : null;
+
+            if (fullName == null)
+                return null;
+
+            if (_componentAliases.TryGetValue(fullName, out var alias))
+                fullName = alias;
+
+            return _components.GetValueOrDefault(fullName);
         }
 
         public static Type ResolveUIObject(string fullName)

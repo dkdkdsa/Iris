@@ -43,6 +43,20 @@ namespace IrisEditor
             return path;
         }
 
+        public string PendingSpriteSlicerPath { get; private set; }
+
+        public void RequestOpenSpriteSlicer(string relativePath)
+        {
+            PendingSpriteSlicerPath = relativePath;
+        }
+
+        public string ConsumePendingSpriteSlicer()
+        {
+            var path = PendingSpriteSlicerPath;
+            PendingSpriteSlicerPath = null;
+            return path;
+        }
+
         public void OpenWorkspace(string rootPath)
         {
             Workspace = new EditorWorkspace(rootPath);

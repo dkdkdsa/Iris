@@ -35,6 +35,7 @@ namespace Iris.Core
 
             var byId = new Dictionary<string, Actor>(StringComparer.OrdinalIgnoreCase);
             var parentLinks = new List<(Actor Child, string ParentId)>();
+            var built = new List<Actor>();
 
             foreach (var actorNode in actors)
             {
@@ -44,6 +45,7 @@ namespace Iris.Core
                 try
                 {
                     var actor = BuildActor(scene, actorObj);
+                    built.Add(actor);
 
                     string id = actorObj["id"]?.GetValue<string>();
                     if (!string.IsNullOrEmpty(id))
@@ -67,12 +69,15 @@ namespace Iris.Core
                     Console.WriteLine($"[Iris] 부모 액터를 찾지 못해 루트로 둠: {child.Name}");
             }
 
+            foreach (var actor in built)
+                actor.Awake();
+
             return scene;
         }
 
         internal static Actor BuildActor(Scene scene, JsonObject actorObj)
         {
-            var actor = scene.CreateActor();
+            var actor = scene.CreateActorDeferred();
             actor.Name = actorObj["name"]?.GetValue<string>() ?? "Actor";
 
             if (actorObj["components"] is not JsonArray components)
@@ -106,10 +111,19 @@ namespace Iris.Core
                 if (type == typeof(Transform))
                     continue;
 
+                var properties = compObj["properties"] as JsonObject;
+
+                if (type == typeof(SpriteRenderer) && properties != null &&
+                    properties["Sprite"] == null && properties["Texture"] is JsonNode textureNode)
+                {
+                    properties.Remove("Texture");
+                    properties["Sprite"] = textureNode;
+                }
+
                 try
                 {
                     var component = (Component)Activator.CreateInstance(type);
-                    JsonPropertyMapper.ApplyProperties(component, compObj["properties"] as JsonObject);
+                    JsonPropertyMapper.ApplyProperties(component, properties);
                     actor.AddComponent(component);
                 }
                 catch (Exception ex)

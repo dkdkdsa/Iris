@@ -95,6 +95,10 @@ namespace IrisEditor.Serialization
                             continue;
 
                         string typeName = compObj["type"]?.GetValue<string>();
+
+                        if (typeName == "Iris.Core.TextureRenderer")
+                            typeName = "Iris.Core.SpriteRenderer";
+
                         var type = ComponentCatalog.Resolve(typeName);
 
                         if (type == null)
@@ -104,6 +108,9 @@ namespace IrisEditor.Serialization
 
                         if (type == typeof(Transform))
                             MigrateTransformKeys(properties);
+
+                        if (type == typeof(SpriteRenderer))
+                            Rename(properties, "Texture", "Sprite");
 
                         ComponentCatalog.ApplyMissingDefaults(properties, type);
 

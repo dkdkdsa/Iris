@@ -12,7 +12,7 @@ namespace ExampleGame.Player
         private Rigidbody _rigid;
         private IFactory<Bullet, BulletRequest> _factory;
 
-        protected override void OnAttached()
+        protected override void Awake()
         {
             _rigid = GetComponent<Rigidbody>();
             _factory = Factorys.GetFactory<Bullet, BulletRequest>();

@@ -12,8 +12,8 @@ namespace ExampleGame.Enemies
         {
             var actor = Actor.Create();
 
-            var renderer = actor.AddComponent<TextureRenderer>();
-            renderer.Texture = Helper.GetAsset<ITexture>("Resources/DummyBox.png");
+            var renderer = actor.AddComponent<SpriteRenderer>();
+            renderer.Sprite = Helper.GetAsset<Sprite>("Resources/DummyBox.png");
 
             var rigid = actor.AddComponent<Rigidbody>();
             rigid.Position = request.targetPosition;

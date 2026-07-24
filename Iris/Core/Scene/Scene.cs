@@ -18,6 +18,13 @@ namespace Iris.Core
             return actor;
         }
 
+        internal Actor CreateActorDeferred()
+        {
+            var actor = new Actor(deferAwake: true);
+            _actors.Add(actor);
+            return actor;
+        }
+
         internal void Update()
         {
             for (int i = 0; i < _actors.Count; i++)
