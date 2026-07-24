@@ -11,6 +11,7 @@ namespace Iris.Core
         private bool _awake;
 
         public string Name { get; set; } = "Actor";
+        public string Tag { get; set; } = "";
         public Transform Transform { get; private set; }
         public bool DestroyFlag { get; private set; }
 

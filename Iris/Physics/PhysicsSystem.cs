@@ -76,6 +76,8 @@ namespace Iris.Physics
             }
         }
 
+        internal B2WorldId WorldId => _worldId;
+
         public B2BodyId CreateBody(in B2BodyDef def)
         {
             return B2Bodies.b2CreateBody(_worldId, def);

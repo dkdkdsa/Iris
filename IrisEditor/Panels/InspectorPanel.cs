@@ -31,12 +31,7 @@ namespace IrisEditor.Panels
                 return;
             }
 
-            string name = actor.Name ?? string.Empty;
-            if (ImGui.InputText("이름", ref name, 128))
-            {
-                actor.Name = name;
-                _context.MarkDirty();
-            }
+            DrawIdentity(actor);
 
             ImGui.Separator();
 
@@ -90,6 +85,35 @@ namespace IrisEditor.Panels
                 }
 
                 ImGui.EndPopup();
+            }
+        }
+
+        private void DrawIdentity(ActorData actor)
+        {
+            var style = ImGui.GetStyle();
+
+            float labels = ImGui.CalcTextSize("이름").X + ImGui.CalcTextSize("태그").X;
+            float overhead = labels + style.ItemInnerSpacing.X * 2f + style.ItemSpacing.X;
+            float field = MathF.Max((ImGui.GetContentRegionAvail().X - overhead) * 0.5f, 40f);
+
+            ImGui.SetNextItemWidth(field);
+            string name = actor.Name ?? string.Empty;
+
+            if (ImGui.InputText("이름", ref name, 128))
+            {
+                actor.Name = name;
+                _context.MarkDirty();
+            }
+
+            ImGui.SameLine();
+
+            ImGui.SetNextItemWidth(field);
+            string tag = actor.Tag ?? string.Empty;
+
+            if (ImGui.InputText("태그", ref tag, 128))
+            {
+                actor.Tag = tag;
+                _context.MarkDirty();
             }
         }
 

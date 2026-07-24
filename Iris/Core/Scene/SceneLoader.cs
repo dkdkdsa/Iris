@@ -79,6 +79,7 @@ namespace Iris.Core
         {
             var actor = scene.CreateActorDeferred();
             actor.Name = actorObj["name"]?.GetValue<string>() ?? "Actor";
+            actor.Tag = actorObj["tag"]?.GetValue<string>() ?? string.Empty;
 
             if (actorObj["components"] is not JsonArray components)
                 return actor;

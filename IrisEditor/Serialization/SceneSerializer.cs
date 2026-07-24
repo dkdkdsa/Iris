@@ -81,6 +81,7 @@ namespace IrisEditor.Serialization
                 {
                     Id = ParseGuid(actorObj["id"]),
                     Name = actorObj["name"]?.GetValue<string>() ?? "Actor",
+                    Tag = actorObj["tag"]?.GetValue<string>() ?? string.Empty,
                     ParentId = Guid.TryParse(actorObj["parent"]?.GetValue<string>(), out var parentId)
                         ? parentId
                         : null,
@@ -154,6 +155,9 @@ namespace IrisEditor.Serialization
                 ["id"] = actor.Id.ToString(),
                 ["name"] = actor.Name,
             };
+
+            if (!string.IsNullOrEmpty(actor.Tag))
+                actorObj["tag"] = actor.Tag;
 
             if (includeParent && actor.ParentId.HasValue)
                 actorObj["parent"] = actor.ParentId.Value.ToString();
