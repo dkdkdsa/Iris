@@ -47,6 +47,8 @@ namespace Iris.UI
                 src = Sprite.SrcRect,
                 dest = screenRect,
                 rotation = Rotation,
+                flipX = Scale.X < 0f,
+                flipY = Scale.Y < 0f,
                 order = Order,
             });
         }

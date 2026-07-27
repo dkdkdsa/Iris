@@ -318,10 +318,15 @@ namespace IrisEditor.Panels
             float anchorX = screenMin.X + screenSize.X * instance.Anchor.X;
             float anchorY = screenMin.Y + screenSize.Y * instance.Anchor.Y;
 
-            float x = anchorX + instance.Position.X * fit - size.X * instance.Anchor.X;
-            float y = anchorY + instance.Position.Y * fit - size.Y * instance.Anchor.Y;
+            float width = MathF.Abs(size.X);
+            float height = MathF.Abs(size.Y);
+            float pivotX = size.X < 0f ? 1f - instance.Anchor.X : instance.Anchor.X;
+            float pivotY = size.Y < 0f ? 1f - instance.Anchor.Y : instance.Anchor.Y;
 
-            return new Rectangle<float>(x, y, size.X, size.Y);
+            float x = anchorX + instance.Position.X * fit - width * pivotX;
+            float y = anchorY + instance.Position.Y * fit - height * pivotY;
+
+            return new Rectangle<float>(x, y, width, height);
         }
 
         private unsafe void DrawInstance(ImDrawListPtr draw, UIObject instance, Rectangle<float> rect)
@@ -351,6 +356,12 @@ namespace IrisEditor.Panels
                     uv1 = new System.Numerics.Vector2((src.Origin.X + src.Size.X) / (float)cmd.texture.Width, (src.Origin.Y + src.Size.Y) / (float)cmd.texture.Height);
                 }
 
+                if (cmd.flipX)
+                    (uv0.X, uv1.X) = (uv1.X, uv0.X);
+
+                if (cmd.flipY)
+                    (uv0.Y, uv1.Y) = (uv1.Y, uv0.Y);
+
                 uint color = 0xFFFFFFFF;
 
                 if (cmd.color.HasValue)
@@ -363,7 +374,7 @@ namespace IrisEditor.Panels
                 drewAnything = true;
             }
 
-            if (instance is TextUIObject text)
+            if (instance is UIText text)
                 text.Font?.Commit();
 
             if (!drewAnything)

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace Iris.Core
 {
@@ -6,6 +7,7 @@ namespace Iris.Core
     {
         public AnimatorState To { get; set; }
         public Func<Animator, bool> Condition { get; set; }
+        public List<AnimatorCondition> Conditions { get; } = new();
         public bool HasExitTime { get; set; }
     }
 }

@@ -99,26 +99,28 @@ namespace Iris.Core
             var trm = OwnerActor.Transform;
             var frame = Clip.GetFrame(Math.Min(CurrentFrame, Clip.FrameCount - 1));
 
+            float scaledWidth = frame.Size.X / PixelPerUnit * trm.Scale.X;
+            float scaledHeight = frame.Size.Y / PixelPerUnit * trm.Scale.Y;
+
+            float width = MathF.Abs(scaledWidth);
+            float height = MathF.Abs(scaledHeight);
+            float pivotX = scaledWidth < 0f ? 1f - Pivot.X : Pivot.X;
+            float pivotY = scaledHeight < 0f ? 1f - Pivot.Y : Pivot.Y;
+
             system.Submit(new RenderCommand
             {
                 texture = Clip.Texture,
                 src = frame,
-                dest = CreateDest(trm, frame),
+                dest = new Rectangle<float>(
+                    trm.Position.X - width * pivotX,
+                    trm.Position.Y - height * pivotY,
+                    width, height),
                 rotation = trm.Rotation,
-                flipX = FlipX,
-                flipY = FlipY,
+                flipX = FlipX != (scaledWidth < 0f),
+                flipY = FlipY != (scaledHeight < 0f),
                 order = Order,
                 color = Color,
             });
-        }
-
-        private Rectangle<float> CreateDest(Transform transform, in Rectangle<int> frame)
-        {
-            float width = frame.Size.X / PixelPerUnit * transform.Scale.X;
-            float height = frame.Size.Y / PixelPerUnit * transform.Scale.Y;
-            float x = transform.Position.X - width * Pivot.X;
-            float y = transform.Position.Y - height * Pivot.Y;
-            return new Rectangle<float>(x, y, width, height);
         }
     }
 }

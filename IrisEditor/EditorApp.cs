@@ -24,6 +24,7 @@ namespace IrisEditor
         private readonly UIEditorPanel _uiEditor;
         private readonly SpriteSlicerPanel _spriteSlicer;
         private readonly ProjectSettingsPanel _projectSettings;
+        private readonly AnimatorPanel _animator;
         private bool _resetLayout;
 
         public EditorApp(EditorContext context)
@@ -40,6 +41,7 @@ namespace IrisEditor
             _uiEditor = new UIEditorPanel(context, renderer);
             _spriteSlicer = new SpriteSlicerPanel(context);
             _projectSettings = new ProjectSettingsPanel(context);
+            _animator = new AnimatorPanel(context);
 
             var io = ImGui.GetIO();
             io.ConfigFlags |= ImGuiConfigFlags.DockingEnable;
@@ -57,9 +59,6 @@ namespace IrisEditor
             _context.Scripts.Update();
             _context.Builder.Update();
 
-            if (ImGui.GetIO().KeyCtrl && ImGui.IsKeyPressed(ImGuiKey.S) && _context.Dirty)
-                SaveScene(saveAs: false);
-
             if (ImGui.IsKeyPressed(ImGuiKey.F5, false))
                 _context.RunGame();
 
@@ -72,6 +71,11 @@ namespace IrisEditor
             _uiEditor.Draw();
             _spriteSlicer.Draw();
             _projectSettings.Draw();
+            _animator.Draw();
+
+            if (!_animator.ConsumedSaveShortcut &&
+                ImGui.GetIO().KeyCtrl && ImGui.IsKeyPressed(ImGuiKey.S) && _context.Dirty)
+                SaveScene(saveAs: false);
         }
 
         private void DrawMainMenuBar()

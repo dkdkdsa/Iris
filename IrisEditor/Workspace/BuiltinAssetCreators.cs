@@ -29,6 +29,19 @@ namespace IrisEditor.Workspace
                 """);
         }
 
+        [AssetCreator("애니메이터 컨트롤러", "NewAnimator.controller")]
+        private static void CreateAnimatorController(string path)
+        {
+            File.WriteAllText(path, """
+                {
+                  "defaultState": "",
+                  "parameters": [],
+                  "states": [],
+                  "anyTransitions": []
+                }
+                """);
+        }
+
         [AssetCreator("스프라이트 애니메이션", "NewAnimation.anim")]
         private static void CreateSpriteAnimation(string path)
         {

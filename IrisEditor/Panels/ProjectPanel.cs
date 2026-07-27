@@ -362,6 +362,9 @@ namespace IrisEditor.Panels
 
             if (asset.Path.EndsWith(".ui", StringComparison.OrdinalIgnoreCase))
                 _context.RequestOpenUILayout(workspace.ToAbsolute(asset.Path));
+
+            if (asset.Path.EndsWith(".controller", StringComparison.OrdinalIgnoreCase))
+                _context.RequestOpenAnimator(workspace.ToAbsolute(asset.Path));
         }
 
         private void OpenScene(EditorWorkspace workspace, AssetEntry asset)

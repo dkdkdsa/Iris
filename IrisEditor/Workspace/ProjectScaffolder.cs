@@ -2,12 +2,16 @@ using Iris.Core;
 using IrisEditor.Data;
 using IrisEditor.Serialization;
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Text;
 
 namespace IrisEditor.Workspace
 {
     internal static class ProjectScaffolder
     {
+        private static readonly string[] _nativeDlls = { "SDL2.dll", "cimgui.dll", "stbi.dll" };
+
         public static bool TryCreate(string projectRoot, out string error, string engineProject = null)
         {
             error = null;
@@ -27,13 +31,12 @@ namespace IrisEditor.Workspace
                 return false;
             }
 
-            engineProject ??= FindEngineProject();
+            string csproj = engineProject != null
+                ? SourceReferenceCsproj(engineProject)
+                : ResolveEngineCsproj(out error);
 
-            if (engineProject == null)
-            {
-                error = "엔진 프로젝트(Iris.csproj)를 찾을 수 없습니다.";
+            if (csproj == null)
                 return false;
-            }
 
             try
             {
@@ -41,7 +44,7 @@ namespace IrisEditor.Workspace
                 Directory.CreateDirectory(Path.Combine(projectRoot, "Scenes"));
                 Directory.CreateDirectory(Path.Combine(projectRoot, "Resources"));
 
-                File.WriteAllText(Path.Combine(projectRoot, $"{name}.csproj"), CsprojTemplate(engineProject));
+                File.WriteAllText(Path.Combine(projectRoot, $"{name}.csproj"), csproj);
                 File.WriteAllText(Path.Combine(projectRoot, "Program.cs"), ProgramTemplate());
                 File.WriteAllText(Path.Combine(projectRoot, "project.json"), ProjectJsonTemplate(name));
 
@@ -54,6 +57,24 @@ namespace IrisEditor.Workspace
                 error = ex.Message;
                 return false;
             }
+        }
+
+        private static string ResolveEngineCsproj(out string error)
+        {
+            error = null;
+
+            string sourceProject = FindEngineProject();
+
+            if (sourceProject != null)
+                return SourceReferenceCsproj(sourceProject);
+
+            string engineDll = Path.Combine(AppContext.BaseDirectory, "Iris.dll");
+
+            if (File.Exists(engineDll))
+                return DllReferenceCsproj(engineDll);
+
+            error = "엔진(Iris.csproj 또는 Iris.dll)을 찾을 수 없습니다.";
+            return null;
         }
 
         private static string FindEngineProject()
@@ -71,6 +92,24 @@ namespace IrisEditor.Workspace
             }
 
             return null;
+        }
+
+        private static List<string> FindNativeDlls(string engineDir)
+        {
+            var result = new List<string>();
+
+            foreach (var native in _nativeDlls)
+            {
+                string ridPath = Path.Combine(engineDir, "runtimes", "win-x64", "native", native);
+                string rootPath = Path.Combine(engineDir, native);
+
+                if (File.Exists(ridPath))
+                    result.Add(ridPath);
+                else if (File.Exists(rootPath))
+                    result.Add(rootPath);
+            }
+
+            return result;
         }
 
         private static SceneData DefaultScene()
@@ -101,7 +140,7 @@ namespace IrisEditor.Workspace
             return scene;
         }
 
-        private static string CsprojTemplate(string engineProject)
+        private static string SourceReferenceCsproj(string engineProject)
         {
             return $"""
                 <Project Sdk="Microsoft.NET.Sdk">
@@ -117,11 +156,51 @@ namespace IrisEditor.Workspace
                     <ProjectReference Include="{engineProject}" />
                   </ItemGroup>
 
+                {ContentItemGroup()}
+                </Project>
+                """;
+        }
+
+        private static string DllReferenceCsproj(string engineDll)
+        {
+            string engineDir = Path.GetDirectoryName(engineDll);
+
+            var natives = new StringBuilder();
+
+            foreach (var native in FindNativeDlls(engineDir))
+                natives.AppendLine($"""    <None Include="{native}" Link="{Path.GetFileName(native)}" CopyToOutputDirectory="PreserveNewest" />""");
+
+            return $"""
+                <Project Sdk="Microsoft.NET.Sdk">
+
+                  <PropertyGroup>
+                    <OutputType>Exe</OutputType>
+                    <TargetFramework>net10.0</TargetFramework>
+                    <ImplicitUsings>disable</ImplicitUsings>
+                    <Nullable>disable</Nullable>
+                  </PropertyGroup>
+
+                  <ItemGroup>
+                    <Reference Include="Iris">
+                      <HintPath>{engineDll}</HintPath>
+                    </Reference>
+                  </ItemGroup>
+
+                  <ItemGroup>
+                {natives.ToString().TrimEnd()}
+                  </ItemGroup>
+
+                {ContentItemGroup()}
+                </Project>
+                """;
+        }
+
+        private static string ContentItemGroup()
+        {
+            return """
                   <ItemGroup>
                     <Content Include="**\*.png;**\*.jpg;**\*.jpeg;**\*.bmp;**\*.tga;**\*.gif;**\*.wav;**\*.mp3;**\*.scene;project.json" Exclude="bin\**;obj\**" CopyToOutputDirectory="PreserveNewest" />
                   </ItemGroup>
-
-                </Project>
                 """;
         }
 
@@ -138,7 +217,7 @@ namespace IrisEditor.Workspace
         {
             return $$"""
                 {
-                  "startScene": "Scenes/Main.scene",
+                  "buildScenes": [ "Scenes/Main.scene" ],
                   "width": 1280,
                   "height": 720,
                   "title": "{{name}}",

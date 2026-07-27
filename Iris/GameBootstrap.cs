@@ -17,7 +17,9 @@ namespace Iris
                 SceneLoader.ContentRoot = Path.GetFullPath(contentRoot);
 
             var config = LoadConfig();
-            string scenePath = GetArg(args, "--scene") ?? config.StartScene;
+            SceneManager.SetBuildScenes(config.BuildScenes);
+
+            string sceneOverride = GetArg(args, "--scene");
 
             var engine = new Engine(new DefaultPlatform());
 
@@ -27,15 +29,14 @@ namespace Iris
 
                 var sceneSystem = SystemManager.Instance.GetSystem<SceneSystem>();
 
-                if (scenePath == null)
-                {
-                    sceneSystem.LoadScene(new Scene());
-                    return;
-                }
-
                 try
                 {
-                    sceneSystem.LoadScene(SceneLoader.Load(scenePath));
+                    if (sceneOverride != null)
+                        SceneManager.LoadFromPath(sceneOverride);
+                    else if (config.BuildScenes.Count > 0)
+                        SceneManager.LoadScene(0);
+                    else
+                        sceneSystem.LoadScene(new Scene());
                 }
                 catch (Exception ex)
                 {
@@ -67,12 +68,24 @@ namespace Iris
             {
                 if (JsonNode.Parse(File.ReadAllText(path)) is JsonObject obj)
                 {
-                    config.StartScene = obj["startScene"]?.GetValue<string>() ?? config.StartScene;
                     config.DefaultWidth = (int)(obj["width"]?.GetValue<float>() ?? config.DefaultWidth);
                     config.DefaultHeight = (int)(obj["height"]?.GetValue<float>() ?? config.DefaultHeight);
                     config.Title = obj["title"]?.GetValue<string>() ?? config.Title;
                     config.Fullscreen = obj["fullscreen"]?.GetValue<bool>() ?? config.Fullscreen;
                     config.Resizable = obj["resizable"]?.GetValue<bool>() ?? config.Resizable;
+
+                    if (obj["buildScenes"] is JsonArray buildScenes)
+                    {
+                        foreach (var node in buildScenes)
+                        {
+                            if (node?.GetValue<string>() is string scene && !string.IsNullOrWhiteSpace(scene))
+                                config.BuildScenes.Add(scene);
+                        }
+                    }
+
+                    if (config.BuildScenes.Count == 0 && obj["startScene"]?.GetValue<string>() is string legacy &&
+                        !string.IsNullOrWhiteSpace(legacy))
+                        config.BuildScenes.Add(legacy);
                 }
             }
             catch (Exception ex)

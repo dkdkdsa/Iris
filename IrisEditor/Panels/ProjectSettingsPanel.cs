@@ -2,6 +2,7 @@ using Hexa.NET.ImGui;
 using Iris;
 using IrisEditor.Data;
 using IrisEditor.Serialization;
+using IrisEditor.Workspace;
 using System;
 using System.IO;
 using System.Numerics;
@@ -123,6 +124,81 @@ namespace IrisEditor.Panels
             }
         }
 
+        private void DrawBuildScenes(EditorWorkspace workspace)
+        {
+            ImGui.Spacing();
+            ImGui.SeparatorText("빌드 씬 (0번이 시작 씬)");
+
+            var scenes = _config.BuildScenes;
+            int moveUp = -1;
+            int moveDown = -1;
+            int remove = -1;
+
+            for (int i = 0; i < scenes.Count; i++)
+            {
+                ImGui.PushID(i);
+
+                ImGui.AlignTextToFramePadding();
+                ImGui.Text($"{i}");
+                ImGui.SameLine();
+
+                string display = string.IsNullOrEmpty(scenes[i])
+                    ? "(비어 있음)"
+                    : Path.GetFileNameWithoutExtension(scenes[i]);
+
+                ImGui.SetNextItemWidth(-120f);
+                ImGui.InputText("##Scene", ref display, 256, ImGuiInputTextFlags.ReadOnly);
+
+                if (ImGui.IsItemHovered() && !string.IsNullOrEmpty(scenes[i]))
+                    ImGui.SetTooltip(scenes[i]);
+
+                ImGui.SameLine();
+                ImGui.BeginDisabled(i == 0);
+                if (ImGui.ArrowButton("up", ImGuiDir.Up))
+                    moveUp = i;
+                ImGui.EndDisabled();
+
+                ImGui.SameLine();
+                ImGui.BeginDisabled(i == scenes.Count - 1);
+                if (ImGui.ArrowButton("down", ImGuiDir.Down))
+                    moveDown = i;
+                ImGui.EndDisabled();
+
+                ImGui.SameLine();
+                if (ImGui.SmallButton("X"))
+                    remove = i;
+
+                ImGui.PopID();
+            }
+
+            if (moveUp > 0)
+            {
+                (scenes[moveUp - 1], scenes[moveUp]) = (scenes[moveUp], scenes[moveUp - 1]);
+                _dirty = true;
+            }
+
+            if (moveDown >= 0 && moveDown < scenes.Count - 1)
+            {
+                (scenes[moveDown + 1], scenes[moveDown]) = (scenes[moveDown], scenes[moveDown + 1]);
+                _dirty = true;
+            }
+
+            if (remove >= 0)
+            {
+                scenes.RemoveAt(remove);
+                _dirty = true;
+            }
+
+            ImGui.SetNextItemWidth(-120f);
+            var picked = AssetPicker.Draw("씬 추가", string.Empty, typeof(SceneData), workspace);
+
+            if (picked is JsonValue value && value.TryGetValue(out string scenePath) && !string.IsNullOrWhiteSpace(scenePath))
+            {
+                scenes.Add(scenePath.Replace('\\', '/'));
+                _dirty = true;
+            }
+        }
+
         private void DrawContent()
         {
             var workspace = _context.Workspace;
@@ -145,25 +221,7 @@ namespace IrisEditor.Panels
                 _dirty = true;
             }
 
-            ImGui.SetNextItemWidth(-160f);
-            var picked = AssetPicker.Draw("시작 씬", _config.StartScene, typeof(SceneData), workspace);
-
-            if (picked is JsonValue value && value.TryGetValue(out string scenePath))
-            {
-                _config.StartScene = scenePath;
-                _dirty = true;
-            }
-
-            if (!string.IsNullOrEmpty(_config.StartScene))
-            {
-                ImGui.SameLine();
-
-                if (ImGui.SmallButton("지우기"))
-                {
-                    _config.StartScene = null;
-                    _dirty = true;
-                }
-            }
+            DrawBuildScenes(workspace);
 
             ImGui.Spacing();
             ImGui.SeparatorText("창");

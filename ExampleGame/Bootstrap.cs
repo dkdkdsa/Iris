@@ -75,7 +75,7 @@ namespace ExampleGame
 
             var font = AssetManager.Load<IFont>(@"C:\Windows\Fonts\malgun.ttf");
 
-            var label = new TextUIObject
+            var label = new UIText
             {
                 Font = font,
                 Text = "하트: 3개",

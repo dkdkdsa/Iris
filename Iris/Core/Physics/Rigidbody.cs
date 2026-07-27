@@ -2,6 +2,7 @@ using Box2D.NET;
 using Iris.Attributes;
 using Iris.Physics;
 using Silk.NET.Maths;
+using System;
 
 namespace Iris.Core
 {
@@ -43,7 +44,7 @@ namespace Iris.Core
             set
             {
                 if (B2Worlds.b2Body_IsValid(_id))
-                    B2Bodies.b2Body_SetTransform(_id, new B2Vec2(value.X, value.Y), B2MathFunction.b2MakeRot(Transform.Rotation));
+                    B2Bodies.b2Body_SetTransform(_id, new B2Vec2(value.X, value.Y), ToBodyRotation(Transform.Rotation));
 
                 Transform.Position = value;
             }
@@ -55,7 +56,7 @@ namespace Iris.Core
             get
             {
                 return B2Worlds.b2Body_IsValid(_id)
-                    ? B2Bodies.b2Body_GetAngularVelocity(_id)
+                    ? ToTransformAngular(B2Bodies.b2Body_GetAngularVelocity(_id))
                     : _angularVelocity;
             }
             set
@@ -63,7 +64,7 @@ namespace Iris.Core
                 _angularVelocity = value;
 
                 if (B2Worlds.b2Body_IsValid(_id))
-                    B2Bodies.b2Body_SetAngularVelocity(_id, value);
+                    B2Bodies.b2Body_SetAngularVelocity(_id, ToBodyAngular(value));
             }
         }
 
@@ -152,9 +153,9 @@ namespace Iris.Core
                 return;
 
             if (mode == ForceMode.Impulse)
-                B2Bodies.b2Body_ApplyAngularImpulse(_id, torque, true);
+                B2Bodies.b2Body_ApplyAngularImpulse(_id, -torque, true);
             else
-                B2Bodies.b2Body_ApplyTorque(_id, torque, true);
+                B2Bodies.b2Body_ApplyTorque(_id, -torque, true);
         }
 
         protected override void OnAttached()
@@ -166,9 +167,9 @@ namespace Iris.Core
             def.linearDamping = _linearDamping;
             def.angularDamping = _angularDamping;
             def.linearVelocity = new B2Vec2(_linearVelocity.X, _linearVelocity.Y);
-            def.angularVelocity = _angularVelocity;
+            def.angularVelocity = ToBodyAngular(_angularVelocity);
             def.position = new B2Vec2(Transform.Position.X, Transform.Position.Y);
-            def.rotation = B2MathFunction.b2MakeRot(Transform.Rotation);
+            def.rotation = ToBodyRotation(Transform.Rotation);
             _id = sys.CreateBody(def);
         }
 
@@ -177,11 +178,31 @@ namespace Iris.Core
             var linVel = B2Bodies.b2Body_GetLinearVelocity(_id);
             _linearVelocity = new Vector2D<float>(linVel.X, linVel.Y);
 
-            _angularVelocity = B2Bodies.b2Body_GetAngularVelocity(_id);
+            _angularVelocity = ToTransformAngular(B2Bodies.b2Body_GetAngularVelocity(_id));
 
             var trm = B2Bodies.b2Body_GetTransform(_id);
             Transform.Position = new Vector2D<float>(trm.p.X, trm.p.Y);
-            Transform.Rotation = B2MathFunction.b2Rot_GetAngle(trm.q);
+            Transform.Rotation = ToTransformRotation(trm.q);
+        }
+
+        private static B2Rot ToBodyRotation(float degrees)
+        {
+            return B2MathFunction.b2MakeRot(-degrees * MathF.PI / 180f);
+        }
+
+        private static float ToTransformRotation(B2Rot rotation)
+        {
+            return -B2MathFunction.b2Rot_GetAngle(rotation) * 180f / MathF.PI;
+        }
+
+        private static float ToBodyAngular(float degreesPerSecond)
+        {
+            return -degreesPerSecond * MathF.PI / 180f;
+        }
+
+        private static float ToTransformAngular(float radiansPerSecond)
+        {
+            return -radiansPerSecond * 180f / MathF.PI;
         }
 
         internal B2BodyId GetBodyId()

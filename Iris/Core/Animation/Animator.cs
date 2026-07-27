@@ -1,3 +1,4 @@
+using Iris.Attributes;
 using System;
 using System.Collections.Generic;
 
@@ -5,6 +6,8 @@ namespace Iris.Core
 {
     public sealed class Animator : Component
     {
+        private const float Epsilon = 0.0001f;
+
         private readonly Dictionary<string, AnimatorState> _states = new();
         private readonly List<AnimatorTransition> _anyTransitions = new();
 
@@ -18,12 +21,86 @@ namespace Iris.Core
 
         public AnimatedSpriteRenderer Renderer { get; private set; }
 
+        [Show]
+        public AnimatorController Controller { get; set; }
+
         public string CurrentName => _current?.Name;
 
         protected override void Awake()
         {
             Renderer = GetComponent<AnimatedSpriteRenderer>()
                        ?? OwnerActor.AddComponent<AnimatedSpriteRenderer>();
+
+            Build(Controller);
+        }
+
+        public void Build(AnimatorController controller)
+        {
+            _states.Clear();
+            _anyTransitions.Clear();
+            _current = null;
+            _started = false;
+
+            if (controller == null)
+                return;
+
+            foreach (var parameter in controller.Parameters)
+            {
+                switch (parameter.Type)
+                {
+                    case AnimatorParameterType.Bool: _bools[parameter.Name] = false; break;
+                    case AnimatorParameterType.Float: _floats[parameter.Name] = 0f; break;
+                    case AnimatorParameterType.Int: _ints[parameter.Name] = 0; break;
+                }
+            }
+
+            foreach (var state in controller.States)
+                _states[state.Name] = new AnimatorState(state.Name, state.Clip);
+
+            foreach (var state in controller.States)
+            {
+                if (!_states.TryGetValue(state.Name, out var from))
+                    continue;
+
+                foreach (var transition in state.Transitions)
+                {
+                    var built = BuildTransition(transition);
+
+                    if (built != null)
+                        from.Transitions.Add(built);
+                }
+            }
+
+            foreach (var transition in controller.AnyTransitions)
+            {
+                var built = BuildTransition(transition);
+
+                if (built != null)
+                    _anyTransitions.Add(built);
+            }
+
+            if (controller.DefaultState != null && _states.TryGetValue(controller.DefaultState, out var start))
+                _current = start;
+            else if (controller.States.Count > 0 && _states.TryGetValue(controller.States[0].Name, out var first))
+                _current = first;
+        }
+
+        private AnimatorTransition BuildTransition(AnimatorControllerTransition source)
+        {
+            if (!_states.TryGetValue(source.To, out var target))
+            {
+                Console.WriteLine($"[Iris] 애니메이터 전이 대상 상태를 찾지 못함: {source.To}");
+                return null;
+            }
+
+            var result = new AnimatorTransition
+            {
+                To = target,
+                HasExitTime = source.HasExitTime,
+            };
+
+            result.Conditions.AddRange(source.Conditions);
+            return result;
         }
 
         public void AddState(string name, SpriteAnimation clip)
@@ -119,7 +196,58 @@ namespace Iris.Core
             if (t.HasExitTime && Renderer.IsPlaying)
                 return false;
 
-            return t.Condition == null || t.Condition(this);
+            if (t.Condition != null && !t.Condition(this))
+                return false;
+
+            foreach (var condition in t.Conditions)
+            {
+                if (!Passes(condition))
+                    return false;
+            }
+
+            return true;
+        }
+
+        private bool Passes(AnimatorCondition condition)
+        {
+            if (string.IsNullOrEmpty(condition.Parameter))
+                return true;
+
+            switch (condition.Mode)
+            {
+                case AnimatorConditionMode.If:
+                    return IsSet(condition.Parameter);
+
+                case AnimatorConditionMode.IfNot:
+                    return !IsSet(condition.Parameter);
+
+                case AnimatorConditionMode.Greater:
+                    return Number(condition.Parameter) > condition.Threshold;
+
+                case AnimatorConditionMode.Less:
+                    return Number(condition.Parameter) < condition.Threshold;
+
+                case AnimatorConditionMode.Equals:
+                    return MathF.Abs(Number(condition.Parameter) - condition.Threshold) <= Epsilon;
+
+                case AnimatorConditionMode.NotEquals:
+                    return MathF.Abs(Number(condition.Parameter) - condition.Threshold) > Epsilon;
+            }
+
+            return true;
+        }
+
+        private bool IsSet(string parameter)
+        {
+            return GetBool(parameter) || GetTrigger(parameter);
+        }
+
+        private float Number(string parameter)
+        {
+            if (_floats.TryGetValue(parameter, out var f))
+                return f;
+
+            return _ints.TryGetValue(parameter, out var i) ? i : 0f;
         }
     }
 }

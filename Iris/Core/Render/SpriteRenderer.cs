@@ -1,5 +1,6 @@
 using Iris.Rendering;
 using Silk.NET.Maths;
+using System;
 
 namespace Iris.Core
 {
@@ -25,10 +26,16 @@ namespace Iris.Core
             float pixelHeight = src.HasValue ? src.Value.Size.Y : texture.Height;
 
             var trm = OwnerActor.Transform;
-            float width = pixelWidth / PixelPerUnit * trm.Scale.X;
-            float height = pixelHeight / PixelPerUnit * trm.Scale.Y;
-            float x = trm.Position.X - width * Pivot.X;
-            float y = trm.Position.Y - height * Pivot.Y;
+            float scaledWidth = pixelWidth / PixelPerUnit * trm.Scale.X;
+            float scaledHeight = pixelHeight / PixelPerUnit * trm.Scale.Y;
+
+            float width = MathF.Abs(scaledWidth);
+            float height = MathF.Abs(scaledHeight);
+            float pivotX = scaledWidth < 0f ? 1f - Pivot.X : Pivot.X;
+            float pivotY = scaledHeight < 0f ? 1f - Pivot.Y : Pivot.Y;
+
+            float x = trm.Position.X - width * pivotX;
+            float y = trm.Position.Y - height * pivotY;
 
             system.Submit(new RenderCommand
             {
@@ -36,8 +43,8 @@ namespace Iris.Core
                 src = src,
                 dest = new Rectangle<float>(x, y, width, height),
                 rotation = trm.Rotation,
-                flipX = FlipX,
-                flipY = FlipY,
+                flipX = FlipX != (scaledWidth < 0f),
+                flipY = FlipY != (scaledHeight < 0f),
                 order = Order,
                 color = Color,
             });

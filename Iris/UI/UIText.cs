@@ -7,7 +7,7 @@ using System.Collections.Generic;
 
 namespace Iris.UI
 {
-    public class TextUIObject : UIObject
+    public class UIText : UIObject
     {
         public string Text { get; set; } = string.Empty;
         public IFont Font { get; set; }

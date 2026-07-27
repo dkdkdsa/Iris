@@ -6,16 +6,10 @@ using System.Text.Json.Nodes;
 
 namespace Iris.Core
 {
-    /// <summary>
-    /// 에디터가 저장한 .scene 파일을 읽어 살아있는 Scene을 만든다.
-    /// 호출마다 새 Scene을 반환한다(캐시 없음 - 레벨 재시작 대응).
-    /// </summary>
     public static class SceneLoader
     {
-        /// <summary>에셋 상대 경로의 기준 폴더. 기본값은 실행 파일 위치.</summary>
         public static string ContentRoot { get; set; } = AppContext.BaseDirectory;
 
-        /// <summary>커스텀 컴포넌트/UI 오브젝트가 들어있는 어셈블리를 타입 해석 대상에 추가한다.</summary>
         public static void RegisterAssembly(Assembly assembly)
         {
             RuntimeTypeResolver.Register(assembly);
@@ -84,7 +78,6 @@ namespace Iris.Core
             if (actorObj["components"] is not JsonArray components)
                 return actor;
 
-            // Transform을 가장 먼저 적용한다 - 뒤 컴포넌트의 OnAttached가 Transform을 읽는다(예: Rigidbody).
             foreach (var compNode in components)
             {
                 if (compNode is JsonObject transformObj &&

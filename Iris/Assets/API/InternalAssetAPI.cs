@@ -18,6 +18,7 @@ namespace Iris.Assets
             _loaders.Add(typeof(Iris.Core.Sprite), new SpriteLoader());
             _loaders.Add(typeof(Iris.Core.Tile), new TileLoader());
             _loaders.Add(typeof(Iris.Core.Prefab), new PrefabLoader());
+            _loaders.Add(typeof(Iris.Core.AnimatorController), new AnimatorControllerLoader());
         }
 
         internal override T LoadAsset<T>(string path)

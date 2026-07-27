@@ -29,6 +29,7 @@ namespace IrisEditor.Workspace
             [".anim"] = typeof(Iris.Core.SpriteAnimation),
             [".sprite"] = typeof(Iris.Core.Sprite),
             [".tile"] = typeof(Iris.Core.Tile),
+            [".controller"] = typeof(Iris.Core.AnimatorController),
             [".prefab"] = typeof(Iris.Core.Prefab),
             [".scene"] = typeof(SceneData),
         };

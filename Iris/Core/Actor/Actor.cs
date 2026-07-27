@@ -14,7 +14,6 @@ namespace Iris.Core
         public string Tag { get; set; } = "";
         public Transform Transform { get; private set; }
         public bool DestroyFlag { get; private set; }
-
         public Actor Parent { get; private set; }
         public IReadOnlyList<Actor> Children => _children;
 
@@ -92,6 +91,22 @@ namespace Iris.Core
             {
                 if (_components[i] is T match)
                     return match;
+            }
+
+            return null;
+        }
+
+        public T GetComponentInChildren<T>() where T : class
+        {
+            for (int i = 0; i < _children.Count; i++)
+            {
+                var component = _children[i].GetComponent<T>();
+                if (component != null)
+                    return component;
+
+                component = _children[i].GetComponentInChildren<T>();
+                if (component != null)
+                    return component;
             }
 
             return null;

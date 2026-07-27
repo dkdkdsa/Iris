@@ -98,10 +98,15 @@ namespace Iris.UI
             var anchorPoint = new Vector2D<float>(viewport.X * uiObject.Anchor.X, viewport.Y * uiObject.Anchor.Y);
             var offset = uiObject.Position * scale;
 
-            float x = anchorPoint.X + offset.X - size.X * uiObject.Anchor.X;
-            float y = anchorPoint.Y + offset.Y - size.Y * uiObject.Anchor.Y;
+            float width = Math.Abs(size.X);
+            float height = Math.Abs(size.Y);
+            float pivotX = size.X < 0f ? 1f - uiObject.Anchor.X : uiObject.Anchor.X;
+            float pivotY = size.Y < 0f ? 1f - uiObject.Anchor.Y : uiObject.Anchor.Y;
 
-            return new Rectangle<float>(x, y, size.X, size.Y);
+            float x = anchorPoint.X + offset.X - width * pivotX;
+            float y = anchorPoint.Y + offset.Y - height * pivotY;
+
+            return new Rectangle<float>(x, y, width, height);
         }
 
         public UIObject HitTest(Vector2D<float> screenPosition)

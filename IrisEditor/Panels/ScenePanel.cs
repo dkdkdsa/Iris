@@ -223,8 +223,8 @@ namespace IrisEditor.Panels
                     float pixelWidth = src.HasValue ? src.Value.Size.X : texture.Width;
                     float pixelHeight = src.HasValue ? src.Value.Size.Y : texture.Height;
 
-                    float halfWidth = pixelWidth / ppu * actorScale.X * _viewScale * 0.5f;
-                    float halfHeight = pixelHeight / ppu * actorScale.Y * _viewScale * 0.5f;
+                    float halfWidth = MathF.Abs(pixelWidth / ppu * actorScale.X) * _viewScale * 0.5f;
+                    float halfHeight = MathF.Abs(pixelHeight / ppu * actorScale.Y) * _viewScale * 0.5f;
 
                     if (halfWidth <= 0f || halfHeight <= 0f)
                         continue;

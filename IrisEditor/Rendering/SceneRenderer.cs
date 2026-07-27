@@ -143,11 +143,21 @@ namespace IrisEditor.Rendering
             if (ppu <= 0f)
                 return;
 
-            var worldSize = new Vector2(pixelWidth / ppu * actorScale.X, pixelHeight / ppu * actorScale.Y);
+            float scaledWidth = pixelWidth / ppu * actorScale.X;
+            float scaledHeight = pixelHeight / ppu * actorScale.Y;
+
+            var worldSize = new Vector2(MathF.Abs(scaledWidth), MathF.Abs(scaledHeight));
             if (worldSize.X <= 0f || worldSize.Y <= 0f)
                 return;
 
             var pivot = comp.GetVector2("Pivot", new Vector2(0.5f, 0.5f));
+
+            if (scaledWidth < 0f)
+                pivot.X = 1f - pivot.X;
+
+            if (scaledHeight < 0f)
+                pivot.Y = 1f - pivot.Y;
+
             var worldCenter = position + (new Vector2(0.5f, 0.5f) - pivot) * worldSize;
 
             _previews.Add(new SpritePreview
@@ -157,8 +167,8 @@ namespace IrisEditor.Rendering
                 Center = WorldToPanel(worldCenter, camPos, scale, center),
                 Size = worldSize * scale,
                 Rotation = rotation,
-                FlipX = comp.GetBool("FlipX", false),
-                FlipY = comp.GetBool("FlipY", false),
+                FlipX = comp.GetBool("FlipX", false) != (scaledWidth < 0f),
+                FlipY = comp.GetBool("FlipY", false) != (scaledHeight < 0f),
                 Tint = GetTint(comp),
                 Order = (int)comp.GetFloat("Order", 0f),
                 Sequence = _previews.Count,

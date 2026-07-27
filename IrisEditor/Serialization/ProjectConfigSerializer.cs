@@ -30,12 +30,24 @@ namespace IrisEditor.Serialization
 
             raw = obj;
 
-            config.StartScene = ReadString(obj, "startScene") ?? config.StartScene;
             config.Title = ReadString(obj, "title") ?? config.Title;
             config.DefaultWidth = ReadInt(obj, "width") ?? config.DefaultWidth;
             config.DefaultHeight = ReadInt(obj, "height") ?? config.DefaultHeight;
             config.Fullscreen = ReadBool(obj, "fullscreen") ?? config.Fullscreen;
             config.Resizable = ReadBool(obj, "resizable") ?? config.Resizable;
+
+            if (obj["buildScenes"] is JsonArray buildScenes)
+            {
+                foreach (var node in buildScenes)
+                {
+                    if (node is JsonValue v && v.TryGetValue(out string scene) && !string.IsNullOrWhiteSpace(scene))
+                        config.BuildScenes.Add(scene.Replace('\\', '/'));
+                }
+            }
+
+            if (config.BuildScenes.Count == 0 && ReadString(obj, "startScene") is string legacy &&
+                !string.IsNullOrWhiteSpace(legacy))
+                config.BuildScenes.Add(legacy.Replace('\\', '/'));
 
             return config;
         }
@@ -44,9 +56,17 @@ namespace IrisEditor.Serialization
         {
             var obj = raw?.DeepClone() as JsonObject ?? new JsonObject();
 
-            obj["startScene"] = string.IsNullOrWhiteSpace(config.StartScene)
-                ? null
-                : JsonValue.Create(config.StartScene.Replace('\\', '/'));
+            obj.Remove("startScene");
+
+            var buildScenes = new JsonArray();
+
+            foreach (var scene in config.BuildScenes)
+            {
+                if (!string.IsNullOrWhiteSpace(scene))
+                    buildScenes.Add(JsonValue.Create(scene.Replace('\\', '/')));
+            }
+
+            obj["buildScenes"] = buildScenes;
 
             obj["width"] = JsonValue.Create(Math.Max(1, config.DefaultWidth));
             obj["height"] = JsonValue.Create(Math.Max(1, config.DefaultHeight));
