@@ -275,6 +275,9 @@ namespace IrisEditor.Panels
             if (avail.X < 1f || avail.Y < 1f)
                 return;
 
+            ImGui.InvisibleButton("##UIDesignCanvas", avail);
+            bool canvasHovered = ImGui.IsItemHovered();
+
             draw.AddRectFilled(origin, origin + avail, 0xFF181818);
 
             float refWidth = _resolutions[_resolutionIndex].Width;
@@ -308,7 +311,7 @@ namespace IrisEditor.Panels
                         0xFF00A0FF);
             }
 
-            HandleDesignInput(screenMin, screenSize, fit);
+            HandleDesignInput(screenMin, screenSize, fit, canvasHovered);
         }
 
         private Rectangle<float> CalculateRect(UIObject instance, System.Numerics.Vector2 screenMin, System.Numerics.Vector2 screenSize, float fit)
@@ -386,9 +389,9 @@ namespace IrisEditor.Panels
             }
         }
 
-        private void HandleDesignInput(System.Numerics.Vector2 screenMin, System.Numerics.Vector2 screenSize, float fit)
+        private void HandleDesignInput(System.Numerics.Vector2 screenMin, System.Numerics.Vector2 screenSize, float fit, bool canvasHovered)
         {
-            if (ImGui.IsWindowHovered() && ImGui.IsMouseClicked(ImGuiMouseButton.Left))
+            if (canvasHovered && ImGui.IsMouseClicked(ImGuiMouseButton.Left))
             {
                 var mouse = ImGui.GetMousePos();
                 _selected = Pick(mouse, screenMin, screenSize, fit);
