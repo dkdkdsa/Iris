@@ -54,5 +54,13 @@ namespace Iris.Core
             _system.Stop(_id);
             IsPlaying = false;
         }
+
+        public override void Dispose()
+        {
+            if(_system != null)
+            {
+                _system.Stop(_id);
+            }
+        }
     }
 }
