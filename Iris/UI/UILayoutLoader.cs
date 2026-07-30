@@ -1,4 +1,5 @@
 using Iris.Assets;
+using Iris.Files;
 using System.IO;
 
 namespace Iris.UI
@@ -7,7 +8,7 @@ namespace Iris.UI
     {
         public IAsset LoadAsset(string path)
         {
-            return new UILayout(File.ReadAllText(path));
+            return new UILayout(VirtualFileSystem.ReadAllText(path));
         }
     }
 }

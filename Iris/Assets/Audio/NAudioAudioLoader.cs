@@ -1,9 +1,10 @@
-﻿using Iris.Audio;
+using Iris.Audio;
 using Iris.Core;
+using Iris.Files;
 using NAudio.Wave;
 using System;
 using System.Collections.Generic;
-using System.Text;
+using System.IO;
 
 namespace Iris.Assets
 {
@@ -11,29 +12,39 @@ namespace Iris.Assets
     {
         public IAsset LoadAsset(string path)
         {
-            using (var reader = new AudioFileReader(path))
+            using var stream = new MemoryStream(VirtualFileSystem.ReadAllBytes(path));
+            using var reader = CreateReader(path, stream);
+
+            var sampleProvider = reader.ToSampleProvider();
+            int sampleRate = sampleProvider.WaveFormat.SampleRate;
+            int channels = sampleProvider.WaveFormat.Channels;
+            var samples = new List<float>();
+
+            float[] buffer = new float[sampleRate * channels];
+
+            int read;
+            while ((read = sampleProvider.Read(buffer, 0, buffer.Length)) > 0)
             {
-                int sampleLate = reader.WaveFormat.SampleRate;
-                int channels = reader.WaveFormat.Channels;
-                var samples = new List<float>();
-
-
-                float[] buffer = new float[sampleLate * channels];
-
-                int read;
-                while ((read = reader.Read(buffer, 0, buffer.Length)) > 0)
-                {
-                    for (int i = 0; i < read; i++)
-                        samples.Add(buffer[i]);
-                }
-
-                return Factorys.Create<IAudioClip, AudioClipData>(new AudioClipData
-                {
-                    Channels = channels,
-                    SampleRate = sampleLate,
-                    Samples = samples.ToArray()
-                });
+                for (int i = 0; i < read; i++)
+                    samples.Add(buffer[i]);
             }
+
+            return Factorys.Create<IAudioClip, AudioClipData>(new AudioClipData
+            {
+                Channels = channels,
+                SampleRate = sampleRate,
+                Samples = samples.ToArray()
+            });
+        }
+
+        private static WaveStream CreateReader(string path, Stream stream)
+        {
+            string ext = Path.GetExtension(path);
+
+            if (ext.Equals(".mp3", StringComparison.OrdinalIgnoreCase))
+                return new Mp3FileReader(stream);
+
+            return new WaveFileReader(stream);
         }
     }
 }

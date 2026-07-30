@@ -1,3 +1,4 @@
+using Iris.Files;
 using System.IO;
 
 namespace Iris.Assets
@@ -6,7 +7,7 @@ namespace Iris.Assets
     {
         public IAsset LoadAsset(string path)
         {
-            return new StbFont(File.ReadAllBytes(path));
+            return new StbFont(VirtualFileSystem.ReadAllBytes(path));
         }
     }
 }

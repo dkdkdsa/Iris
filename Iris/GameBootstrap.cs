@@ -1,4 +1,5 @@
 using Iris.Core;
+using Iris.Files;
 using Iris.Platform;
 using System;
 using System.IO;
@@ -15,6 +16,19 @@ namespace Iris
             string contentRoot = GetArg(args, "--content");
             if (!string.IsNullOrEmpty(contentRoot))
                 SceneLoader.ContentRoot = Path.GetFullPath(contentRoot);
+
+            string packagePath = Path.Combine(SceneLoader.ContentRoot, Files.Package.PackageFormat.DefaultFileName);
+
+            if (File.Exists(packagePath))
+            {
+                var packageProvider = new PackageFileProvider(packagePath);
+                VirtualFileSystem.InjectProvider(packageProvider);
+                Console.WriteLine($"[Iris] 패키지 마운트: {Files.Package.PackageFormat.DefaultFileName} ({packageProvider.EntryCount}개 엔트리)");
+            }
+            else
+            {
+                VirtualFileSystem.InjectProvider(new LooseFileProvider(SceneLoader.ContentRoot));
+            }
 
             var config = LoadConfig();
             SceneManager.SetBuildScenes(config.BuildScenes);
@@ -61,12 +75,12 @@ namespace Iris
             var config = new ProjectConfig();
             string path = Path.Combine(SceneLoader.ContentRoot, "project.json");
 
-            if (!File.Exists(path))
+            if (!VirtualFileSystem.Exists(path))
                 return config;
 
             try
             {
-                if (JsonNode.Parse(File.ReadAllText(path)) is JsonObject obj)
+                if (JsonNode.Parse(VirtualFileSystem.ReadAllText(path)) is JsonObject obj)
                 {
                     config.DefaultWidth = (int)(obj["width"]?.GetValue<float>() ?? config.DefaultWidth);
                     config.DefaultHeight = (int)(obj["height"]?.GetValue<float>() ?? config.DefaultHeight);

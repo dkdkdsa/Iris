@@ -111,7 +111,6 @@ namespace IrisEditor.Workspace
                 _loadContext?.Unload();
                 _loadContext = new GameLoadContext();
 
-                // 파일이 아니라 바이트로 로드해서 DLL을 잠그지 않는다(재빌드 가능해야 함).
                 using var stream = new MemoryStream(File.ReadAllBytes(dll));
                 Current = _loadContext.LoadFromStream(stream);
 

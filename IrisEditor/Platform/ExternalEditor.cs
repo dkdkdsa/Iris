@@ -23,8 +23,6 @@ namespace IrisEditor.Platform
                     return;
                 }
 
-                // VS가 이미 떠 있으면 /edit로 기존 인스턴스에 파일만 열고,
-                // 없으면 프로젝트 + 파일로 새로 띄운다.
                 bool running = Process.GetProcessesByName("devenv").Length > 0;
 
                 string arguments = running || projectFile == null

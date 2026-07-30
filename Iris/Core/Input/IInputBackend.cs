@@ -9,7 +9,6 @@ namespace Iris.Core
         public Vector2D<int> MouseDelta { get; }
         public Vector2D<int> MouseScrollDelta { get; }
 
-        /// <summary>이번 프레임에 입력된 문자. 키 상태가 아니라 IME까지 거친 최종 텍스트다.</summary>
         public IReadOnlyList<char> TextInput { get; }
 
         public bool AnyKey { get; }

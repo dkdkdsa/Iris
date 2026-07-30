@@ -244,12 +244,11 @@ namespace IrisEditor
                     return;
                 }
 
-                Builder.Build(Workspace.ProjectFile, fullOut, success =>
+                Builder.Build(Workspace.ProjectFile, fullRoot, fullOut, success =>
                 {
                     if (!success)
                         return;
 
-                    CopyBuildContent(fullOut);
                     Console.WriteLine($"[에디터] 빌드 완료: {fullOut}");
 
                     try
@@ -261,33 +260,6 @@ namespace IrisEditor
                     }
                 });
             });
-        }
-
-        private void CopyBuildContent(string outputDirectory)
-        {
-            Workspace.Refresh();
-
-            foreach (var asset in Workspace.Assets)
-            {
-                bool include = asset.AssetType != null ||
-                               string.Equals(asset.Path, "project.json", StringComparison.OrdinalIgnoreCase);
-
-                if (!include)
-                    continue;
-
-                try
-                {
-                    string source = Workspace.ToAbsolute(asset.Path);
-                    string target = Path.Combine(outputDirectory, asset.Path);
-
-                    Directory.CreateDirectory(Path.GetDirectoryName(target));
-                    File.Copy(source, target, true);
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"[에디터] 콘텐츠 복사 실패({asset.Path}): {ex.Message}");
-                }
-            }
         }
 
         public void RefreshScripts()

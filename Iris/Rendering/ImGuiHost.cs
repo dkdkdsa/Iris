@@ -12,7 +12,6 @@ namespace Iris.Rendering
     {
         private static readonly KeyValuePair<KeyCode, ImGuiKey>[] _keyMap = CreateKeyMap();
 
-        // UnmanagedCallersOnly는 캡처를 못 하므로 클립보드는 정적으로 잡아둔다.
         private static IClipboard _clipboard;
         private static nint _clipboardBuffer;
 
@@ -22,10 +21,6 @@ namespace Iris.Rendering
         private ImGuiContextPtr _context;
         private bool _frameStarted;
 
-        /// <summary>
-        /// ImGui가 이번 프레임 입력을 가져갔는지. 게임 입력을 막을지는 호스트가 판단한다
-        /// (에디터에서는 Scene 창 자체가 ImGui 창이라 이 값만으로 막으면 게임이 마우스를 영영 못 받는다).
-        /// </summary>
         public bool WantCaptureMouse { get; private set; }
         public bool WantCaptureKeyboard { get; private set; }
 
@@ -38,14 +33,12 @@ namespace Iris.Rendering
             ImGui.SetCurrentContext(_context);
 
             var io = ImGui.GetIO();
-            // RendererHasTextures가 있어야 1.92의 ImDrawData.Textures 경로가 채워진다.
             io.BackendFlags |= ImGuiBackendFlags.RendererHasTextures;
             io.BackendFlags |= ImGuiBackendFlags.RendererHasVtxOffset;
 
             SetupClipboard(clipboard);
         }
 
-        /// <summary>AppHost가 프레임 초입에 부른다. 이후부터 ImGui 호출이 유효하다.</summary>
         internal void NewFrame(float deltaTime)
         {
             var io = ImGui.GetIO();
@@ -58,12 +51,10 @@ namespace Iris.Rendering
             ImGui.NewFrame();
             _frameStarted = true;
 
-            // NewFrame 이후에야 확정된다.
             WantCaptureMouse = io.WantCaptureMouse;
             WantCaptureKeyboard = io.WantCaptureKeyboard;
         }
 
-        /// <summary>AppHost가 present 직전에 부른다.</summary>
         internal void Render()
         {
             if (!_frameStarted)
@@ -113,7 +104,6 @@ namespace Iris.Rendering
             platformIO.PlatformSetClipboardTextFn = (void*)(delegate* unmanaged<ImGuiContext*, byte*, void>)&SetClipboardText;
         }
 
-        // ImGui가 반환 포인터를 다음 호출까지 들고 있으므로 버퍼를 유지했다가 다음 번에 해제한다.
         [UnmanagedCallersOnly]
         private static byte* GetClipboardText(ImGuiContext* context)
         {
@@ -126,7 +116,7 @@ namespace Iris.Rendering
             }
             catch
             {
-                return null; // 네이티브 콜백이라 예외가 넘어가면 프로세스가 죽는다.
+                return null;
             }
         }
 

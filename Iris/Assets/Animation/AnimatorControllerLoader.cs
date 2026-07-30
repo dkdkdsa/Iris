@@ -1,4 +1,5 @@
 using Iris.Core;
+using Iris.Files;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -10,7 +11,7 @@ namespace Iris.Assets
     {
         public IAsset LoadAsset(string path)
         {
-            if (JsonNode.Parse(File.ReadAllText(path)) is not JsonObject root)
+            if (JsonNode.Parse(VirtualFileSystem.ReadAllText(path)) is not JsonObject root)
                 throw new InvalidDataException($"애니메이터 컨트롤러 파일 형식이 아닙니다: {path}");
 
             var parameters = new List<AnimatorParameter>();

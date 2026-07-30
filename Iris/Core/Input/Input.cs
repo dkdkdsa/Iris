@@ -12,7 +12,6 @@ namespace Iris.Core
         public static Vector2D<int> MouseDelta => _backend?.MouseDelta ?? default;
         public static Vector2D<int> MouseScrollDelta => _backend?.MouseScrollDelta ?? default;
 
-        /// <summary>이번 프레임에 입력된 문자. 키 상태가 아니라 IME까지 거친 최종 텍스트다.</summary>
         public static IReadOnlyList<char> TextInput => _backend?.TextInput ?? Array.Empty<char>();
 
         public static bool AnyKey => _backend?.AnyKey ?? false;

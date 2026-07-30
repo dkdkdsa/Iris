@@ -35,7 +35,6 @@ namespace IrisEditor.Platform
             Begin(BrowseFolder, onClosed);
         }
 
-        // 매 프레임 호출. 다이얼로그가 닫혔으면 메인 스레드에서 콜백을 실행한다.
         public static void Update()
         {
             if (_thread == null || !_done)
@@ -52,9 +51,6 @@ namespace IrisEditor.Platform
             callback?.Invoke(result);
         }
 
-        // 셸 다이얼로그는 STA 스레드를 요구한다(메인 스레드는 CLR이 MTA로 굳혀둠).
-        // 단, 오너(메인 스레드의 창)가 모달 다이얼로그의 동기 메시지에 응답해야 하므로
-        // 메인 스레드를 블록하면 교착된다 — 그래서 폴링 + 콜백 구조다.
         private static void Begin(Func<nint, string> show, Action<string> onClosed)
         {
             if (_thread != null)

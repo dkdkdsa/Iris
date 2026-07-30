@@ -20,8 +20,6 @@ namespace Iris.Assets.NAudio
 
         public void Dispose()
         {
-            // 관리되는 PCM 버퍼라 별도 해제 리소스 없음.
-            // (FMOD라면 여기서 Sound.release() 호출)
         }
     }
 }

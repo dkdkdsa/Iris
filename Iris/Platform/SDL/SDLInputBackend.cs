@@ -7,10 +7,6 @@ using SdlKey = Silk.NET.SDL.KeyCode;
 
 namespace Iris.Platform.SDL
 {
-    /// <summary>
-    /// SDL 이벤트를 엔진 표준 입력으로 번역한다. SDL 이벤트 큐는 하나뿐이라 직접 폴링하지 않고
-    /// 플랫폼의 펌프가 넘겨주는 이벤트를 받는다.
-    /// </summary>
     internal sealed class SDLInputBackend : InputBackendBase
     {
         private static readonly Dictionary<int, KeyCode> _keyMap = CreateKeyMap();
@@ -51,10 +47,8 @@ namespace Iris.Platform.SDL
             }
         }
 
-        /// <summary>SDL_TextInputEvent.Text 는 널 종료 UTF-8 고정 버퍼다.</summary>
         private static unsafe string ReadText(TextInputEvent evt)
         {
-            // evt는 값 파라미터(스택)라 고정 버퍼가 이미 고정돼 있다.
             byte* text = evt.Text;
 
             int length = 0;
@@ -95,7 +89,6 @@ namespace Iris.Platform.SDL
             for (int i = 0; i < 12; i++)
                 map[(int)SdlKey.KF1 + i] = KeyCode.F1 + i;
 
-            // SDL 키패드 숫자는 1~9 다음에 0이 온다.
             for (int i = 0; i < 9; i++)
                 map[(int)SdlKey.KKP1 + i] = KeyCode.Keypad1 + i;
             map[(int)SdlKey.KKP0] = KeyCode.Keypad0;

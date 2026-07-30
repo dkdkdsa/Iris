@@ -1,80 +1,58 @@
+using Iris.Build;
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
+using System.Collections.Concurrent;
 using System.IO;
+using System.Threading.Tasks;
 
 namespace IrisEditor.Workspace
 {
     internal sealed class GameBuilder
     {
-        private Process _process;
-        private List<string> _output;
+        private Task<bool> _task;
         private Action<bool> _onDone;
+        private readonly ConcurrentQueue<string> _logs = new();
 
-        public bool Building => _process != null;
+        public bool Building => _task != null;
 
-        public void Build(string projectFile, string outputDirectory, Action<bool> onDone)
+        public void Build(string projectFile, string contentRoot, string outputDirectory, Action<bool> onDone)
         {
-            if (_process != null)
+            if (_task != null)
                 return;
 
             _onDone = onDone;
-            _output = new List<string>();
 
-            var psi = new ProcessStartInfo("dotnet", $"publish \"{projectFile}\" -c Release -o \"{outputDirectory}\" --nologo -v q")
+            var context = new BuildContext
             {
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false,
-                CreateNoWindow = true,
+                ProjectFile = projectFile,
+                ContentRoot = contentRoot,
+                OutputDirectory = outputDirectory,
+                Log = message => _logs.Enqueue(message),
             };
 
-            try
-            {
-                _process = Process.Start(psi);
-                _process.OutputDataReceived += (_, e) => { if (e.Data != null) lock (_output) _output.Add(e.Data); };
-                _process.ErrorDataReceived += (_, e) => { if (e.Data != null) lock (_output) _output.Add(e.Data); };
-                _process.BeginOutputReadLine();
-                _process.BeginErrorReadLine();
+            Console.WriteLine($"[에디터] 게임 빌드 시작: {Path.GetFileName(projectFile)} → {outputDirectory}");
 
-                Console.WriteLine($"[에디터] 게임 빌드 시작: {Path.GetFileName(projectFile)} → {outputDirectory}");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"[에디터] dotnet 실행 실패: {ex.Message}");
-                _process = null;
-                _onDone = null;
-                onDone?.Invoke(false);
-            }
+            _task = Task.Run(() => BuildPipeline.CreateDefault().Run(context));
         }
 
         public void Update()
         {
-            if (_process == null || !_process.HasExited)
+            while (_logs.TryDequeue(out var message))
+                Console.WriteLine(message);
+
+            if (_task == null || !_task.IsCompleted)
                 return;
 
-            int exitCode = _process.ExitCode;
-            _process.Dispose();
-            _process = null;
+            bool success = _task.Status == TaskStatus.RanToCompletion && _task.Result;
+
+            if (_task.IsFaulted && _task.Exception != null)
+                Console.WriteLine($"[에디터] 빌드 예외: {_task.Exception.GetBaseException().Message}");
+
+            _task = null;
 
             var onDone = _onDone;
             _onDone = null;
 
-            if (exitCode != 0)
-            {
-                Console.WriteLine("[에디터] 게임 빌드 실패:");
-
-                lock (_output)
-                {
-                    foreach (var line in _output)
-                        Console.WriteLine("  " + line);
-                }
-
-                onDone?.Invoke(false);
-                return;
-            }
-
-            onDone?.Invoke(true);
+            onDone?.Invoke(success);
         }
     }
 }

@@ -67,7 +67,6 @@ namespace IrisEditor.Panels
 
             ImGui.EndChild();
 
-            // 생성은 트리 순회 밖에서 실행한다 — Refresh()가 순회 중인 목록을 수정하면 터진다.
             if (_pendingAction != null)
             {
                 var action = _pendingAction;
@@ -318,7 +317,6 @@ namespace IrisEditor.Panels
                 string newName = _renameBuffer;
                 bool isDir = isDirectory;
 
-                // 순회 밖에서 실행 - Refresh가 순회 중인 목록을 바꾸면 터진다.
                 _pendingAction = () => ApplyRename(workspace, target, newName, isDir);
                 _renamingPath = null;
                 return;

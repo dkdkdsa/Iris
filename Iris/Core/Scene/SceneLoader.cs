@@ -1,3 +1,4 @@
+using Iris.Files;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -19,7 +20,7 @@ namespace Iris.Core
         {
             string fullPath = Path.IsPathRooted(path) ? path : Path.Combine(ContentRoot, path);
 
-            if (JsonNode.Parse(File.ReadAllText(fullPath)) is not JsonObject root)
+            if (JsonNode.Parse(VirtualFileSystem.ReadAllText(fullPath)) is not JsonObject root)
                 throw new InvalidDataException($"씬 파일 형식이 아닙니다: {path}");
 
             var scene = new Scene();

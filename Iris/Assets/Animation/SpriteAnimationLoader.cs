@@ -1,4 +1,5 @@
 using Iris.Core;
+using Iris.Files;
 using Silk.NET.Maths;
 using System;
 using System.Collections.Generic;
@@ -11,7 +12,7 @@ namespace Iris.Assets
     {
         public IAsset LoadAsset(string path)
         {
-            if (JsonNode.Parse(File.ReadAllText(path)) is not JsonObject root)
+            if (JsonNode.Parse(VirtualFileSystem.ReadAllText(path)) is not JsonObject root)
                 throw new InvalidDataException($"스프라이트 애니메이션 파일 형식이 아닙니다: {path}");
 
             string texturePath = root["texture"]?.GetValue<string>();

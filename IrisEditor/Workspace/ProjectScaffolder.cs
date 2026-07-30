@@ -198,8 +198,8 @@ namespace IrisEditor.Workspace
         private static string ContentItemGroup()
         {
             return """
-                  <ItemGroup>
-                    <Content Include="**\*.png;**\*.jpg;**\*.jpeg;**\*.bmp;**\*.tga;**\*.gif;**\*.wav;**\*.mp3;**\*.scene;project.json" Exclude="bin\**;obj\**" CopyToOutputDirectory="PreserveNewest" />
+                  <ItemGroup Condition="'$(Configuration)' == 'Debug'">
+                    <Content Include="**\*.png;**\*.jpg;**\*.jpeg;**\*.bmp;**\*.tga;**\*.gif;**\*.wav;**\*.mp3;**\*.ttf;**\*.otf;**\*.ui;**\*.anim;**\*.sprite;**\*.tile;**\*.controller;**\*.prefab;**\*.scene;project.json" Exclude="bin\**;obj\**" CopyToOutputDirectory="PreserveNewest" />
                   </ItemGroup>
                 """;
         }

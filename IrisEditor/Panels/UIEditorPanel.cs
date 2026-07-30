@@ -382,7 +382,6 @@ namespace IrisEditor.Panels
 
             if (!drewAnything)
             {
-                // 텍스처/폰트 없는 오브젝트도 배치가 보이도록 자리 표시
                 var min = new System.Numerics.Vector2(rect.Origin.X, rect.Origin.Y);
                 var max = new System.Numerics.Vector2(rect.Origin.X + MathF.Max(rect.Size.X, 24f), rect.Origin.Y + MathF.Max(rect.Size.Y, 24f));
                 draw.AddRect(min, max, 0x80FFFFFF);

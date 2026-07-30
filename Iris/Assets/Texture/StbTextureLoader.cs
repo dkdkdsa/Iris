@@ -1,4 +1,5 @@
 ﻿using Iris.Core;
+using Iris.Files;
 using Silk.NET.Maths;
 using StbiSharp;
 using System;
@@ -13,7 +14,7 @@ namespace Iris.Assets
     {
         public IAsset LoadAsset(string path)
         {
-            var bytes = File.ReadAllBytes(path);
+            var bytes = VirtualFileSystem.ReadAllBytes(path);
             var img = Stbi.LoadFromMemory(bytes, 4);
 
             var tex = Factorys.Create<ITexture, Vector2D<int>>(new (img.Width, img.Height));

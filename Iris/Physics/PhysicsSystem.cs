@@ -21,7 +21,6 @@ namespace Iris.Physics
         {
             B2Worlds.b2World_Step(_worldId, Time.FixedTimeStep, 4);
 
-            //contact
             {
                 var evts = B2Worlds.b2World_GetContactEvents(_worldId);
 
@@ -48,7 +47,6 @@ namespace Iris.Physics
                 }
             }
 
-            //sencerEvents
             {
                 var evts = B2Worlds.b2World_GetSensorEvents(_worldId);
 

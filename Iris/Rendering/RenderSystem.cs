@@ -34,7 +34,6 @@ namespace Iris.Rendering
             {
                 if (cmd.screenSpace)
                 {
-                    // 화면 픽셀 좌표 그대로. 카메라가 없어도 UI는 그려진다(메뉴 씬 등).
                     var d = cmd.dest;
                     var dest = new Rectangle<int>(
                         (int)MathF.Round(d.Origin.X), (int)MathF.Round(d.Origin.Y),
