@@ -1,4 +1,5 @@
 using Iris.Assets;
+using Iris.Debugging;
 using Silk.NET.Maths;
 using System;
 using System.Collections.Generic;
@@ -8,6 +9,8 @@ namespace Iris.Core
 {
     public sealed class Prefab : IAsset
     {
+        private static readonly DebugChannel _log = Debug.Channel("Iris");
+
         private readonly JsonArray _actors;
 
         internal Prefab(JsonArray actors)
@@ -31,7 +34,7 @@ namespace Iris.Core
 
             if (scene == null)
             {
-                Console.WriteLine("[Iris] 활성 씬이 없어 프리팹을 생성할 수 없습니다.");
+                _log.LogError("Cannot instantiate prefab: no active scene.");
                 return null;
             }
 
@@ -63,7 +66,7 @@ namespace Iris.Core
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"[Iris] 프리팹 액터 생성 실패: {ex.Message}");
+                    _log.LogExceptionOnce("Failed to build prefab actor", ex);
                 }
             }
 

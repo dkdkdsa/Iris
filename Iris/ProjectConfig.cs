@@ -10,6 +10,8 @@ namespace Iris
         public int DefaultHeight = 720;
         public bool Fullscreen = false;
         public bool Resizable = false;
+        public bool VSync = true;
+        public int TargetFrameRate = 0;
         public string Title = "NewGame";
         public List<string> BuildScenes = new();
     }

@@ -28,7 +28,7 @@ namespace Iris.Files.Hash
                 throw new ArgumentNullException(nameof(algorithm));
 
             if (algorithm.Id == HashAlgorithmId.None)
-                throw new ArgumentException("해시 알고리즘 식별자가 None이면 패키지에 기록할 수 없습니다.", nameof(algorithm));
+                throw new ArgumentException("Hash algorithm id None cannot be recorded in a package.", nameof(algorithm));
 
             _algorithms[algorithm.Id] = algorithm;
         }
@@ -43,7 +43,7 @@ namespace Iris.Files.Hash
             if (_algorithms.TryGetValue(id, out var algorithm))
                 return algorithm;
 
-            throw new NotSupportedException($"등록되지 않은 해시 알고리즘입니다: {id}");
+            throw new NotSupportedException($"Unregistered hash algorithm: {id}");
         }
 
         public static bool TryResolve(HashAlgorithmId id, out IHashAlgorithm algorithm)

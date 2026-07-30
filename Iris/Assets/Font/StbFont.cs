@@ -1,4 +1,5 @@
 using Iris.Core;
+using Iris.Debugging;
 using Silk.NET.Maths;
 using System;
 using System.Collections.Generic;
@@ -9,6 +10,8 @@ namespace Iris.Assets
 {
     internal unsafe class StbFont : IFont
     {
+        private static readonly DebugChannel _log = Debug.Channel("Iris");
+
         private const int AtlasWidth = 2048;
         private const int AtlasHeight = 2048;
         private const int Padding = 1;
@@ -45,7 +48,7 @@ namespace Iris.Assets
             if (stbtt_InitFont(_info, ptr, stbtt_GetFontOffsetForIndex(ptr, 0)) == 0)
             {
                 _dataPin.Free();
-                throw new InvalidOperationException("폰트 파일을 해석할 수 없습니다.");
+                throw new InvalidOperationException("Failed to parse font file.");
             }
 
             BakePixelHeight = bakePixelHeight;
@@ -117,7 +120,7 @@ namespace Iris.Assets
                 if (!_warnedFull)
                 {
                     _warnedFull = true;
-                    Console.WriteLine("[Iris] 폰트 아틀라스가 가득 찼습니다. 이후 글자는 표시되지 않습니다.");
+                    _log.LogWarning("Font atlas is full; further glyphs will not be rendered.");
                 }
 
                 return glyph;

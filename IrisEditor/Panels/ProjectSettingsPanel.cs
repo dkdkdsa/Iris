@@ -1,5 +1,6 @@
 using Hexa.NET.ImGui;
 using Iris;
+using Iris.Debugging;
 using IrisEditor.Data;
 using IrisEditor.Serialization;
 using IrisEditor.Workspace;
@@ -12,6 +13,8 @@ namespace IrisEditor.Panels
 {
     internal sealed class ProjectSettingsPanel
     {
+        private static readonly DebugChannel _log = Debug.Channel("Editor");
+
         private static readonly (string Label, int Width, int Height)[] _resolutions =
         {
             ("800 × 600", 800, 600),
@@ -41,7 +44,7 @@ namespace IrisEditor.Panels
 
             if (workspace == null)
             {
-                Console.WriteLine("[에디터] 열린 프로젝트가 없습니다. 프로젝트를 먼저 여세요.");
+                _log.LogWarning("열린 프로젝트가 없습니다. 프로젝트를 먼저 여세요.");
                 return;
             }
 
@@ -93,7 +96,7 @@ namespace IrisEditor.Panels
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"[에디터] project.json 읽기 실패: {ex.Message}");
+                _log.LogException("project.json 읽기 실패", ex);
                 _config = new ProjectConfig();
                 _raw = new JsonObject();
                 _dirty = false;
@@ -116,11 +119,11 @@ namespace IrisEditor.Panels
                 if (created)
                     _context.Workspace?.Refresh();
 
-                Console.WriteLine($"[에디터] 프로젝트 설정 저장: {_path}");
+                _log.Log($"프로젝트 설정 저장: {_path}");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"[에디터] project.json 저장 실패: {ex.Message}");
+                _log.LogException("project.json 저장 실패", ex);
             }
         }
 
@@ -281,6 +284,28 @@ namespace IrisEditor.Panels
             }
 
             ImGui.Spacing();
+            ImGui.SeparatorText("프레임");
+
+            bool vsync = _config.VSync;
+
+            if (ImGui.Checkbox("수직 동기화", ref vsync))
+            {
+                _config.VSync = vsync;
+                _dirty = true;
+            }
+
+            ImGui.SetNextItemWidth(-160f);
+            int targetFrameRate = _config.TargetFrameRate;
+
+            if (ImGui.InputInt("최대 프레임", ref targetFrameRate))
+            {
+                _config.TargetFrameRate = Math.Max(0, targetFrameRate);
+                _dirty = true;
+            }
+
+            ImGui.TextDisabled(FrameRateHint());
+
+            ImGui.Spacing();
             ImGui.Separator();
 
             ImGui.BeginDisabled(!_dirty);
@@ -300,6 +325,18 @@ namespace IrisEditor.Panels
                 ImGui.SameLine();
                 ImGui.TextDisabled("저장 안 된 변경사항");
             }
+        }
+
+        private string FrameRateHint()
+        {
+            if (_config.TargetFrameRate > 0)
+                return _config.VSync
+                    ? $"{_config.TargetFrameRate}fps 와 모니터 주사율 중 낮은 쪽으로 제한됩니다"
+                    : $"{_config.TargetFrameRate}fps 로 제한됩니다";
+
+            return _config.VSync
+                ? "모니터 주사율로 제한됩니다 (최대 프레임 0 = 제한 없음)"
+                : "제한이 없어 CPU/GPU를 최대로 사용합니다";
         }
 
         private string CurrentResolutionLabel()

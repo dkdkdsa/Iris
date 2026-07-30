@@ -1,4 +1,5 @@
 using Iris.Core;
+using Iris.Debugging;
 using Iris.Files;
 using System;
 using System.Collections.Generic;
@@ -9,10 +10,12 @@ namespace Iris.Assets
 {
     internal class AnimatorControllerLoader : IAssetLoader
     {
+        private static readonly DebugChannel _log = Debug.Channel("Iris");
+
         public IAsset LoadAsset(string path)
         {
             if (JsonNode.Parse(VirtualFileSystem.ReadAllText(path)) is not JsonObject root)
-                throw new InvalidDataException($"애니메이터 컨트롤러 파일 형식이 아닙니다: {path}");
+                throw new InvalidDataException($"Not an animator controller file: {path}");
 
             var parameters = new List<AnimatorParameter>();
 
@@ -139,7 +142,7 @@ namespace Iris.Assets
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"[Iris] 애니메이션 클립 로드 실패({relativePath}): {ex.Message}");
+                _log.LogExceptionOnce($"Failed to load animation clip ({relativePath})", ex);
                 return null;
             }
         }

@@ -1,4 +1,5 @@
 using Iris.Attributes;
+using Iris.Debugging;
 using System;
 using System.Collections.Generic;
 
@@ -7,6 +8,8 @@ namespace Iris.Core
     public sealed class Animator : Component
     {
         private const float Epsilon = 0.0001f;
+
+        private static readonly DebugChannel _log = Debug.Channel("Iris");
 
         private readonly Dictionary<string, AnimatorState> _states = new();
         private readonly List<AnimatorTransition> _anyTransitions = new();
@@ -89,7 +92,7 @@ namespace Iris.Core
         {
             if (!_states.TryGetValue(source.To, out var target))
             {
-                Console.WriteLine($"[Iris] 애니메이터 전이 대상 상태를 찾지 못함: {source.To}");
+                _log.LogOnce(LogLevel.Warning, $"Animator transition target state not found: {source.To}", this);
                 return null;
             }
 

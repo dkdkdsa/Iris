@@ -1,5 +1,6 @@
 using Hexa.NET.ImGui;
 using Iris.Core;
+using Iris.Debugging;
 using Iris.Rendering;
 using Iris.UI;
 using IrisEditor.Data;
@@ -15,6 +16,8 @@ namespace IrisEditor.Panels
 {
     internal sealed class UIEditorPanel
     {
+        private static readonly DebugChannel _log = Debug.Channel("Editor");
+
         private static readonly (string Label, int Width, int Height)[] _resolutions =
         {
             ("800 × 600", 800, 600),
@@ -73,7 +76,7 @@ namespace IrisEditor.Panels
         private void OpenFile(string path)
         {
             if (_open && _dirty)
-                Console.WriteLine("[에디터] 저장 안 된 UI 변경사항을 버리고 다른 파일을 엽니다.");
+                _log.LogWarning("저장 안 된 UI 변경사항을 버리고 다른 파일을 엽니다.");
 
             try
             {
@@ -86,7 +89,7 @@ namespace IrisEditor.Panels
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"[에디터] UI 레이아웃 열기 실패: {ex.Message}");
+                _log.LogException("UI 레이아웃 열기 실패", ex);
             }
         }
 
@@ -99,7 +102,7 @@ namespace IrisEditor.Panels
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"[에디터] UI 레이아웃 저장 실패: {ex.Message}");
+                _log.LogException("UI 레이아웃 저장 실패", ex);
             }
         }
 
@@ -255,7 +258,7 @@ namespace IrisEditor.Panels
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine($"[에디터] UI 미리보기 생성 실패({entry.TargetType.Name}): {ex.Message}");
+                        _log.LogExceptionOnce($"UI 미리보기 생성 실패({entry.TargetType.Name})", ex);
                         instance = null;
                     }
                 }

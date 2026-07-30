@@ -25,7 +25,7 @@ namespace Iris.Files
             if (_file.TryRead(Hashing.Compute(key), out var data))
                 return data;
 
-            throw new FileNotFoundException($"패키지에 없는 파일입니다: {key}");
+            throw new FileNotFoundException($"File not found in package: {key}");
         }
     }
 }

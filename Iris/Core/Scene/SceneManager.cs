@@ -1,3 +1,4 @@
+using Iris.Debugging;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -6,6 +7,8 @@ namespace Iris.Core
 {
     public static class SceneManager
     {
+        private static readonly DebugChannel _log = Debug.Channel("Iris");
+
         private static readonly List<string> _buildScenes = new();
 
         public static Scene Active => SystemManager.Instance.GetSystem<SceneSystem>().ActiveScene;
@@ -32,7 +35,7 @@ namespace Iris.Core
 
             if (path == null)
             {
-                Console.WriteLine($"[Iris] 빌드 씬 목록에 '{name}'이(가) 없습니다.");
+                _log.LogError($"Scene '{name}' is not in the build scene list.");
                 return null;
             }
 
@@ -43,7 +46,7 @@ namespace Iris.Core
         {
             if (buildIndex < 0 || buildIndex >= _buildScenes.Count)
             {
-                Console.WriteLine($"[Iris] 빌드 씬 인덱스가 범위를 벗어남: {buildIndex} (0~{_buildScenes.Count - 1})");
+                _log.LogError($"Build scene index out of range: {buildIndex} (0~{_buildScenes.Count - 1})");
                 return null;
             }
 

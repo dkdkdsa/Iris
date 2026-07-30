@@ -12,7 +12,7 @@ namespace Iris.Build.Step
             "runtimes",
         };
 
-        public string Name => "출력 정리";
+        public string Name => "Clean Output";
 
         public Task<bool> Run(BuildContext context)
         {
@@ -35,7 +35,7 @@ namespace Iris.Build.Step
             {
                 if (_reservedDirectories.Contains(directory))
                 {
-                    context.Log($"예약된 폴더 이름과 겹쳐 정리를 건너뜀: {directory}");
+                    context.Log($"Skipping cleanup for reserved folder name: {directory}");
                     continue;
                 }
 
@@ -60,7 +60,7 @@ namespace Iris.Build.Step
             }
 
             if (removed > 0)
-                context.Log($"출력에 복사된 느슨한 콘텐츠 {removed}개 항목 제거");
+                context.Log($"Removed {removed} loose content item(s) from output");
 
             return Task.FromResult(true);
         }

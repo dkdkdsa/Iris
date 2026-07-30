@@ -20,7 +20,7 @@ namespace Iris.Build.Step
             ".git", ".vs", "bin", "obj",
         };
 
-        public string Name => "콘텐츠 수집";
+        public string Name => "Collect Content";
 
         public Task<bool> Run(BuildContext context)
         {
@@ -28,7 +28,7 @@ namespace Iris.Build.Step
 
             if (string.IsNullOrEmpty(context.ContentRoot) || !Directory.Exists(context.ContentRoot))
             {
-                context.Log($"콘텐츠 루트가 없습니다: {context.ContentRoot}");
+                context.Log($"Content root not found: {context.ContentRoot}");
                 return Task.FromResult(false);
             }
 
@@ -39,7 +39,7 @@ namespace Iris.Build.Step
             if (File.Exists(projectJson))
                 context.Content.Add(new ContentFile("project.json", projectJson));
 
-            context.Log($"에셋 {context.Content.Count}개 수집");
+            context.Log($"Collected {context.Content.Count} assets");
             return Task.FromResult(true);
         }
 

@@ -2,6 +2,7 @@
 using Iris.Assets;
 using Iris.Assets.SDL;
 using Iris.Core;
+using Iris.Debugging;
 using Iris.Platform;
 using Iris.Platform.SDL;
 using Silk.NET.Maths;
@@ -12,18 +13,65 @@ namespace Iris.Rendering.SDL
 {
     internal unsafe class SDLRenderBackend : IRenderBackend, IImGuiRenderer, IFactory<ITexture, Vector2D<int>>
     {
+        private static readonly DebugChannel _log = Debug.Channel("Iris");
+
         private readonly Sdl _sdl;
         private Renderer* _renderer;
         private SDLWindow _window;
+        private bool _vsync = true;
 
         public SDLRenderBackend(Sdl sdl)
         {
             _sdl = sdl;
         }
+
+        public bool VSync
+        {
+            get
+            {
+                return _vsync;
+            }
+            set
+            {
+                _vsync = value;
+
+                if (_renderer == null)
+                    return;
+
+                if (_sdl.RenderSetVSync(_renderer, value ? 1 : 0) != 0)
+                    _log.LogWarning($"Failed to toggle vsync ({value}): {_sdl.GetErrorS()}");
+            }
+        }
+
         public void Init(IWindow window)
         {
             _window = window as SDLWindow;
-            _renderer = _sdl.CreateRenderer(_window?.GetNativeWindow(), -1, (uint)RendererFlags.Accelerated);
+
+            var flags = RendererFlags.Accelerated;
+
+            if (_vsync)
+                flags |= RendererFlags.Presentvsync;
+
+            _renderer = _sdl.CreateRenderer(_window?.GetNativeWindow(), -1, (uint)flags);
+
+            if (_renderer == null)
+            {
+                _log.LogError($"Failed to create renderer: {_sdl.GetErrorS()}");
+                return;
+            }
+
+            if (_vsync && !HasVSync())
+                _log.LogWarning("Could not enable vsync; use targetFrameRate to limit frames.");
+        }
+
+        private bool HasVSync()
+        {
+            RendererInfo info = default;
+
+            if (_sdl.GetRendererInfo(_renderer, &info) != 0)
+                return false;
+
+            return (info.Flags & (uint)RendererFlags.Presentvsync) != 0;
         }
 
         public void BeginFrame()

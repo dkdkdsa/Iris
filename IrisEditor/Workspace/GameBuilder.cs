@@ -1,4 +1,5 @@
 using Iris.Build;
+using Iris.Debugging;
 using System;
 using System.Collections.Concurrent;
 using System.IO;
@@ -8,6 +9,8 @@ namespace IrisEditor.Workspace
 {
     internal sealed class GameBuilder
     {
+        private static readonly DebugChannel _log = Debug.Channel("Editor");
+
         private Task<bool> _task;
         private Action<bool> _onDone;
         private readonly ConcurrentQueue<string> _logs = new();
@@ -29,7 +32,7 @@ namespace IrisEditor.Workspace
                 Log = message => _logs.Enqueue(message),
             };
 
-            Console.WriteLine($"[에디터] 게임 빌드 시작: {Path.GetFileName(projectFile)} → {outputDirectory}");
+            _log.Log($"게임 빌드 시작: {Path.GetFileName(projectFile)} → {outputDirectory}");
 
             _task = Task.Run(() => BuildPipeline.CreateDefault().Run(context));
         }
@@ -37,7 +40,7 @@ namespace IrisEditor.Workspace
         public void Update()
         {
             while (_logs.TryDequeue(out var message))
-                Console.WriteLine(message);
+                _log.Log(message);
 
             if (_task == null || !_task.IsCompleted)
                 return;
@@ -45,7 +48,7 @@ namespace IrisEditor.Workspace
             bool success = _task.Status == TaskStatus.RanToCompletion && _task.Result;
 
             if (_task.IsFaulted && _task.Exception != null)
-                Console.WriteLine($"[에디터] 빌드 예외: {_task.Exception.GetBaseException().Message}");
+                _log.LogException("빌드 예외", _task.Exception.GetBaseException());
 
             _task = null;
 

@@ -14,14 +14,14 @@ namespace Iris.Build.Package
         private readonly List<PackageEntry> _entries = new();
         private readonly Dictionary<ulong, string> _keysByHash = new();
 
-        private FileStream Stream => _stream ?? throw new InvalidOperationException("CreateFile을 먼저 호출해야 합니다.");
+        private FileStream Stream => _stream ?? throw new InvalidOperationException("CreateFile must be called first.");
 
         public int EntryCount => _entries.Count;
 
         public void CreateFile(string packageFilePath)
         {
             if (_stream != null)
-                throw new InvalidOperationException("이미 파일이 열려 있습니다.");
+                throw new InvalidOperationException("A file is already open.");
 
             _stream = File.Create(packageFilePath);
             _stream.Position = PackageFormat.HeaderSize;
@@ -40,10 +40,10 @@ namespace Iris.Build.Package
             ulong hash = Hashing.Compute(normalized);
 
             if (_keysByHash.TryGetValue(hash, out var existing))
-                throw new InvalidDataException($"키 중복 또는 해시 충돌: '{existing}' / '{normalized}'");
+                throw new InvalidDataException($"Duplicate key or hash collision: '{existing}' / '{normalized}'");
 
             if (rawData.LongLength > uint.MaxValue)
-                throw new InvalidDataException($"4GB를 넘는 파일은 담을 수 없습니다: {normalized}");
+                throw new InvalidDataException($"Files larger than 4GB cannot be packed: {normalized}");
 
             _keysByHash[hash] = normalized;
 

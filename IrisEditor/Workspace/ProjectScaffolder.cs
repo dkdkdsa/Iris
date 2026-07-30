@@ -222,7 +222,9 @@ namespace IrisEditor.Workspace
                   "height": 720,
                   "title": "{{name}}",
                   "fullscreen": false,
-                  "resizable": false
+                  "resizable": false,
+                  "vsync": true,
+                  "targetFrameRate": 0
                 }
                 """;
         }

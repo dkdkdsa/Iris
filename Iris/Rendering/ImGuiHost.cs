@@ -71,25 +71,35 @@ namespace Iris.Rendering
             var mouse = Input.MousePosition;
             io.AddMousePosEvent(mouse.X, mouse.Y);
 
-            io.AddMouseButtonEvent(0, Input.GetMouseButton(MouseButton.Left));
-            io.AddMouseButtonEvent(1, Input.GetMouseButton(MouseButton.Right));
-            io.AddMouseButtonEvent(2, Input.GetMouseButton(MouseButton.Middle));
+            io.AddMouseButtonEvent(0, IsHeld(MouseButton.Left));
+            io.AddMouseButtonEvent(1, IsHeld(MouseButton.Right));
+            io.AddMouseButtonEvent(2, IsHeld(MouseButton.Middle));
 
             var scroll = Input.MouseScrollDelta;
             if (scroll.X != 0 || scroll.Y != 0)
                 io.AddMouseWheelEvent(scroll.X, scroll.Y);
 
             for (int i = 0; i < _keyMap.Length; i++)
-                io.AddKeyEvent(_keyMap[i].Value, Input.GetKey(_keyMap[i].Key));
+                io.AddKeyEvent(_keyMap[i].Value, IsHeld(_keyMap[i].Key));
 
-            io.AddKeyEvent(ImGuiKey.ModCtrl, Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl));
-            io.AddKeyEvent(ImGuiKey.ModShift, Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift));
-            io.AddKeyEvent(ImGuiKey.ModAlt, Input.GetKey(KeyCode.LeftAlt) || Input.GetKey(KeyCode.RightAlt));
-            io.AddKeyEvent(ImGuiKey.ModSuper, Input.GetKey(KeyCode.LeftSuper) || Input.GetKey(KeyCode.RightSuper));
+            io.AddKeyEvent(ImGuiKey.ModCtrl, IsHeld(KeyCode.LeftControl) || IsHeld(KeyCode.RightControl));
+            io.AddKeyEvent(ImGuiKey.ModShift, IsHeld(KeyCode.LeftShift) || IsHeld(KeyCode.RightShift));
+            io.AddKeyEvent(ImGuiKey.ModAlt, IsHeld(KeyCode.LeftAlt) || IsHeld(KeyCode.RightAlt));
+            io.AddKeyEvent(ImGuiKey.ModSuper, IsHeld(KeyCode.LeftSuper) || IsHeld(KeyCode.RightSuper));
 
             var text = Input.TextInput;
             for (int i = 0; i < text.Count; i++)
                 io.AddInputCharacterUTF16(text[i]);
+        }
+
+        private static bool IsHeld(KeyCode key)
+        {
+            return Input.GetKey(key) || Input.GetKeyDown(key);
+        }
+
+        private static bool IsHeld(MouseButton button)
+        {
+            return Input.GetMouseButton(button) || Input.GetMouseButtonDown(button);
         }
 
         private static void SetupClipboard(IClipboard clipboard)

@@ -35,6 +35,8 @@ namespace IrisEditor.Serialization
             config.DefaultHeight = ReadInt(obj, "height") ?? config.DefaultHeight;
             config.Fullscreen = ReadBool(obj, "fullscreen") ?? config.Fullscreen;
             config.Resizable = ReadBool(obj, "resizable") ?? config.Resizable;
+            config.VSync = ReadBool(obj, "vsync") ?? config.VSync;
+            config.TargetFrameRate = ReadInt(obj, "targetFrameRate") ?? config.TargetFrameRate;
 
             if (obj["buildScenes"] is JsonArray buildScenes)
             {
@@ -73,6 +75,8 @@ namespace IrisEditor.Serialization
             obj["title"] = JsonValue.Create(config.Title ?? string.Empty);
             obj["fullscreen"] = JsonValue.Create(config.Fullscreen);
             obj["resizable"] = JsonValue.Create(config.Resizable);
+            obj["vsync"] = JsonValue.Create(config.VSync);
+            obj["targetFrameRate"] = JsonValue.Create(Math.Max(0, config.TargetFrameRate));
 
             File.WriteAllText(path, obj.ToJsonString(_writeOptions));
         }

@@ -1,3 +1,4 @@
+using Iris.Debugging;
 using Iris.Files;
 using System;
 using System.Collections.Generic;
@@ -9,6 +10,8 @@ namespace Iris.Core
 {
     public static class SceneLoader
     {
+        private static readonly DebugChannel _log = Debug.Channel("Iris");
+
         public static string ContentRoot { get; set; } = AppContext.BaseDirectory;
 
         public static void RegisterAssembly(Assembly assembly)
@@ -21,7 +24,7 @@ namespace Iris.Core
             string fullPath = Path.IsPathRooted(path) ? path : Path.Combine(ContentRoot, path);
 
             if (JsonNode.Parse(VirtualFileSystem.ReadAllText(fullPath)) is not JsonObject root)
-                throw new InvalidDataException($"씬 파일 형식이 아닙니다: {path}");
+                throw new InvalidDataException($"Not a scene file: {path}");
 
             var scene = new Scene();
 
@@ -52,7 +55,7 @@ namespace Iris.Core
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"[Iris] 액터 로드 실패: {ex.Message}");
+                    _log.LogException("Failed to load actor", ex);
                 }
             }
 
@@ -61,7 +64,7 @@ namespace Iris.Core
                 if (byId.TryGetValue(parentId, out var parent))
                     child.SetParent(parent, worldPositionStays: false);
                 else
-                    Console.WriteLine($"[Iris] 부모 액터를 찾지 못해 루트로 둠: {child.Name}");
+                    _log.LogWarning($"Parent actor not found; keeping at root: {child.Name}", child);
             }
 
             foreach (var actor in built)
@@ -99,7 +102,7 @@ namespace Iris.Core
 
                 if (type == null)
                 {
-                    Console.WriteLine($"[Iris] 알 수 없는 컴포넌트 타입을 건너뜀: {typeName}");
+                    _log.LogOnce(LogLevel.Warning, $"Skipping unknown component type: {typeName}");
                     continue;
                 }
 
@@ -123,7 +126,7 @@ namespace Iris.Core
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"[Iris] 컴포넌트 로드 실패({type.Name}): {ex.Message}");
+                    _log.LogExceptionOnce($"Failed to load component ({type.Name})", ex);
                 }
             }
 

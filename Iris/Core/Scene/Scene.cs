@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Iris.Debugging;
+using System;
 using System.Collections.Generic;
 using System.Numerics;
 using System.Text;
@@ -7,6 +8,8 @@ namespace Iris.Core
 {
     public sealed class Scene : IDisposable
     {
+        private static readonly DebugChannel _log = Debug.Channel("Iris");
+
         private readonly List<Actor> _actors = new();
 
         public IReadOnlyList<Actor> Actors => _actors;
@@ -36,7 +39,7 @@ namespace Iris.Core
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine(ex);
+                    _log.LogExceptionOnce(ex, item);
                 }
             }
         }
@@ -52,7 +55,7 @@ namespace Iris.Core
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine(ex);
+                    _log.LogExceptionOnce(ex, item);
                 }
             }
         }
@@ -71,7 +74,7 @@ namespace Iris.Core
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine(ex);
+                    _log.LogExceptionOnce(ex, item);
                 }
             }
 
@@ -89,7 +92,7 @@ namespace Iris.Core
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine(ex);
+                    _log.LogExceptionOnce(ex, item);
                 }
             }
 

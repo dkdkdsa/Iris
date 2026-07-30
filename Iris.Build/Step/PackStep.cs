@@ -7,7 +7,7 @@ namespace Iris.Build.Step
 {
     public sealed class PackStep : IBuildStep
     {
-        public string Name => "패키징";
+        public string Name => "Pack";
 
         public Task<bool> Run(BuildContext context)
         {
@@ -26,7 +26,7 @@ namespace Iris.Build.Step
             }
 
             long size = new FileInfo(packagePath).Length;
-            context.Log($"{PackageFormat.DefaultFileName} 생성: {context.Content.Count}개 엔트리, {size / 1024.0:F1}KB");
+            context.Log($"Created {PackageFormat.DefaultFileName}: {context.Content.Count} entries, {size / 1024.0:F1}KB");
 
             return Task.FromResult(true);
         }

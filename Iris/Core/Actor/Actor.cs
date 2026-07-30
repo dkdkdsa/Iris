@@ -1,3 +1,4 @@
+using Iris.Debugging;
 using Silk.NET.Maths;
 using System;
 using System.Collections.Generic;
@@ -6,6 +7,8 @@ namespace Iris.Core
 {
     public sealed class Actor : EngineObject, IDisposable
     {
+        private static readonly DebugChannel _log = Debug.Channel("Iris");
+
         private List<Component> _components = new();
         private readonly List<Actor> _children = new();
         private bool _awake;
@@ -124,7 +127,7 @@ namespace Iris.Core
                 }
                 catch(Exception ex)
                 {
-                    Console.WriteLine(ex.ToString());
+                    _log.LogExceptionOnce(ex, this);
                 }
 
             }
@@ -142,7 +145,7 @@ namespace Iris.Core
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine(ex.ToString());
+                    _log.LogExceptionOnce(ex, this);
                 }
             }
         }
@@ -159,7 +162,7 @@ namespace Iris.Core
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine(ex.ToString());
+                    _log.LogExceptionOnce(ex, this);
                 }
             }
         }
@@ -188,7 +191,7 @@ namespace Iris.Core
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine(ex.ToString());
+                    _log.LogExceptionOnce(ex, this);
                 }
             }
 

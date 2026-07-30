@@ -1,9 +1,12 @@
+using Iris.Debugging;
 using System;
 
 namespace Iris.Core
 {
     public sealed class SceneSystem : SystemBase
     {
+        private static readonly DebugChannel _log = Debug.Channel("Iris");
+
         public Scene ActiveScene { get; private set; }
 
         private Scene _pendingScene;
@@ -34,7 +37,7 @@ namespace Iris.Core
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.ToString());
+                _log.LogExceptionOnce(ex);
             }
         }
 
@@ -48,7 +51,7 @@ namespace Iris.Core
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.ToString());
+                _log.LogExceptionOnce(ex);
             }
         }
 
@@ -62,7 +65,7 @@ namespace Iris.Core
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.ToString());
+                _log.LogExceptionOnce(ex);
             }
         }
 
@@ -92,7 +95,7 @@ namespace Iris.Core
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.ToString());
+                _log.LogExceptionOnce(ex);
             }
         }
     }

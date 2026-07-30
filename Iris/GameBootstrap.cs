@@ -1,4 +1,5 @@
 using Iris.Core;
+using Iris.Debugging;
 using Iris.Files;
 using Iris.Platform;
 using System;
@@ -9,6 +10,8 @@ namespace Iris
 {
     public static class GameBootstrap
     {
+        private static readonly DebugChannel _log = Debug.Channel("Iris");
+
         public static void Run(string[] args, Action onInit = null)
         {
             args ??= Array.Empty<string>();
@@ -23,7 +26,7 @@ namespace Iris
             {
                 var packageProvider = new PackageFileProvider(packagePath);
                 VirtualFileSystem.InjectProvider(packageProvider);
-                Console.WriteLine($"[Iris] 패키지 마운트: {Files.Package.PackageFormat.DefaultFileName} ({packageProvider.EntryCount}개 엔트리)");
+                _log.Log($"Mounted package: {Files.Package.PackageFormat.DefaultFileName} ({packageProvider.EntryCount} entries)");
             }
             else
             {
@@ -54,7 +57,7 @@ namespace Iris
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine(ex.Message);
+                    _log.LogException("Failed to load startup scene", ex);
                     sceneSystem.LoadScene(new Scene());
                 }
             };
@@ -66,6 +69,8 @@ namespace Iris
                 title = config.Title,
                 resizable = config.Resizable,
                 fullscreen = config.Fullscreen,
+                vsync = config.VSync,
+                targetFrameRate = config.TargetFrameRate,
             });
         }
 
@@ -87,6 +92,8 @@ namespace Iris
                     config.Title = obj["title"]?.GetValue<string>() ?? config.Title;
                     config.Fullscreen = obj["fullscreen"]?.GetValue<bool>() ?? config.Fullscreen;
                     config.Resizable = obj["resizable"]?.GetValue<bool>() ?? config.Resizable;
+                    config.VSync = obj["vsync"]?.GetValue<bool>() ?? config.VSync;
+                    config.TargetFrameRate = (int)(obj["targetFrameRate"]?.GetValue<float>() ?? config.TargetFrameRate);
 
                     if (obj["buildScenes"] is JsonArray buildScenes)
                     {
@@ -104,7 +111,7 @@ namespace Iris
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"[Iris] project.json 읽기 실패: {ex.Message}");
+                _log.LogException("Failed to read project.json", ex);
             }
 
             return config;

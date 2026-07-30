@@ -8,6 +8,7 @@ namespace Iris.Rendering
 {
     public interface IRenderBackend : IDisposable
     {
+        public bool VSync { get; set; }
         public void Init(IWindow window);
         public void BeginFrame();
         public void Clear(Color clearColor);

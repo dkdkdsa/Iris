@@ -1,9 +1,12 @@
-﻿using System;
+﻿using Iris.Debugging;
+using System;
 
 namespace Iris.Core
 {
     public abstract class Component : EngineObject, IDisposable
     {
+        private static readonly DebugChannel _log = Debug.Channel("Iris");
+
         private bool _awakened;
 
         public Actor OwnerActor { get; private set; }
@@ -28,7 +31,7 @@ namespace Iris.Core
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.ToString());
+                _log.LogExceptionOnce(ex, this);
             }
         }
 

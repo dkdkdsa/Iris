@@ -11,5 +11,7 @@ namespace Iris.Core
         public string title = "";
         public bool resizable;
         public bool fullscreen;
+        public bool vsync = true;
+        public int targetFrameRate;
     }
 }

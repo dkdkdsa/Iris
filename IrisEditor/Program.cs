@@ -17,6 +17,8 @@ namespace IrisEditor
                 height = 720,
                 title = "Iris Editor",
                 resizable = true,
+                vsync = true,
+                targetFrameRate = 60,
             });
 
             AssetManager.Initialize();

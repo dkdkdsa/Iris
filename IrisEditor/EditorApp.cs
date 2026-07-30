@@ -1,4 +1,5 @@
 using Hexa.NET.ImGui;
+using Iris.Debugging;
 using IrisEditor.Panels;
 using IrisEditor.Platform;
 using IrisEditor.Rendering;
@@ -12,6 +13,8 @@ namespace IrisEditor
 {
     internal sealed unsafe class EditorApp
     {
+        private static readonly DebugChannel _log = Debug.Channel("Editor");
+
         private readonly EditorContext _context;
         private readonly HierarchyPanel _hierarchy;
         private readonly ScenePanel _scene;
@@ -19,6 +22,7 @@ namespace IrisEditor
         private readonly InspectorPanel _inspector;
         private readonly ProjectPanel _project;
         private readonly TilePalettePanel _tiles;
+        private readonly ConsolePanel _console;
 
         private readonly List<EditorPanel> _panels;
         private readonly UIEditorPanel _uiEditor;
@@ -42,6 +46,7 @@ namespace IrisEditor
             _spriteSlicer = new SpriteSlicerPanel(context);
             _projectSettings = new ProjectSettingsPanel(context);
             _animator = new AnimatorPanel(context);
+            _console = new ConsolePanel(context);
 
             var io = ImGui.GetIO();
             io.ConfigFlags |= ImGuiConfigFlags.DockingEnable;
@@ -50,7 +55,7 @@ namespace IrisEditor
             if (File.Exists(fontPath))
                 io.Fonts.AddFontFromFileTTF(fontPath, 16f);
 
-            _panels = new List<EditorPanel> { _hierarchy, _scene, _camera, _inspector, _project, _tiles };
+            _panels = new List<EditorPanel> { _hierarchy, _scene, _camera, _inspector, _project, _tiles, _console };
         }
 
         public void Draw()
@@ -174,7 +179,7 @@ namespace IrisEditor
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"[에디터] 씬 저장 실패: {ex.Message}");
+                _log.LogException("씬 저장 실패", ex);
             }
         }
 
@@ -225,6 +230,7 @@ namespace IrisEditor
             ImGuiP.DockBuilderDockWindow(_inspector.Title, inspector);
             ImGuiP.DockBuilderDockWindow(_project.Title, project);
             ImGuiP.DockBuilderDockWindow(_tiles.Title, project);
+            ImGuiP.DockBuilderDockWindow(_console.Title, project);
             ImGuiP.DockBuilderDockWindow(_hierarchy.Title, hierarchy);
             ImGuiP.DockBuilderDockWindow(_scene.Title, scene);
             ImGuiP.DockBuilderDockWindow(_camera.Title, scene);

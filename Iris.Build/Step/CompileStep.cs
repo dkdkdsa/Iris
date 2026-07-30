@@ -6,7 +6,7 @@ namespace Iris.Build.Step
 {
     public sealed class CompileStep : IBuildStep
     {
-        public string Name => "게임 컴파일";
+        public string Name => "Compile Game";
 
         public async Task<bool> Run(BuildContext context)
         {
@@ -25,7 +25,7 @@ namespace Iris.Build.Step
 
             if (process == null)
             {
-                context.Log("dotnet을 실행하지 못했습니다.");
+                context.Log("Failed to start dotnet.");
                 return false;
             }
 

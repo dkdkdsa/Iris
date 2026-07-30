@@ -1,6 +1,4 @@
 <Solution>
-  <Project Path="DummyClient/DummyClient.csproj" Id="214c9c95-28f0-4acb-b5c5-d820b58e5e62" />
-  <Project Path="ExampleGame/ExampleGame.csproj" Id="9ca093df-3750-42e4-b61f-8b03d4ab8786" />
   <Project Path="Iris.Build/Iris.Build.csproj" Id="4f5a3073-6c7b-48ae-bd84-d24fe4186772" />
   <Project Path="Iris/Iris.csproj" />
   <Project Path="IrisEditor/IrisEditor.csproj" Id="80918b50-a393-4f31-8316-a024fde42e2d" />

@@ -13,12 +13,12 @@ namespace Iris.Assets
         public IAsset LoadAsset(string path)
         {
             if (JsonNode.Parse(VirtualFileSystem.ReadAllText(path)) is not JsonObject root)
-                throw new InvalidDataException($"스프라이트 애니메이션 파일 형식이 아닙니다: {path}");
+                throw new InvalidDataException($"Not a sprite animation file: {path}");
 
             string texturePath = root["texture"]?.GetValue<string>();
 
             if (string.IsNullOrWhiteSpace(texturePath))
-                throw new InvalidDataException($"texture가 비어 있습니다: {path}");
+                throw new InvalidDataException($"texture is empty: {path}");
 
             string fullTexturePath = Path.IsPathRooted(texturePath)
                 ? texturePath

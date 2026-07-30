@@ -1,5 +1,6 @@
 using Iris.Assets;
 using Iris.Attributes;
+using Iris.Debugging;
 using Silk.NET.Maths;
 using System;
 using System.Collections.Generic;
@@ -10,6 +11,8 @@ namespace Iris.Core
 {
     public class Tilemap : Component
     {
+        private static readonly DebugChannel _log = Debug.Channel("Iris");
+
         private readonly Dictionary<Vector2D<int>, Tile> _tiles = new();
         private string _serialized = string.Empty;
         private bool _parsed = true;
@@ -129,7 +132,7 @@ namespace Iris.Core
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"[Iris] 타일맵 데이터 파싱 실패: {ex.Message}");
+                _log.LogException("Failed to parse tilemap data", ex, this);
             }
         }
 
@@ -145,7 +148,7 @@ namespace Iris.Core
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"[Iris] 타일 로드 실패({path}): {ex.Message}");
+                _log.LogExceptionOnce($"Failed to load tile ({path})", ex);
                 return null;
             }
         }

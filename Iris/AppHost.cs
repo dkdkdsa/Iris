@@ -1,15 +1,23 @@
 using Iris.Core;
+using Iris.Debugging;
 using Iris.Platform;
 using Iris.Rendering;
 using System;
-using System.Diagnostics;
+using System.Threading;
+using Stopwatch = System.Diagnostics.Stopwatch;
 
 namespace Iris
 {
     public sealed class AppHost : IDisposable
     {
+        private const double PreciseSleepThreshold = 0.002;
+        private const double CoarseSleepThreshold = 0.020;
+        private const double SpinMargin = 0.001;
+
         private readonly IPlatform _platform;
 
+        private PrecisionTimer _frameTimer;
+        private double _sleepThreshold;
         private Stopwatch _stopwatch;
         private double _previousTime;
 
@@ -18,6 +26,8 @@ namespace Iris
         public ImGuiHost ImGui { get; private set; }
 
         public float DeltaTime { get; private set; }
+
+        public int TargetFrameRate { get; set; }
 
         public bool IsCloseRequested => _platform.IsCloseRequested;
 
@@ -28,6 +38,14 @@ namespace Iris
 
         public void Initialize(WindowConfig config)
         {
+            TargetFrameRate = config.targetFrameRate;
+
+            _frameTimer = new PrecisionTimer();
+            _sleepThreshold = _frameTimer.IsHighResolution ? PreciseSleepThreshold : CoarseSleepThreshold;
+
+            if (TargetFrameRate > 0 && !_frameTimer.IsHighResolution)
+                Debug.Channel("Iris").LogWarning("High-resolution timer is unavailable; frame limiting will be imprecise.");
+
             _platform.CreateWindow(config);
             Input.SetBackend(_platform.InputBackend);
 
@@ -71,12 +89,38 @@ namespace Iris
             ImGui?.Render();
 
             backend.EndFrame();
+
+            LimitFrameRate();
+        }
+
+        private void LimitFrameRate()
+        {
+            if (TargetFrameRate <= 0)
+                return;
+
+            double budget = 1.0 / TargetFrameRate;
+
+            while (true)
+            {
+                double remaining = budget - (_stopwatch.Elapsed.TotalSeconds - _previousTime);
+
+                if (remaining <= 0d)
+                    return;
+
+                if (remaining > _sleepThreshold)
+                    _frameTimer.Wait(remaining - SpinMargin);
+                else
+                    Thread.SpinWait(64);
+            }
         }
 
         public void Dispose()
         {
             ImGui?.Dispose();
             ImGui = null;
+
+            _frameTimer?.Dispose();
+            _frameTimer = null;
 
             _platform.Dispose();
         }

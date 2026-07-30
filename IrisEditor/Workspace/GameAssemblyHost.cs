@@ -1,14 +1,18 @@
+using Iris.Debugging;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 using System.Runtime.Loader;
+using System.Text;
 
 namespace IrisEditor.Workspace
 {
     internal sealed class GameAssemblyHost
     {
+        private static readonly DebugChannel _log = Iris.Debugging.Debug.Channel("Editor");
+
         private sealed class GameLoadContext : AssemblyLoadContext
         {
             public GameLoadContext() : base(isCollectible: true)
@@ -56,11 +60,11 @@ namespace IrisEditor.Workspace
                 _buildProcess.BeginOutputReadLine();
                 _buildProcess.BeginErrorReadLine();
 
-                Console.WriteLine($"[에디터] 스크립트 빌드 시작: {Path.GetFileName(projectFile)}");
+                _log.Log($"스크립트 빌드 시작: {Path.GetFileName(projectFile)}");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"[에디터] dotnet 실행 실패: {ex.Message}");
+                _log.LogException("dotnet 실행 실패", ex);
                 _buildProcess = null;
                 _onDone = null;
                 onDone?.Invoke(false);
@@ -81,13 +85,19 @@ namespace IrisEditor.Workspace
 
             if (exitCode != 0)
             {
-                Console.WriteLine("[에디터] 스크립트 빌드 실패:");
+                var builder = new StringBuilder("스크립트 빌드 실패:");
 
                 lock (_buildOutput)
                 {
                     foreach (var line in _buildOutput)
-                        Console.WriteLine("  " + line);
+                    {
+                        builder.AppendLine();
+                        builder.Append("  ");
+                        builder.Append(line);
+                    }
                 }
+
+                _log.LogError(builder.ToString());
 
                 onDone?.Invoke(false);
                 return;
@@ -102,7 +112,7 @@ namespace IrisEditor.Workspace
 
             if (dll == null)
             {
-                Console.WriteLine("[에디터] 빌드 산출물 DLL을 찾을 수 없습니다.");
+                _log.LogError("빌드 산출물 DLL을 찾을 수 없습니다.");
                 return false;
             }
 
@@ -114,12 +124,12 @@ namespace IrisEditor.Workspace
                 using var stream = new MemoryStream(File.ReadAllBytes(dll));
                 Current = _loadContext.LoadFromStream(stream);
 
-                Console.WriteLine($"[에디터] 게임 어셈블리 로드 완료: {Path.GetFileName(dll)}");
+                _log.Log($"게임 어셈블리 로드 완료: {Path.GetFileName(dll)}");
                 return true;
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"[에디터] 어셈블리 로드 실패: {ex.Message}");
+                _log.LogException("어셈블리 로드 실패", ex);
                 Current = null;
                 return false;
             }

@@ -46,6 +46,7 @@ namespace Iris.Platform.SDL
         public void CreateWindow(WindowConfig config)
         {
             _window = new SDLWindow(_sdl, config);
+            _backend.VSync = config.vsync;
             _backend.Init(_window);
             _sdl.StartTextInput();
         }

@@ -24,7 +24,7 @@ namespace Iris.Files.Package
                 long fileLength = RandomAccess.GetLength(_handle);
 
                 if (fileLength < PackageFormat.HeaderSize)
-                    throw new InvalidDataException($"패키지 파일이 너무 작습니다: {path}");
+                    throw new InvalidDataException($"Package file is too small: {path}");
 
                 Span<byte> headerBytes = stackalloc byte[PackageFormat.HeaderSize];
                 ReadExactly(0, headerBytes);
@@ -32,15 +32,15 @@ namespace Iris.Files.Package
                 _header = MemoryMarshal.Read<PackageHeader>(headerBytes);
 
                 if (_header.magic != PackageFormat.MagicValue)
-                    throw new InvalidDataException($"패키지 파일이 아닙니다: {path}");
+                    throw new InvalidDataException($"Not a package file: {path}");
 
                 if (_header.version != PackageFormat.CurrentVersion)
-                    throw new InvalidDataException($"지원하지 않는 패키지 버전입니다: {_header.version} (지원: {PackageFormat.CurrentVersion})");
+                    throw new InvalidDataException($"Unsupported package version: {_header.version} (supported: {PackageFormat.CurrentVersion})");
 
                 long indexSize = (long)_header.entryCount * PackageFormat.EntrySize;
 
                 if ((long)_header.indexOffset < PackageFormat.HeaderSize || (long)_header.indexOffset + indexSize > fileLength)
-                    throw new InvalidDataException($"패키지 인덱스가 손상되었습니다: {path}");
+                    throw new InvalidDataException($"Package index is corrupted: {path}");
 
                 byte[] indexBytes = new byte[indexSize];
                 ReadExactly((long)_header.indexOffset, indexBytes);
@@ -50,7 +50,7 @@ namespace Iris.Files.Package
                 foreach (var entry in entries)
                 {
                     if ((long)entry.offset < PackageFormat.HeaderSize || (long)entry.offset + entry.storedSize > fileLength)
-                        throw new InvalidDataException($"패키지 엔트리가 손상되었습니다: {path}");
+                        throw new InvalidDataException($"Package entry is corrupted: {path}");
 
                     _entries[entry.hash] = entry;
                 }
@@ -101,7 +101,7 @@ namespace Iris.Files.Package
                 int read = RandomAccess.Read(_handle, buffer.Slice(total), offset + total);
 
                 if (read == 0)
-                    throw new EndOfStreamException("패키지 파일이 잘렸습니다.");
+                    throw new EndOfStreamException("Package file is truncated.");
 
                 total += read;
             }

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Iris.Debugging;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Authentication;
@@ -8,6 +9,8 @@ namespace Iris.Core
 {
     public class SystemManager : IDisposable
     {
+        private static readonly DebugChannel _log = Debug.Channel("Iris");
+
         public static SystemManager Instance { get; private set; }
         private List<SystemBase> _systems = new();
 
@@ -43,7 +46,7 @@ namespace Iris.Core
                 }
                 catch(Exception ex)
                 {
-                    Console.WriteLine(ex.ToString());
+                    _log.LogExceptionOnce(ex);
                 }
 
             }
@@ -59,7 +62,7 @@ namespace Iris.Core
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine(ex.ToString());
+                    _log.LogExceptionOnce(ex);
                 }
             }
         }
@@ -74,7 +77,7 @@ namespace Iris.Core
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine(ex.ToString());
+                    _log.LogExceptionOnce(ex);
                 }
             }
         }
@@ -89,7 +92,7 @@ namespace Iris.Core
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine(ex.ToString());
+                    _log.LogExceptionOnce(ex);
                 }
             }
         }

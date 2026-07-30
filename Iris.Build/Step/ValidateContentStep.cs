@@ -14,7 +14,7 @@ namespace Iris.Build.Step
             ".scene", ".prefab", ".ui", ".anim", ".sprite", ".tile", ".controller",
         };
 
-        public string Name => "콘텐츠 검증";
+        public string Name => "Validate Content";
 
         public Task<bool> Run(BuildContext context)
         {
@@ -38,7 +38,7 @@ namespace Iris.Build.Step
                 }
                 catch (Exception ex)
                 {
-                    context.Log($"{file.Key}: JSON 파싱 실패 - {ex.Message}");
+                    context.Log($"{file.Key}: JSON parse failed - {ex.Message}");
                     errors++;
                     continue;
                 }
@@ -49,7 +49,7 @@ namespace Iris.Build.Step
                     {
                         if (!File.Exists(reference))
                         {
-                            context.Log($"{file.Key} → 없는 절대 경로 참조: {reference}");
+                            context.Log($"{file.Key} → missing absolute path reference: {reference}");
                             errors++;
                         }
 
@@ -58,7 +58,7 @@ namespace Iris.Build.Step
 
                     if (!keys.Contains(PackageFormat.NormalizeKey(reference)))
                     {
-                        context.Log($"{file.Key} → 없는 에셋 참조: {reference}");
+                        context.Log($"{file.Key} → missing asset reference: {reference}");
                         errors++;
                     }
                 });
@@ -66,7 +66,7 @@ namespace Iris.Build.Step
 
             if (errors > 0)
             {
-                context.Log($"참조 오류 {errors}개");
+                context.Log($"{errors} reference error(s)");
                 return Task.FromResult(false);
             }
 

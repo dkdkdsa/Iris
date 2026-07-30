@@ -1,5 +1,6 @@
 using Hexa.NET.ImGui;
 using Iris.Core;
+using Iris.Debugging;
 using IrisEditor.Data;
 using IrisEditor.Serialization;
 using System;
@@ -12,6 +13,8 @@ namespace IrisEditor.Panels
 {
     internal sealed class AnimatorPanel
     {
+        private static readonly DebugChannel _log = Debug.Channel("Editor");
+
         private static readonly Vector2 NodeSize = new(150f, 44f);
         private const uint NodeColor = 0xFF3A3A3A;
         private const uint NodeDefaultColor = 0xFF2A5A2A;
@@ -102,7 +105,7 @@ namespace IrisEditor.Panels
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"[에디터] 애니메이터 컨트롤러 열기 실패: {ex.Message}");
+                _log.LogException("애니메이터 컨트롤러 열기 실패", ex);
             }
         }
 
@@ -112,11 +115,11 @@ namespace IrisEditor.Panels
             {
                 AnimatorControllerSerializer.Save(_graph, _path);
                 _dirty = false;
-                Console.WriteLine($"[에디터] 애니메이터 저장: {_path}");
+                _log.Log($"애니메이터 저장: {_path}");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"[에디터] 애니메이터 저장 실패: {ex.Message}");
+                _log.LogException("애니메이터 저장 실패", ex);
             }
         }
 

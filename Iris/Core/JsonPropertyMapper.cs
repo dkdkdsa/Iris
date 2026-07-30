@@ -1,4 +1,5 @@
 using Iris.Assets;
+using Iris.Debugging;
 using Silk.NET.Maths;
 using System;
 using System.IO;
@@ -9,6 +10,8 @@ namespace Iris.Core
 {
     public static class JsonPropertyMapper
     {
+        private static readonly DebugChannel _log = Debug.Channel("Iris");
+
         public static void ApplyProperties(object target, JsonObject properties)
         {
             if (properties == null)
@@ -40,7 +43,7 @@ namespace Iris.Core
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"[Iris] 멤버 적용 실패({type.Name}.{pair.Key}): {ex.Message}");
+                    _log.LogExceptionOnce($"Failed to apply member ({type.Name}.{pair.Key})", ex);
                 }
             }
         }

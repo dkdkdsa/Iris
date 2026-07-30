@@ -1,4 +1,5 @@
 using Iris.Core;
+using Iris.Debugging;
 using System;
 using System.Collections.Generic;
 using System.Text.Json.Nodes;
@@ -7,12 +8,14 @@ namespace Iris.UI
 {
     internal class UILayout : IUILayout
     {
+        private static readonly DebugChannel _log = Debug.Channel("Iris");
+
         private readonly List<(string TypeName, JsonObject Properties)> _entries = new();
 
         public UILayout(string json)
         {
             if (JsonNode.Parse(json) is not JsonObject root)
-                throw new InvalidOperationException("UI 레이아웃 파일 형식이 아닙니다.");
+                throw new InvalidOperationException("Not a UI layout file.");
 
             if (root["uiObjects"] is not JsonArray uiObjects)
                 return;
@@ -49,7 +52,7 @@ namespace Iris.UI
 
                 if (type == null)
                 {
-                    Console.WriteLine($"[Iris] 알 수 없는 UI 오브젝트 타입을 건너뜀: {typeName}");
+                    _log.LogOnce(LogLevel.Warning, $"Skipping unknown UI object type: {typeName}");
                     continue;
                 }
 
@@ -61,7 +64,7 @@ namespace Iris.UI
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"[Iris] UI 오브젝트 생성 실패({typeName}): {ex.Message}");
+                    _log.LogExceptionOnce($"Failed to create UI object ({typeName})", ex);
                 }
             }
 

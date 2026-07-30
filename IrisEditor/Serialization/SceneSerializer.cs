@@ -1,4 +1,5 @@
 using Iris.Core;
+using Iris.Debugging;
 using IrisEditor.Data;
 using System;
 using System.Collections.Generic;
@@ -11,6 +12,8 @@ namespace IrisEditor.Serialization
 {
     internal static class SceneSerializer
     {
+        private static readonly DebugChannel _log = Debug.Channel("Editor");
+
         public static void Save(SceneData scene, string path)
         {
             var actors = new JsonArray();
@@ -103,7 +106,7 @@ namespace IrisEditor.Serialization
                         var type = ComponentCatalog.Resolve(typeName);
 
                         if (type == null)
-                            Console.WriteLine($"[에디터] 알 수 없는 컴포넌트 타입(데이터는 보존됨): {typeName}");
+                            _log.LogOnce(LogLevel.Warning, $"알 수 없는 컴포넌트 타입(데이터는 보존됨): {typeName}");
 
                         var properties = compObj["properties"]?.DeepClone() as JsonObject ?? new JsonObject();
 

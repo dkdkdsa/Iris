@@ -29,7 +29,7 @@ namespace Iris.Build
         {
             foreach (var step in _steps)
             {
-                context.Log($"[빌드] {step.Name}");
+                context.Log($"[Build] {step.Name}");
 
                 bool success;
 
@@ -39,13 +39,13 @@ namespace Iris.Build
                 }
                 catch (Exception ex)
                 {
-                    context.Log($"[빌드] {step.Name} 예외: {ex.Message}");
+                    context.Log($"[Build] {step.Name} exception: {ex.Message}");
                     return false;
                 }
 
                 if (!success)
                 {
-                    context.Log($"[빌드] {step.Name} 실패");
+                    context.Log($"[Build] {step.Name} failed");
                     return false;
                 }
             }
