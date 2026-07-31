@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using System.Text.Json.Nodes;
+using IrisEditor.Localization;
 
 namespace IrisEditor.Panels
 {
@@ -38,7 +39,7 @@ namespace IrisEditor.Panels
             }
 
             if (!drewAny)
-                ImGui.TextDisabled("(데이터 없음)");
+                ImGui.TextDisabled(Loc.T("common.noData"));
 
             return changed;
         }

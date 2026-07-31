@@ -11,6 +11,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text.Json.Nodes;
+using IrisEditor.Localization;
 
 namespace IrisEditor.Panels
 {
@@ -60,7 +61,7 @@ namespace IrisEditor.Panels
 
             ImGui.SetNextWindowSize(new System.Numerics.Vector2(1100f, 640f), ImGuiCond.FirstUseEver);
 
-            string title = $"UI 편집기 - {Path.GetFileName(_path)}{(_dirty ? " *" : "")}###UIEditorWindow";
+            string title = $"{Loc.T("uiEditor.title")} - {Path.GetFileName(_path)}{(_dirty ? " *" : "")}###UIEditorWindow";
 
             if (ImGui.Begin(title, ref _open, ImGuiWindowFlags.MenuBar))
             {
@@ -74,7 +75,7 @@ namespace IrisEditor.Panels
         private void OpenFile(string path)
         {
             if (_open && _dirty)
-                Debug.LogWarning("저장 안 된 UI 변경사항을 버리고 다른 파일을 엽니다.");
+                Debug.LogWarning("Discarding unsaved UI changes and opening another file.");
 
             try
             {
@@ -87,7 +88,7 @@ namespace IrisEditor.Panels
             }
             catch (Exception ex)
             {
-                Debug.LogException("UI 레이아웃 열기 실패", ex);
+                Debug.LogException("Failed to open UI layout", ex);
             }
         }
 
@@ -100,7 +101,7 @@ namespace IrisEditor.Panels
             }
             catch (Exception ex)
             {
-                Debug.LogException("UI 레이아웃 저장 실패", ex);
+                Debug.LogException("Failed to save UI layout", ex);
             }
         }
 
@@ -109,12 +110,12 @@ namespace IrisEditor.Panels
             if (!ImGui.BeginMenuBar())
                 return;
 
-            if (ImGui.BeginMenu("파일"))
+            if (ImGui.BeginMenu(Loc.T("menu.file")))
             {
-                if (ImGui.MenuItem("저장"))
+                if (ImGui.MenuItem(Loc.T("common.save")))
                     Save();
 
-                if (ImGui.MenuItem("닫기"))
+                if (ImGui.MenuItem(Loc.T("common.close")))
                     _open = false;
 
                 ImGui.EndMenu();
@@ -133,7 +134,7 @@ namespace IrisEditor.Panels
                 ImGui.EndCombo();
             }
 
-            ImGui.TextDisabled("미리보기 해상도");
+            ImGui.TextDisabled(Loc.T("uiEditor.previewResolution"));
 
             ImGui.EndMenuBar();
         }
@@ -165,7 +166,7 @@ namespace IrisEditor.Panels
 
         private void DrawPalette()
         {
-            ImGui.TextDisabled("UI 오브젝트 추가");
+            ImGui.TextDisabled(Loc.T("uiEditor.addObject"));
             ImGui.Separator();
 
             foreach (var type in UIObjectCatalog.Types)
@@ -192,21 +193,21 @@ namespace IrisEditor.Panels
 
         private void DrawInfo()
         {
-            ImGui.TextDisabled("UI 오브젝트 정보");
+            ImGui.TextDisabled(Loc.T("uiEditor.objectInfo"));
             ImGui.Separator();
 
             if (_selected == null)
             {
-                ImGui.TextDisabled("(디자인 창에서 선택)");
+                ImGui.TextDisabled(Loc.T("uiEditor.selectHint"));
                 return;
             }
 
             string title = _selected.TargetType?.Name
-                ?? (_selected.TypeName != null ? $"{_selected.TypeName} (미해석)" : "(알 수 없음)");
+                ?? (_selected.TypeName != null ? Loc.T("common.unresolved", _selected.TypeName) : Loc.T("common.unknown"));
 
             ImGui.Text(title);
 
-            if (ImGui.Button("삭제", new System.Numerics.Vector2(-1f, 0f)))
+            if (ImGui.Button(Loc.T("common.delete"), new System.Numerics.Vector2(-1f, 0f)))
             {
                 _entries.Remove(_selected);
                 _selected = null;
@@ -256,7 +257,7 @@ namespace IrisEditor.Panels
                     }
                     catch (Exception ex)
                     {
-                        Debug.LogExceptionOnce($"UI 미리보기 생성 실패({entry.TargetType.Name})", ex);
+                        Debug.LogExceptionOnce($"Failed to build UI preview ({entry.TargetType.Name})", ex);
                         instance = null;
                     }
                 }

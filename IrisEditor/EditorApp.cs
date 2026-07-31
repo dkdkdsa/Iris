@@ -8,11 +8,14 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Numerics;
+using IrisEditor.Localization;
 
 namespace IrisEditor
 {
     internal sealed unsafe class EditorApp
     {
+        private const int LayoutVersion = 1;
+
         private readonly EditorContext _context;
         private readonly HierarchyPanel _hierarchy;
         private readonly ScenePanel _scene;
@@ -58,6 +61,7 @@ namespace IrisEditor
 
         public void Draw()
         {
+            Loc.PollHotReload();
             FileDialog.Update();
             _context.Scripts.Update();
             _context.Builder.Update();
@@ -86,66 +90,88 @@ namespace IrisEditor
             if (!ImGui.BeginMainMenuBar())
                 return;
 
-            if (ImGui.BeginMenu("파일"))
+            if (ImGui.BeginMenu(Loc.T("menu.file")))
             {
-                if (ImGui.MenuItem("새 프로젝트"))
+                if (ImGui.MenuItem(Loc.T("menu.file.newProject")))
                     _context.CreateProjectWithDialog();
 
                 ImGui.Separator();
 
-                if (ImGui.MenuItem("씬 저장", "Ctrl+S"))
+                if (ImGui.MenuItem(Loc.T("menu.file.saveScene"), "Ctrl+S"))
                     SaveScene(saveAs: false);
 
-                if (ImGui.MenuItem("다른 이름으로 저장"))
+                if (ImGui.MenuItem(Loc.T("menu.file.saveSceneAs")))
                     SaveScene(saveAs: true);
 
                 ImGui.Separator();
 
-                if (ImGui.MenuItem("프로젝트 열기"))
+                if (ImGui.MenuItem(Loc.T("menu.file.openProject")))
                     _context.OpenProjectWithDialog();
 
-                if (ImGui.MenuItem("스크립트 새로고침", string.Empty, false, !_context.Scripts.Building))
+                if (ImGui.MenuItem(Loc.T("menu.file.refreshScripts"), string.Empty, false, !_context.Scripts.Building))
                     _context.RefreshScripts();
 
                 ImGui.Separator();
 
-                if (ImGui.MenuItem("현재 씬 실행", "F5", false, !_context.Scripts.Building && !_context.Builder.Building))
+                if (ImGui.MenuItem(Loc.T("menu.file.runScene"), "F5", false, !_context.Scripts.Building && !_context.Builder.Building))
                     _context.RunGame();
 
                 ImGui.Separator();
 
-                if (ImGui.MenuItem(_context.Builder.Building ? "빌드 중..." : "빌드", string.Empty, false, !_context.Builder.Building))
+                if (ImGui.MenuItem(_context.Builder.Building ? Loc.T("menu.file.building") : Loc.T("menu.file.build"), string.Empty, false, !_context.Builder.Building))
                     _context.BuildGameWithDialog();
 
                 ImGui.EndMenu();
             }
 
-            if (ImGui.BeginMenu("프로젝트"))
+            if (ImGui.BeginMenu(Loc.T("menu.project")))
             {
-                if (ImGui.MenuItem("프로젝트 설정", string.Empty, false, _context.Workspace != null))
+                if (ImGui.MenuItem(Loc.T("menu.project.settings"), string.Empty, false, _context.Workspace != null))
                     _projectSettings.Open();
 
                 ImGui.EndMenu();
             }
 
-            if (ImGui.BeginMenu("보기"))
+            if (ImGui.BeginMenu(Loc.T("menu.view")))
             {
                 foreach (var panel in _panels)
                     ImGui.MenuItem(panel.Title, string.Empty, ref panel.IsOpen);
 
                 ImGui.Separator();
 
-                ImGui.MenuItem("콜라이더 표시", string.Empty, ref _scene.ShowColliders);
+                ImGui.MenuItem(Loc.T("menu.view.showColliders"), string.Empty, ref _scene.ShowColliders);
 
                 ImGui.Separator();
 
-                if (ImGui.MenuItem("레이아웃 초기화"))
+                if (ImGui.MenuItem(Loc.T("menu.view.resetLayout")))
                     _resetLayout = true;
+
+                ImGui.Separator();
+
+                if (ImGui.BeginMenu(Loc.T("menu.view.language")))
+                {
+                    foreach (var code in Loc.Available)
+                    {
+                        if (ImGui.MenuItem(Loc.DisplayName(code), string.Empty, code == Loc.Language))
+                        {
+                            Loc.SetLanguage(code);
+                            EditorSettings.Language = code;
+                            EditorSettings.Save();
+                        }
+                    }
+
+                    ImGui.Separator();
+
+                    if (ImGui.MenuItem(Loc.T("menu.view.reloadLanguage")))
+                        Loc.Reload();
+
+                    ImGui.EndMenu();
+                }
 
                 ImGui.EndMenu();
             }
 
-            string sceneLabel = _context.ScenePath == null ? "제목 없는 씬" : Path.GetFileName(_context.ScenePath);
+            string sceneLabel = _context.ScenePath == null ? Loc.T("menu.untitledScene") : Path.GetFileName(_context.ScenePath);
             if (_context.Dirty)
                 sceneLabel += " *";
 
@@ -177,7 +203,7 @@ namespace IrisEditor
             }
             catch (Exception ex)
             {
-                Debug.LogException("씬 저장 실패", ex);
+                Debug.LogException("Failed to save scene", ex);
             }
         }
 
@@ -202,10 +228,18 @@ namespace IrisEditor
 
             uint dockspaceId = ImGui.GetID("EditorDockspace");
 
-            if (_resetLayout || ImGuiP.DockBuilderGetNode(dockspaceId).IsNull)
+            bool outdated = EditorSettings.LayoutVersion != LayoutVersion;
+
+            if (_resetLayout || outdated || ImGuiP.DockBuilderGetNode(dockspaceId).IsNull)
             {
                 _resetLayout = false;
                 BuildDefaultLayout(dockspaceId, viewport.WorkSize);
+
+                if (outdated)
+                {
+                    EditorSettings.LayoutVersion = LayoutVersion;
+                    EditorSettings.Save();
+                }
             }
 
             ImGui.DockSpace(dockspaceId, Vector2.Zero, ImGuiDockNodeFlags.None);

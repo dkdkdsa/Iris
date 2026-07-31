@@ -13,4 +13,8 @@
     <ProjectReference Include="..\Iris.Build\Iris.Build.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Content Include="Localization\*.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>

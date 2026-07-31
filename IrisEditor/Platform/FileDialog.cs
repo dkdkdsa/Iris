@@ -2,6 +2,7 @@ using System;
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 using System.Threading;
+using IrisEditor.Localization;
 
 namespace IrisEditor.Platform
 {
@@ -13,7 +14,7 @@ namespace IrisEditor.Platform
         private const int OfnOverwritePrompt = 0x2;
         private const int OfnNoChangeDir = 0x8;
 
-        private const string Filter = "Iris 씬 (*.scene)\0*.scene\0JSON (*.json)\0*.json\0모든 파일 (*.*)\0*.*\0\0";
+        private static string Filter => Loc.T("dialog.sceneFilter") + "\0*.scene\0JSON (*.json)\0*.json\0" + Loc.T("dialog.allFilesFilter") + "\0*.*\0\0";
 
         private static Thread _thread;
         private static Action<string> _callback;
@@ -105,7 +106,7 @@ namespace IrisEditor.Platform
             var bi = new BrowseInfoW
             {
                 hwndOwner = owner,
-                lpszTitle = "워크스페이스 폴더 선택",
+                lpszTitle = Loc.T("dialog.pickWorkspace"),
                 ulFlags = 0x1 | 0x40,
             };
 

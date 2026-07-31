@@ -2,24 +2,25 @@ using IrisEditor.Data;
 using IrisEditor.Serialization;
 using System.IO;
 using System.Text;
+using IrisEditor.Localization;
 
 namespace IrisEditor.Workspace
 {
     internal static class BuiltinAssetCreators
     {
-        [AssetCreator("폴더", "NewFolder")]
+        [AssetCreator("asset.folder", "NewFolder")]
         private static void CreateFolder(string path)
         {
             Directory.CreateDirectory(path);
         }
 
-        [AssetCreator("씬", "NewScene.scene")]
+        [AssetCreator("asset.scene", "NewScene.scene")]
         private static void CreateScene(string path)
         {
             SceneSerializer.Save(new SceneData(), path);
         }
 
-        [AssetCreator("UI 레이아웃", "NewLayout.ui")]
+        [AssetCreator("asset.uiLayout", "NewLayout.ui")]
         private static void CreateUILayout(string path)
         {
             File.WriteAllText(path, """
@@ -29,7 +30,7 @@ namespace IrisEditor.Workspace
                 """);
         }
 
-        [AssetCreator("애니메이터 컨트롤러", "NewAnimator.controller")]
+        [AssetCreator("asset.animatorController", "NewAnimator.controller")]
         private static void CreateAnimatorController(string path)
         {
             File.WriteAllText(path, """
@@ -42,7 +43,7 @@ namespace IrisEditor.Workspace
                 """);
         }
 
-        [AssetCreator("스프라이트 애니메이션", "NewAnimation.anim")]
+        [AssetCreator("asset.spriteAnimation", "NewAnimation.anim")]
         private static void CreateSpriteAnimation(string path)
         {
             File.WriteAllText(path, """
@@ -61,7 +62,7 @@ namespace IrisEditor.Workspace
                 """);
         }
 
-        [AssetCreator("스프라이트", "NewSprite.sprite")]
+        [AssetCreator("asset.sprite", "NewSprite.sprite")]
         private static void CreateSprite(string path)
         {
             File.WriteAllText(path, """
@@ -75,7 +76,7 @@ namespace IrisEditor.Workspace
                 """);
         }
 
-        [AssetCreator("타일", "NewTile.tile")]
+        [AssetCreator("asset.tile", "NewTile.tile")]
         private static void CreateTile(string path)
         {
             File.WriteAllText(path, """
@@ -89,7 +90,7 @@ namespace IrisEditor.Workspace
                 """);
         }
 
-        [AssetCreator("C# 스크립트", "NewScript.cs")]
+        [AssetCreator("asset.script", "NewScript.cs")]
         private static void CreateScript(string path)
         {
             string className = SanitizeClassName(Path.GetFileNameWithoutExtension(path));

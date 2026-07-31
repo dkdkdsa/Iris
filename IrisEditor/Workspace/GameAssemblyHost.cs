@@ -59,11 +59,11 @@ namespace IrisEditor.Workspace
                 _buildProcess.BeginOutputReadLine();
                 _buildProcess.BeginErrorReadLine();
 
-                Debug.Log($"스크립트 빌드 시작: {Path.GetFileName(projectFile)}");
+                Debug.Log($"Script build started: {Path.GetFileName(projectFile)}");
             }
             catch (Exception ex)
             {
-                Debug.LogException("dotnet 실행 실패", ex);
+                Debug.LogException("Failed to run dotnet", ex);
                 _buildProcess = null;
                 _onDone = null;
                 onDone?.Invoke(false);
@@ -84,7 +84,7 @@ namespace IrisEditor.Workspace
 
             if (exitCode != 0)
             {
-                var builder = new StringBuilder("스크립트 빌드 실패:");
+                var builder = new StringBuilder("Script build failed:");
 
                 lock (_buildOutput)
                 {
@@ -111,7 +111,7 @@ namespace IrisEditor.Workspace
 
             if (dll == null)
             {
-                Debug.LogError("빌드 산출물 DLL을 찾을 수 없습니다.");
+                Debug.LogError("Build output DLL not found.");
                 return false;
             }
 
@@ -123,12 +123,12 @@ namespace IrisEditor.Workspace
                 using var stream = new MemoryStream(File.ReadAllBytes(dll));
                 Current = _loadContext.LoadFromStream(stream);
 
-                Debug.Log($"게임 어셈블리 로드 완료: {Path.GetFileName(dll)}");
+                Debug.Log($"Game assembly loaded: {Path.GetFileName(dll)}");
                 return true;
             }
             catch (Exception ex)
             {
-                Debug.LogException("어셈블리 로드 실패", ex);
+                Debug.LogException("Failed to load assembly", ex);
                 Current = null;
                 return false;
             }

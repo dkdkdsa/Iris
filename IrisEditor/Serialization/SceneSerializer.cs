@@ -49,7 +49,7 @@ namespace IrisEditor.Serialization
         public static SceneData Load(string path)
         {
             if (JsonNode.Parse(File.ReadAllText(path)) is not JsonObject root)
-                throw new InvalidDataException("씬 파일 형식이 아닙니다.");
+                throw new InvalidDataException("Not a scene file.");
 
             var scene = new SceneData();
 
@@ -104,7 +104,7 @@ namespace IrisEditor.Serialization
                         var type = ComponentCatalog.Resolve(typeName);
 
                         if (type == null)
-                            Debug.LogOnce(LogLevel.Warning, $"알 수 없는 컴포넌트 타입(데이터는 보존됨): {typeName}");
+                            Debug.LogOnce(LogLevel.Warning, $"Unknown component type (data preserved): {typeName}");
 
                         var properties = compObj["properties"]?.DeepClone() as JsonObject ?? new JsonObject();
 

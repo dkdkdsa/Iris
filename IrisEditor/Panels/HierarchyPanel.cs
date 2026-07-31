@@ -1,6 +1,7 @@
 using Hexa.NET.ImGui;
 using IrisEditor.Data;
 using System.Collections.Generic;
+using IrisEditor.Localization;
 
 namespace IrisEditor.Panels
 {
@@ -22,14 +23,14 @@ namespace IrisEditor.Panels
             _context = context;
         }
 
-        public override string Title => "하이어라키";
+        public override string Title => Loc.Window("panel.hierarchy");
 
         protected override void OnGui()
         {
             var scene = _context.Scene;
 
             if (scene.Actors.Count == 0)
-                ImGui.TextDisabled("우클릭으로 액터를 만드세요");
+                ImGui.TextDisabled(Loc.T("hierarchy.emptyHint"));
 
             _toRemove = null;
             _hasReparent = false;
@@ -62,7 +63,7 @@ namespace IrisEditor.Panels
 
             if (ImGui.BeginPopupContextWindow("HierarchyContext", ImGuiPopupFlags.MouseButtonRight | ImGuiPopupFlags.NoOpenOverItems))
             {
-                if (ImGui.MenuItem("빈 액터 만들기"))
+                if (ImGui.MenuItem(Loc.T("hierarchy.createEmpty")))
                     _context.CreateActor();
 
                 ImGui.EndPopup();
@@ -132,20 +133,20 @@ namespace IrisEditor.Panels
 
             if (ImGui.BeginPopupContextItem())
             {
-                if (ImGui.MenuItem("자식 액터 만들기"))
+                if (ImGui.MenuItem(Loc.T("hierarchy.createChild")))
                     _context.CreateActor(actor);
 
-                if (actor.ParentId != null && ImGui.MenuItem("부모 해제"))
+                if (actor.ParentId != null && ImGui.MenuItem(Loc.T("hierarchy.detachParent")))
                 {
                     _reparentChild = actor;
                     _reparentTarget = null;
                     _hasReparent = true;
                 }
 
-                if (ImGui.MenuItem("프리팹으로 저장", string.Empty, false, _context.Workspace != null))
+                if (ImGui.MenuItem(Loc.T("hierarchy.saveAsPrefab"), string.Empty, false, _context.Workspace != null))
                     _saveAsPrefab = actor;
 
-                if (ImGui.MenuItem("삭제"))
+                if (ImGui.MenuItem(Loc.T("common.delete")))
                     _toRemove = actor;
 
                 ImGui.EndPopup();

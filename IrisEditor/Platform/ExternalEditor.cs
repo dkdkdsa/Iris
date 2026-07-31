@@ -39,7 +39,7 @@ namespace IrisEditor.Platform
             }
             catch (Exception ex)
             {
-                Debug.LogException("스크립트 열기 실패", ex);
+                Debug.LogException("Failed to open script", ex);
             }
         }
 
@@ -80,11 +80,11 @@ namespace IrisEditor.Platform
             }
             catch (Exception ex)
             {
-                Debug.LogException("Visual Studio 탐색 실패", ex);
+                Debug.LogException("Failed to locate Visual Studio", ex);
             }
 
             if (_devenvPath == null)
-                Debug.LogWarning("Visual Studio를 찾지 못했습니다. OS 기본 프로그램으로 엽니다.");
+                Debug.LogWarning("Visual Studio not found; opening with the OS default program.");
 
             return _devenvPath;
         }

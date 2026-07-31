@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Numerics;
 using System.Text;
+using IrisEditor.Localization;
 
 namespace IrisEditor.Panels
 {
@@ -64,7 +65,7 @@ namespace IrisEditor.Panels
             Iris.Debugging.Debug.AddSink(_sink);
         }
 
-        public override string Title => "콘솔";
+        public override string Title => Loc.Window("panel.console");
 
         protected override void OnGui()
         {
@@ -169,7 +170,7 @@ namespace IrisEditor.Panels
 
         private void DrawToolbar()
         {
-            if (ImGui.Button("지우기"))
+            if (ImGui.Button(Loc.T("console.clear")))
             {
                 _sink.Clear();
                 Iris.Debugging.Debug.ResetOnce();
@@ -178,28 +179,28 @@ namespace IrisEditor.Panels
             }
 
             if (ImGui.IsItemHovered())
-                ImGui.SetTooltip("로그를 비우고 LogOnce 억제 상태도 초기화합니다");
+                ImGui.SetTooltip(Loc.T("console.clearTooltip"));
 
             ImGui.SameLine();
 
-            if (ImGui.Checkbox("합치기", ref _collapse))
+            if (ImGui.Checkbox(Loc.T("console.collapse"), ref _collapse))
                 _filterVersion++;
 
             ImGui.SameLine();
-            ImGui.Checkbox("자동 스크롤", ref _autoScroll);
+            ImGui.Checkbox(Loc.T("console.autoScroll"), ref _autoScroll);
 
             ImGui.SameLine();
             ImGui.SetNextItemWidth(160f);
 
-            if (ImGui.InputTextWithHint("##ConsoleSearch", "검색...", ref _search, 128))
+            if (ImGui.InputTextWithHint("##ConsoleSearch", Loc.T("common.searchHint"), ref _search, 128))
                 _filterVersion++;
 
             ImGui.SameLine();
             ImGui.SetNextItemWidth(130f);
 
-            if (ImGui.BeginCombo("##ConsoleChannel", _channelFilter ?? "모든 채널"))
+            if (ImGui.BeginCombo("##ConsoleChannel", _channelFilter ?? Loc.T("console.allChannels")))
             {
-                if (ImGui.Selectable("모든 채널", _channelFilter == null))
+                if (ImGui.Selectable(Loc.T("console.allChannels"), _channelFilter == null))
                 {
                     _channelFilter = null;
                     _filterVersion++;
@@ -218,16 +219,16 @@ namespace IrisEditor.Panels
             }
 
             ImGui.SameLine();
-            LevelToggle($"추적 {_traceCount}##ToggleTrace", ref _showTrace, TraceColor);
+            LevelToggle(Loc.T("console.trace", _traceCount) + "##ToggleTrace", ref _showTrace, TraceColor);
 
             ImGui.SameLine();
-            LevelToggle($"정보 {_infoCount}##ToggleInfo", ref _showInfo, InfoColor);
+            LevelToggle(Loc.T("console.info", _infoCount) + "##ToggleInfo", ref _showInfo, InfoColor);
 
             ImGui.SameLine();
-            LevelToggle($"경고 {_warningCount}##ToggleWarning", ref _showWarning, WarningColor);
+            LevelToggle(Loc.T("console.warning", _warningCount) + "##ToggleWarning", ref _showWarning, WarningColor);
 
             ImGui.SameLine();
-            LevelToggle($"오류 {_errorCount}##ToggleError", ref _showError, ErrorColor);
+            LevelToggle(Loc.T("console.error", _errorCount) + "##ToggleError", ref _showError, ErrorColor);
         }
 
         private void LevelToggle(string label, ref bool value, uint color)
@@ -248,7 +249,7 @@ namespace IrisEditor.Panels
             if (ImGui.BeginChild("##ConsoleList", new Vector2(0f, height), ImGuiChildFlags.Borders))
             {
                 if (_rows.Count == 0)
-                    ImGui.TextDisabled(_entryCount == 0 ? "로그가 없습니다" : "필터에 맞는 로그가 없습니다");
+                    ImGui.TextDisabled(_entryCount == 0 ? Loc.T("console.empty") : Loc.T("console.emptyFiltered"));
 
                 var clipper = new ImGuiListClipper();
                 clipper.Begin(_rows.Count);
@@ -325,12 +326,12 @@ namespace IrisEditor.Panels
 
             if (!_hasSelection)
             {
-                ImGui.TextDisabled("항목을 선택하면 상세 내용이 표시됩니다");
+                ImGui.TextDisabled(Loc.T("console.selectHint"));
                 ImGui.EndChild();
                 return;
             }
 
-            if (ImGui.SmallButton("복사"))
+            if (ImGui.SmallButton(Loc.T("console.copy")))
                 ImGui.SetClipboardText(BuildClipboardText());
 
             ImGui.SameLine();
@@ -339,7 +340,7 @@ namespace IrisEditor.Panels
             if (_selected.Context != null)
             {
                 ImGui.SameLine();
-                ImGui.TextDisabled($"| 컨텍스트: {LogContext.Describe(_selected.Context)}");
+                ImGui.TextDisabled(Loc.T("console.context", LogContext.Describe(_selected.Context)));
             }
 
             ImGui.Separator();
@@ -374,7 +375,7 @@ namespace IrisEditor.Panels
                 OpenSource(file);
 
             if (ImGui.IsItemHovered())
-                ImGui.SetTooltip($"{file}:{lineNumber} 열기");
+                ImGui.SetTooltip(Loc.T("console.openSource", file, lineNumber));
         }
 
         private void CacheStackLines(string stackTrace)
@@ -423,7 +424,7 @@ namespace IrisEditor.Panels
         {
             if (!File.Exists(file))
             {
-                Iris.Debugging.Debug.Channel("Editor").LogWarning($"소스 파일을 찾을 수 없습니다: {file}");
+                Iris.Debugging.Debug.Channel("Editor").LogWarning($"Source file not found: {file}");
                 return;
             }
 

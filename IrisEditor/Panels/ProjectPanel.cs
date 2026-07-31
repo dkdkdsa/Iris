@@ -5,6 +5,7 @@ using IrisEditor.Platform;
 using IrisEditor.Workspace;
 using System;
 using System.IO;
+using IrisEditor.Localization;
 
 namespace IrisEditor.Panels
 {
@@ -18,7 +19,7 @@ namespace IrisEditor.Panels
         private string _renameBuffer = string.Empty;
         private bool _renameFocusPending;
 
-        private const string DeletePopupId = "삭제 확인###DeleteConfirmPopup";
+        private static string DeletePopupId => Loc.Window("project.deletePopup");
 
         private string _deletePath;
         private bool _deleteIsDirectory;
@@ -29,7 +30,7 @@ namespace IrisEditor.Panels
             _context = context;
         }
 
-        public override string Title => "프로젝트";
+        public override string Title => Loc.Window("panel.project");
 
         protected override void OnGui()
         {
@@ -37,13 +38,13 @@ namespace IrisEditor.Panels
 
             if (workspace == null)
             {
-                ImGui.TextDisabled("열린 프로젝트가 없습니다");
+                ImGui.TextDisabled(Loc.T("common.noProject"));
                 ImGui.Spacing();
 
-                if (ImGui.Button("프로젝트 열기"))
+                if (ImGui.Button(Loc.T("project.open")))
                     _context.OpenProjectWithDialog();
 
-                if (ImGui.Button("새로운 프로젝트 생성"))
+                if (ImGui.Button(Loc.T("project.create")))
                     _context.CreateProjectWithDialog();
 
                 return;
@@ -52,7 +53,7 @@ namespace IrisEditor.Panels
             ImGui.Text(Path.GetFileName(Path.TrimEndingDirectorySeparator(workspace.RootPath)));
             ImGui.SameLine();
 
-            if (ImGui.SmallButton("새로고침"))
+            if (ImGui.SmallButton(Loc.T("project.refresh")))
                 workspace.Refresh();
 
             ImGui.Separator();
@@ -100,15 +101,15 @@ namespace IrisEditor.Panels
                 return;
             }
 
-            ImGui.Text($"'{Path.GetFileName(Path.TrimEndingDirectorySeparator(_deletePath))}' 을(를) 삭제할까요?");
+            ImGui.Text(Loc.T("project.deleteConfirm", Path.GetFileName(Path.TrimEndingDirectorySeparator(_deletePath))));
 
             if (_deleteIsDirectory)
-                ImGui.TextDisabled("폴더 안의 모든 파일이 함께 삭제됩니다.");
+                ImGui.TextDisabled(Loc.T("project.deleteFolderWarning"));
 
-            ImGui.TextDisabled("이 작업은 되돌릴 수 없습니다.");
+            ImGui.TextDisabled(Loc.T("project.deleteIrreversible"));
             ImGui.Separator();
 
-            if (ImGui.Button("삭제", new System.Numerics.Vector2(120f, 0f)))
+            if (ImGui.Button(Loc.T("common.delete"), new System.Numerics.Vector2(120f, 0f)))
             {
                 ApplyDelete(workspace);
                 ImGui.CloseCurrentPopup();
@@ -116,7 +117,7 @@ namespace IrisEditor.Panels
 
             ImGui.SameLine();
 
-            if (ImGui.Button("취소", new System.Numerics.Vector2(120f, 0f)))
+            if (ImGui.Button(Loc.T("common.cancel"), new System.Numerics.Vector2(120f, 0f)))
             {
                 _deletePath = null;
                 ImGui.CloseCurrentPopup();
@@ -143,11 +144,11 @@ namespace IrisEditor.Panels
 
                 _context.HandlePathDeleted(absolute, _deleteIsDirectory);
                 workspace.Refresh();
-                Debug.Log($"삭제됨: {_deletePath}");
+                Debug.Log($"Deleted: {_deletePath}");
             }
             catch (Exception ex)
             {
-                Debug.LogException("삭제 실패", ex);
+                Debug.LogException("Failed to delete", ex);
             }
 
             _deletePath = null;
@@ -162,12 +163,12 @@ namespace IrisEditor.Panels
 
         private void DrawCreateMenu(EditorWorkspace workspace, string prefix)
         {
-            if (!ImGui.BeginMenu("생성"))
+            if (!ImGui.BeginMenu(Loc.T("project.createMenu")))
                 return;
 
             foreach (var creator in AssetCreatorRegistry.Creators)
             {
-                if (!ImGui.MenuItem(creator.MenuName))
+                if (!ImGui.MenuItem(Loc.T(creator.MenuName)))
                     continue;
 
                 var picked = creator;
@@ -184,7 +185,7 @@ namespace IrisEditor.Panels
                     }
                     catch (Exception ex)
                     {
-                        Debug.LogException("에셋 생성 실패", ex);
+                        Debug.LogException("Failed to create asset", ex);
                     }
                 };
             }
@@ -217,10 +218,10 @@ namespace IrisEditor.Panels
 
                     ImGui.Separator();
 
-                    if (ImGui.MenuItem("이름 변경"))
+                    if (ImGui.MenuItem(Loc.T("common.rename")))
                         StartRename(dir, isDirectory: true);
 
-                    if (ImGui.MenuItem("삭제"))
+                    if (ImGui.MenuItem(Loc.T("common.delete")))
                         RequestDelete(dir, isDirectory: true);
 
                     ImGui.EndPopup();
@@ -263,13 +264,13 @@ namespace IrisEditor.Panels
 
                 if (ImGui.BeginPopupContextItem())
                 {
-                    if (asset.AssetType == typeof(Iris.Assets.ITexture) && ImGui.MenuItem("스프라이트 슬라이스"))
+                    if (asset.AssetType == typeof(Iris.Assets.ITexture) && ImGui.MenuItem(Loc.T("project.sliceSprite")))
                         _context.RequestOpenSpriteSlicer(asset.Path);
 
-                    if (ImGui.MenuItem("이름 변경"))
+                    if (ImGui.MenuItem(Loc.T("common.rename")))
                         StartRename(asset.Path, isDirectory: false);
 
-                    if (ImGui.MenuItem("삭제"))
+                    if (ImGui.MenuItem(Loc.T("common.delete")))
                         RequestDelete(asset.Path, isDirectory: false);
 
                     ImGui.EndPopup();
@@ -333,7 +334,7 @@ namespace IrisEditor.Panels
 
             if (!workspace.TryRename(relativePath, newName, isDirectory, out var error))
             {
-                Debug.LogError($"이름 변경 실패: {error}");
+                Debug.LogError($"Failed to rename: {error}");
                 return;
             }
 
@@ -374,7 +375,7 @@ namespace IrisEditor.Panels
             }
             catch (Exception ex)
             {
-                Debug.LogException("씬 열기 실패", ex);
+                Debug.LogException("Failed to open scene", ex);
             }
         }
     }

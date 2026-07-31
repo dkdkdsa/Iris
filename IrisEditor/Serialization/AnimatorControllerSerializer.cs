@@ -23,7 +23,7 @@ namespace IrisEditor.Serialization
             var graph = new AnimatorGraph();
 
             if (JsonNode.Parse(File.ReadAllText(path)) is not JsonObject root)
-                throw new InvalidDataException("애니메이터 컨트롤러 파일 형식이 아닙니다.");
+                throw new InvalidDataException("Not an animator controller file.");
 
             graph.DefaultState = root["defaultState"]?.GetValue<string>() ?? string.Empty;
 

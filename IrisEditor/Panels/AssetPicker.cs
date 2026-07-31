@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Numerics;
 using System.Text.Json.Nodes;
+using IrisEditor.Localization;
 
 namespace IrisEditor.Panels
 {
@@ -32,7 +33,7 @@ namespace IrisEditor.Panels
             bool hasValue = !string.IsNullOrEmpty(current);
             string display = hasValue
                 ? Path.GetFileNameWithoutExtension(current)
-                : $"없음 ({TypeDisplayName(assetType)})";
+                : Loc.T("assetPicker.none", TypeDisplayName(assetType));
 
             ImGui.PushStyleColor(ImGuiCol.Button, ImGui.GetColorU32(ImGuiCol.FrameBg));
             ImGui.PushStyleColor(ImGuiCol.ButtonHovered, ImGui.GetColorU32(ImGuiCol.FrameBgHovered));
@@ -134,14 +135,14 @@ namespace IrisEditor.Panels
 
             JsonNode result = null;
 
-            ImGui.TextDisabled($"{TypeDisplayName(assetType)} 선택");
+            ImGui.TextDisabled(Loc.T("assetPicker.title", TypeDisplayName(assetType)));
             ImGui.Separator();
 
             if (ImGui.IsWindowAppearing())
                 ImGui.SetKeyboardFocusHere();
 
             ImGui.SetNextItemWidth(-1f);
-            ImGui.InputTextWithHint("##AssetSearch", "검색...", ref _search, 128);
+            ImGui.InputTextWithHint("##AssetSearch", Loc.T("common.searchHint"), ref _search, 128);
 
             ImGui.Spacing();
 
@@ -149,11 +150,11 @@ namespace IrisEditor.Panels
 
             if (workspace == null)
             {
-                ImGui.TextDisabled("(열린 프로젝트가 없습니다)");
+                ImGui.TextDisabled(Loc.T("assetPicker.noProject"));
             }
             else
             {
-                if (ImGui.Selectable("(없음)", string.IsNullOrEmpty(current)))
+                if (ImGui.Selectable(Loc.T("assetPicker.noneOption"), string.IsNullOrEmpty(current)))
                 {
                     result = JsonValue.Create(string.Empty);
                     ImGui.CloseCurrentPopup();
@@ -211,7 +212,7 @@ namespace IrisEditor.Panels
                 }
 
                 if (matches == 0)
-                    ImGui.TextDisabled("(일치하는 에셋 없음)");
+                    ImGui.TextDisabled(Loc.T("assetPicker.noMatch"));
             }
 
             ImGui.EndChild();

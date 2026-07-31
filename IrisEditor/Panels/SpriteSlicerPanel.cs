@@ -8,6 +8,7 @@ using System.IO;
 using System.Numerics;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using IrisEditor.Localization;
 
 namespace IrisEditor.Panels
 {
@@ -52,7 +53,7 @@ namespace IrisEditor.Panels
 
             ImGui.SetNextWindowSize(new Vector2(900f, 620f), ImGuiCond.FirstUseEver);
 
-            string title = $"스프라이트 슬라이서 - {Path.GetFileName(_texturePath)}###SpriteSlicerWindow";
+            string title = $"{Loc.T("slicer.title")} - {Path.GetFileName(_texturePath)}###SpriteSlicerWindow";
 
             if (ImGui.Begin(title, ref _open))
                 DrawContent();
@@ -89,7 +90,7 @@ namespace IrisEditor.Panels
             }
             catch (Exception ex)
             {
-                Debug.LogException("이미지 열기 실패", ex);
+                Debug.LogException("Failed to open image", ex);
             }
         }
 
@@ -99,17 +100,17 @@ namespace IrisEditor.Panels
 
             ImGui.BeginChild("SlicerParams", new Vector2(240f, 0f), ImGuiChildFlags.Borders);
 
-            ImGui.TextDisabled($"원본 {_pixelWidth} × {_pixelHeight}");
+            ImGui.TextDisabled(Loc.T("slicer.source", _pixelWidth, _pixelHeight));
             ImGui.Separator();
 
             ImGui.SetNextItemWidth(120f);
-            _gridDirty |= ImGui.InputInt("셀 너비", ref _cellWidth);
+            _gridDirty |= ImGui.InputInt(Loc.T("slicer.cellWidth"), ref _cellWidth);
             ImGui.SetNextItemWidth(120f);
-            _gridDirty |= ImGui.InputInt("셀 높이", ref _cellHeight);
+            _gridDirty |= ImGui.InputInt(Loc.T("slicer.cellHeight"), ref _cellHeight);
             ImGui.SetNextItemWidth(120f);
-            _gridDirty |= ImGui.InputInt("오프셋 X", ref _offsetX);
+            _gridDirty |= ImGui.InputInt(Loc.T("slicer.offsetX"), ref _offsetX);
             ImGui.SetNextItemWidth(120f);
-            _gridDirty |= ImGui.InputInt("오프셋 Y", ref _offsetY);
+            _gridDirty |= ImGui.InputInt(Loc.T("slicer.offsetY"), ref _offsetY);
 
             _cellWidth = Math.Max(1, _cellWidth);
             _cellHeight = Math.Max(1, _cellHeight);
@@ -124,33 +125,33 @@ namespace IrisEditor.Panels
                     emptyCount++;
             }
 
-            ImGui.TextDisabled($"{_columns} × {_rows} = {_columns * _rows} 셀");
-            ImGui.TextDisabled($"빈 셀 {emptyCount}개 (제외됨)");
+            ImGui.TextDisabled(Loc.T("slicer.grid", _columns, _rows, _columns * _rows));
+            ImGui.TextDisabled(Loc.T("slicer.emptyCells", emptyCount));
 
             ImGui.Separator();
 
             ImGui.SetNextItemWidth(-1f);
             ImGui.InputText("##SliceName", ref _name, 64);
 
-            if (ImGui.Button("스프라이트로 잘라내기", new Vector2(-1f, 0f)))
+            if (ImGui.Button(Loc.T("slicer.sliceSprites"), new Vector2(-1f, 0f)))
                 ExportSlices(".sprite");
 
-            if (ImGui.Button("타일로 잘라내기", new Vector2(-1f, 0f)))
+            if (ImGui.Button(Loc.T("slicer.sliceTiles"), new Vector2(-1f, 0f)))
                 ExportSlices(".tile");
 
             ImGui.Separator();
 
             ImGui.SetNextItemWidth(120f);
             ImGui.InputFloat("FPS", ref _fps);
-            ImGui.Checkbox("루프", ref _loop);
+            ImGui.Checkbox(Loc.T("slicer.loop"), ref _loop);
 
-            if (ImGui.Button("애니메이션 만들기 (전체)", new Vector2(-1f, 0f)))
+            if (ImGui.Button(Loc.T("slicer.animAll"), new Vector2(-1f, 0f)))
                 ExportAnimation();
 
-            if (ImGui.Button("행마다 애니메이션 만들기", new Vector2(-1f, 0f)))
+            if (ImGui.Button(Loc.T("slicer.animPerRow"), new Vector2(-1f, 0f)))
                 ExportRowAnimations();
 
-            if (ImGui.Button("열마다 애니메이션 만들기", new Vector2(-1f, 0f)))
+            if (ImGui.Button(Loc.T("slicer.animPerColumn"), new Vector2(-1f, 0f)))
                 ExportColumnAnimations();
 
             ImGui.EndChild();
@@ -166,7 +167,7 @@ namespace IrisEditor.Panels
         {
             if (_texture == null || _pixelWidth <= 0 || _pixelHeight <= 0)
             {
-                ImGui.TextDisabled("(텍스처 없음)");
+                ImGui.TextDisabled(Loc.T("slicer.noTexture"));
                 return;
             }
 
@@ -295,11 +296,11 @@ namespace IrisEditor.Panels
                 }
 
                 workspace.Refresh();
-                Debug.Log($"{extension} {exported}개 생성");
+                Debug.Log($"Created {exported} {extension} assets");
             }
             catch (Exception ex)
             {
-                Debug.LogException("슬라이스 실패", ex);
+                Debug.LogException("Failed to slice", ex);
             }
         }
 
@@ -322,7 +323,7 @@ namespace IrisEditor.Panels
 
             if (frameCount == 0)
             {
-                Debug.LogWarning("잘라낼 프레임이 없습니다.");
+                Debug.LogWarning("No frames to slice.");
                 return;
             }
 
@@ -333,11 +334,11 @@ namespace IrisEditor.Panels
                 WriteAnim(directory, $"{_name}.anim", _offsetX, _offsetY, _columns, frameCount);
 
                 workspace.Refresh();
-                Debug.Log($"애니메이션 생성: {_name}.anim");
+                Debug.Log($"Animation created: {_name}.anim");
             }
             catch (Exception ex)
             {
-                Debug.LogException("애니메이션 생성 실패", ex);
+                Debug.LogException("Failed to create animation", ex);
             }
         }
 
@@ -374,11 +375,11 @@ namespace IrisEditor.Panels
                 }
 
                 workspace.Refresh();
-                Debug.Log($"행 애니메이션 {exported}개 생성");
+                Debug.Log($"Created {exported} row animations");
             }
             catch (Exception ex)
             {
-                Debug.LogException("애니메이션 생성 실패", ex);
+                Debug.LogException("Failed to create animation", ex);
             }
         }
 
@@ -415,11 +416,11 @@ namespace IrisEditor.Panels
                 }
 
                 workspace.Refresh();
-                Debug.Log($"열 애니메이션 {exported}개 생성");
+                Debug.Log($"Created {exported} column animations");
             }
             catch (Exception ex)
             {
-                Debug.LogException("애니메이션 생성 실패", ex);
+                Debug.LogException("Failed to create animation", ex);
             }
         }
 

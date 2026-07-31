@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Numerics;
+using IrisEditor.Localization;
 
 namespace IrisEditor.Panels
 {
@@ -31,7 +32,7 @@ namespace IrisEditor.Panels
             IsOpen = false;
         }
 
-        public override string Title => "타일";
+        public override string Title => Loc.Window("panel.tile");
 
         public void Open()
         {
@@ -62,17 +63,17 @@ namespace IrisEditor.Panels
 
             if (workspace == null)
             {
-                ImGui.TextDisabled("열린 프로젝트가 없습니다");
+                ImGui.TextDisabled(Loc.T("common.noProject"));
                 return;
             }
 
-            if (ImGui.Selectable("선택 도구", !TileBrush.Active))
+            if (ImGui.Selectable(Loc.T("tile.selectTool"), !TileBrush.Active))
             {
                 TileBrush.TilePath = null;
                 TileBrush.Eraser = false;
             }
 
-            if (ImGui.Selectable("지우개", TileBrush.Eraser))
+            if (ImGui.Selectable(Loc.T("tile.eraser"), TileBrush.Eraser))
             {
                 TileBrush.Eraser = !TileBrush.Eraser;
 
@@ -84,10 +85,10 @@ namespace IrisEditor.Panels
             bool hasTilemap = selected?.GetComponent(typeof(Tilemap)) != null;
 
             if (TileBrush.Active && !hasTilemap)
-                ImGui.TextDisabled("Tilemap 컴포넌트가 있는 액터를 선택하세요");
+                ImGui.TextDisabled(Loc.T("tile.needTilemap"));
 
             if (hasTilemap && selected.GetComponent(typeof(TilemapRenderer)) == null)
-                ImGui.TextDisabled("TilemapRenderer가 없어 게임에서는 보이지 않습니다");
+                ImGui.TextDisabled(Loc.T("tile.noRenderer"));
 
             ImGui.Separator();
 
@@ -119,7 +120,7 @@ namespace IrisEditor.Panels
             }
 
             if (count == 0)
-                ImGui.TextDisabled("(.tile 에셋 없음 - 프로젝트 패널에서 생성)");
+                ImGui.TextDisabled(Loc.T("tile.noTileAssets"));
 
             ImGui.EndChild();
         }

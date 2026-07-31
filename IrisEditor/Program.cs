@@ -2,6 +2,9 @@ using Iris;
 using Iris.Assets;
 using Iris.Core;
 using Iris.Platform;
+using IrisEditor.Localization;
+using System;
+using System.IO;
 using Debug = Iris.Debugging.Debug;
 
 namespace IrisEditor
@@ -11,6 +14,11 @@ namespace IrisEditor
         static void Main()
         {
             Debug.DefaultChannel = "Editor";
+
+            EditorSettings.Load();
+            Loc.Load(Path.Combine(AppContext.BaseDirectory, "Localization"));
+            Loc.SetLanguage(EditorSettings.Language);
+            Loc.EnableHotReload();
 
             var host = new AppHost(new DefaultPlatform());
 

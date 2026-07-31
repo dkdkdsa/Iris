@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Numerics;
 using System.Text.Json.Nodes;
+using IrisEditor.Localization;
 
 namespace IrisEditor.Panels
 {
@@ -66,7 +67,7 @@ namespace IrisEditor.Panels
 
             ImGui.SetNextWindowSize(new Vector2(1080f, 640f), ImGuiCond.FirstUseEver);
 
-            string title = $"애니메이터 - {Path.GetFileName(_path)}{(_dirty ? " *" : "")}###AnimatorWindow";
+            string title = $"{Loc.T("animator.title")} - {Path.GetFileName(_path)}{(_dirty ? " *" : "")}###AnimatorWindow";
 
             if (ImGui.Begin(title, ref _open, ImGuiWindowFlags.MenuBar))
             {
@@ -103,7 +104,7 @@ namespace IrisEditor.Panels
             }
             catch (Exception ex)
             {
-                Debug.LogException("애니메이터 컨트롤러 열기 실패", ex);
+                Debug.LogException("Failed to open animator controller", ex);
             }
         }
 
@@ -113,11 +114,11 @@ namespace IrisEditor.Panels
             {
                 AnimatorControllerSerializer.Save(_graph, _path);
                 _dirty = false;
-                Debug.Log($"애니메이터 저장: {_path}");
+                Debug.Log($"Animator saved: {_path}");
             }
             catch (Exception ex)
             {
-                Debug.LogException("애니메이터 저장 실패", ex);
+                Debug.LogException("Failed to save animator", ex);
             }
         }
 
@@ -126,21 +127,21 @@ namespace IrisEditor.Panels
             if (!ImGui.BeginMenuBar())
                 return;
 
-            if (ImGui.BeginMenu("파일"))
+            if (ImGui.BeginMenu(Loc.T("menu.file")))
             {
-                if (ImGui.MenuItem("저장", "Ctrl+S"))
+                if (ImGui.MenuItem(Loc.T("common.save"), "Ctrl+S"))
                     Save();
 
-                if (ImGui.MenuItem("닫기"))
+                if (ImGui.MenuItem(Loc.T("common.close")))
                     _open = false;
 
                 ImGui.EndMenu();
             }
 
             if (_linkSource != null || _linkFromAny)
-                ImGui.TextDisabled("전이 대상 상태를 클릭하세요 (Esc 취소)");
+                ImGui.TextDisabled(Loc.T("animator.pickTarget"));
             else
-                ImGui.TextDisabled("빈 곳 우클릭: 상태 추가 | 노드 우클릭: 전이/기본/삭제");
+                ImGui.TextDisabled(Loc.T("animator.hint"));
 
             ImGui.EndMenuBar();
         }
@@ -172,10 +173,10 @@ namespace IrisEditor.Panels
 
         private void DrawParameters()
         {
-            ImGui.TextDisabled("파라미터");
+            ImGui.TextDisabled(Loc.T("animator.parameters"));
             ImGui.Separator();
 
-            if (ImGui.Button("추가", new Vector2(-1f, 0f)))
+            if (ImGui.Button(Loc.T("common.add"), new Vector2(-1f, 0f)))
             {
                 _graph.Parameters.Add(new AnimatorParameterData { Name = _graph.UniqueParameterName("New") });
                 MarkChanged();
@@ -287,7 +288,7 @@ namespace IrisEditor.Panels
 
             draw.AddText(position + new Vector2(10f, 6f), 0xFFFFFFFF, state.Name);
 
-            string clip = string.IsNullOrEmpty(state.Clip) ? "(클립 없음)" : Path.GetFileNameWithoutExtension(state.Clip);
+            string clip = string.IsNullOrEmpty(state.Clip) ? Loc.T("animator.noClip") : Path.GetFileNameWithoutExtension(state.Clip);
             draw.AddText(position + new Vector2(10f, 24f), 0xFFA0A0A0, clip);
         }
 
@@ -440,7 +441,7 @@ namespace IrisEditor.Panels
 
             if (_contextIsAny)
             {
-                if (ImGui.MenuItem("전이 만들기"))
+                if (ImGui.MenuItem(Loc.T("animator.makeTransition")))
                 {
                     _linkFromAny = true;
                     _linkSource = null;
@@ -448,19 +449,19 @@ namespace IrisEditor.Panels
             }
             else if (_contextNode != null)
             {
-                if (ImGui.MenuItem("전이 만들기"))
+                if (ImGui.MenuItem(Loc.T("animator.makeTransition")))
                 {
                     _linkSource = _contextNode;
                     _linkFromAny = false;
                 }
 
-                if (ImGui.MenuItem("기본 상태로 지정", string.Empty, _graph.DefaultState == _contextNode.Name))
+                if (ImGui.MenuItem(Loc.T("animator.setDefault"), string.Empty, _graph.DefaultState == _contextNode.Name))
                 {
                     _graph.DefaultState = _contextNode.Name;
                     MarkChanged();
                 }
 
-                if (ImGui.MenuItem("상태 삭제"))
+                if (ImGui.MenuItem(Loc.T("animator.deleteState")))
                 {
                     RemoveState(_contextNode);
                     _contextNode = null;
@@ -468,7 +469,7 @@ namespace IrisEditor.Panels
             }
             else
             {
-                if (ImGui.MenuItem("상태 추가"))
+                if (ImGui.MenuItem(Loc.T("animator.addState")))
                 {
                     var state = new AnimatorStateData
                     {
@@ -634,25 +635,25 @@ namespace IrisEditor.Panels
                 return;
             }
 
-            ImGui.TextDisabled("(상태나 전이를 선택하세요)");
+            ImGui.TextDisabled(Loc.T("animator.selectHint"));
         }
 
         private void DrawStateInspector(AnimatorStateData state)
         {
-            ImGui.TextDisabled("상태");
+            ImGui.TextDisabled(Loc.T("animator.state"));
             ImGui.Separator();
 
             ImGui.SetNextItemWidth(-70f);
             string name = state.Name ?? string.Empty;
 
-            if (ImGui.InputText("이름", ref name, 64) && !string.IsNullOrWhiteSpace(name))
+            if (ImGui.InputText(Loc.T("common.name"), ref name, 64) && !string.IsNullOrWhiteSpace(name))
             {
                 Rename(state, name);
                 MarkChanged();
             }
 
             ImGui.SetNextItemWidth(-70f);
-            var picked = AssetPicker.Draw("클립", state.Clip, typeof(SpriteAnimation), _context.Workspace);
+            var picked = AssetPicker.Draw(Loc.T("animator.clip"), state.Clip, typeof(SpriteAnimation), _context.Workspace);
 
             if (picked is JsonValue value && value.TryGetValue(out string clipPath))
             {
@@ -662,14 +663,14 @@ namespace IrisEditor.Panels
 
             bool isDefault = state.Name == _graph.DefaultState;
 
-            if (ImGui.Checkbox("기본 상태", ref isDefault) && isDefault)
+            if (ImGui.Checkbox(Loc.T("animator.defaultState"), ref isDefault) && isDefault)
             {
                 _graph.DefaultState = state.Name;
                 MarkChanged();
             }
 
             ImGui.Spacing();
-            ImGui.SeparatorText($"전이 ({state.Transitions.Count})");
+            ImGui.SeparatorText(Loc.T("animator.transitions", state.Transitions.Count));
 
             foreach (var transition in state.Transitions)
             {
@@ -684,12 +685,12 @@ namespace IrisEditor.Panels
 
         private void DrawTransitionInspector(AnimatorTransitionData transition)
         {
-            ImGui.TextDisabled(_transitionOwner == null ? "전이 (Any State)" : $"전이 ({_transitionOwner.Name})");
+            ImGui.TextDisabled(_transitionOwner == null ? Loc.T("animator.transitionAny") : Loc.T("animator.transitionOf", _transitionOwner.Name));
             ImGui.Separator();
 
             ImGui.SetNextItemWidth(-70f);
 
-            if (ImGui.BeginCombo("대상", transition.To))
+            if (ImGui.BeginCombo(Loc.T("animator.target"), transition.To))
             {
                 foreach (var state in _graph.States)
                 {
@@ -705,16 +706,16 @@ namespace IrisEditor.Panels
 
             bool hasExitTime = transition.HasExitTime;
 
-            if (ImGui.Checkbox("재생 완료 후 전이", ref hasExitTime))
+            if (ImGui.Checkbox(Loc.T("animator.hasExitTime"), ref hasExitTime))
             {
                 transition.HasExitTime = hasExitTime;
                 MarkChanged();
             }
 
             ImGui.Spacing();
-            ImGui.SeparatorText("조건");
+            ImGui.SeparatorText(Loc.T("animator.conditions"));
 
-            if (ImGui.Button("조건 추가", new Vector2(-1f, 0f)))
+            if (ImGui.Button(Loc.T("animator.addCondition"), new Vector2(-1f, 0f)))
             {
                 transition.Conditions.Add(new AnimatorConditionData
                 {
@@ -733,7 +734,7 @@ namespace IrisEditor.Panels
 
                 ImGui.SetNextItemWidth(-1f);
 
-                if (ImGui.BeginCombo("##Parameter", string.IsNullOrEmpty(condition.Parameter) ? "(파라미터)" : condition.Parameter))
+                if (ImGui.BeginCombo("##Parameter", string.IsNullOrEmpty(condition.Parameter) ? Loc.T("animator.noParameter") : condition.Parameter))
                 {
                     foreach (var parameter in _graph.Parameters)
                     {
@@ -794,7 +795,7 @@ namespace IrisEditor.Panels
             ImGui.Spacing();
             ImGui.Separator();
 
-            if (ImGui.Button("전이 삭제", new Vector2(-1f, 0f)))
+            if (ImGui.Button(Loc.T("animator.deleteTransition"), new Vector2(-1f, 0f)))
             {
                 if (_transitionOwner == null)
                     _graph.AnyTransitions.Remove(transition);

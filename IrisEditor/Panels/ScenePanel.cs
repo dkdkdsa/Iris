@@ -5,6 +5,7 @@ using IrisEditor.Rendering;
 using IrisEditor.Workspace;
 using System;
 using System.Numerics;
+using IrisEditor.Localization;
 
 namespace IrisEditor.Panels
 {
@@ -28,7 +29,7 @@ namespace IrisEditor.Panels
             _renderer = renderer;
         }
 
-        public override string Title => "씬";
+        public override string Title => Loc.Window("panel.scene");
 
         protected override void OnGui()
         {

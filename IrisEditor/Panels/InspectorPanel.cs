@@ -6,6 +6,7 @@ using System;
 using System.Linq;
 using System.Numerics;
 using System.Text.Json.Nodes;
+using IrisEditor.Localization;
 
 namespace IrisEditor.Panels
 {
@@ -20,14 +21,14 @@ namespace IrisEditor.Panels
             _tilePanel = tilePanel;
         }
 
-        public override string Title => "인스펙터";
+        public override string Title => Loc.Window("panel.inspector");
 
         protected override void OnGui()
         {
             var actor = _context.Selected;
             if (actor == null)
             {
-                ImGui.TextDisabled("(선택된 액터 없음)");
+                ImGui.TextDisabled(Loc.T("inspector.noSelection"));
                 return;
             }
 
@@ -41,14 +42,14 @@ namespace IrisEditor.Panels
             {
                 ImGui.PushID(comp.Id.ToString());
 
-                string title = comp.TargetType?.Name ?? (comp.TypeName != null ? $"{comp.TypeName} (미해석)" : "(알 수 없는 컴포넌트)");
+                string title = comp.TargetType?.Name ?? (comp.TypeName != null ? Loc.T("inspector.unresolved", comp.TypeName) : Loc.T("inspector.unknownComponent"));
                 bool open = ImGui.CollapsingHeader(title, ImGuiTreeNodeFlags.DefaultOpen);
 
                 if (ImGui.BeginPopupContextItem("ComponentContext"))
                 {
                     bool removable = comp.TargetType != typeof(Transform);
 
-                    if (ImGui.MenuItem(removable ? "삭제" : "삭제 (Transform은 필수)", string.Empty, false, removable))
+                    if (ImGui.MenuItem(removable ? Loc.T("common.delete") : Loc.T("inspector.deleteBlocked"), string.Empty, false, removable))
                         toRemove = comp;
 
                     ImGui.EndPopup();
@@ -58,7 +59,7 @@ namespace IrisEditor.Panels
                 {
                     DrawProperties(comp);
 
-                    if (comp.TargetType == typeof(Tilemap) && ImGui.Button("타일 팔레트 열기", new Vector2(-1f, 0f)))
+                    if (comp.TargetType == typeof(Tilemap) && ImGui.Button(Loc.T("inspector.openTilePalette"), new Vector2(-1f, 0f)))
                         _tilePanel.Open();
                 }
 
@@ -70,7 +71,7 @@ namespace IrisEditor.Panels
 
             ImGui.Spacing();
 
-            if (ImGui.Button("컴포넌트 추가", new Vector2(-1f, 0f)))
+            if (ImGui.Button(Loc.T("inspector.addComponent"), new Vector2(-1f, 0f)))
                 ImGui.OpenPopup("AddComponentPopup");
 
             if (ImGui.BeginPopup("AddComponentPopup"))
@@ -92,14 +93,14 @@ namespace IrisEditor.Panels
         {
             var style = ImGui.GetStyle();
 
-            float labels = ImGui.CalcTextSize("이름").X + ImGui.CalcTextSize("태그").X;
+            float labels = ImGui.CalcTextSize(Loc.T("inspector.name")).X + ImGui.CalcTextSize(Loc.T("inspector.tag")).X;
             float overhead = labels + style.ItemInnerSpacing.X * 2f + style.ItemSpacing.X;
             float field = MathF.Max((ImGui.GetContentRegionAvail().X - overhead) * 0.5f, 40f);
 
             ImGui.SetNextItemWidth(field);
             string name = actor.Name ?? string.Empty;
 
-            if (ImGui.InputText("이름", ref name, 128))
+            if (ImGui.InputText(Loc.T("inspector.name"), ref name, 128))
             {
                 actor.Name = name;
                 _context.MarkDirty();
@@ -110,7 +111,7 @@ namespace IrisEditor.Panels
             ImGui.SetNextItemWidth(field);
             string tag = actor.Tag ?? string.Empty;
 
-            if (ImGui.InputText("태그", ref tag, 128))
+            if (ImGui.InputText(Loc.T("inspector.tag"), ref tag, 128))
             {
                 actor.Tag = tag;
                 _context.MarkDirty();
@@ -121,7 +122,7 @@ namespace IrisEditor.Panels
         {
             if (comp.Properties is not JsonObject obj || obj.Count == 0)
             {
-                ImGui.TextDisabled("(데이터 없음)");
+                ImGui.TextDisabled(Loc.T("common.noData"));
                 return;
             }
 

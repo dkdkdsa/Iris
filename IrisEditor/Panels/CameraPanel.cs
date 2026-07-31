@@ -2,6 +2,7 @@ using Hexa.NET.ImGui;
 using IrisEditor.Rendering;
 using System;
 using System.Numerics;
+using IrisEditor.Localization;
 
 namespace IrisEditor.Panels
 {
@@ -34,7 +35,7 @@ namespace IrisEditor.Panels
             }
         }
 
-        public override string Title => "카메라";
+        public override string Title => Loc.Window("panel.camera");
 
         protected override void OnGui()
         {
@@ -62,7 +63,7 @@ namespace IrisEditor.Panels
 
             if (!_renderer.TryGetCamera(out var camPos, out float scale))
             {
-                draw.AddText(screenMin + new Vector2(8f, 8f), 0xFF888888, "카메라 없음 - 씬에 Camera 컴포넌트를 추가하세요");
+                draw.AddText(screenMin + new Vector2(8f, 8f), 0xFF888888, Loc.T("camera.noCamera"));
                 return;
             }
 

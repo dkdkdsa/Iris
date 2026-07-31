@@ -62,13 +62,13 @@ namespace IrisEditor.Workspace
 
             if (string.IsNullOrWhiteSpace(newName))
             {
-                error = "이름이 비어 있습니다.";
+                error = "The name is empty.";
                 return false;
             }
 
             if (newName.IndexOfAny(System.IO.Path.GetInvalidFileNameChars()) >= 0)
             {
-                error = "이름에 사용할 수 없는 문자가 있습니다.";
+                error = "The name contains invalid characters.";
                 return false;
             }
 
@@ -86,7 +86,7 @@ namespace IrisEditor.Workspace
                 {
                     if (!caseOnly && (Directory.Exists(newFull) || File.Exists(newFull)))
                     {
-                        error = "같은 이름이 이미 있습니다.";
+                        error = "An item with the same name already exists.";
                         return false;
                     }
 
@@ -105,7 +105,7 @@ namespace IrisEditor.Workspace
                 {
                     if (!caseOnly && (File.Exists(newFull) || Directory.Exists(newFull)))
                     {
-                        error = "같은 이름이 이미 있습니다.";
+                        error = "An item with the same name already exists.";
                         return false;
                     }
 

@@ -30,7 +30,7 @@ namespace IrisEditor.Workspace
                 Log = message => _logs.Enqueue(message),
             };
 
-            Debug.Log($"게임 빌드 시작: {Path.GetFileName(projectFile)} → {outputDirectory}");
+            Debug.Log($"Game build started: {Path.GetFileName(projectFile)} -> {outputDirectory}");
 
             _task = Task.Run(() => BuildPipeline.CreateDefault().Run(context));
         }
@@ -46,7 +46,7 @@ namespace IrisEditor.Workspace
             bool success = _task.Status == TaskStatus.RanToCompletion && _task.Result;
 
             if (_task.IsFaulted && _task.Exception != null)
-                Debug.LogException("빌드 예외", _task.Exception.GetBaseException());
+                Debug.LogException("Build exception", _task.Exception.GetBaseException());
 
             _task = null;
 

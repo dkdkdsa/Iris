@@ -8,6 +8,7 @@ using System;
 using System.IO;
 using System.Numerics;
 using System.Text.Json.Nodes;
+using IrisEditor.Localization;
 
 namespace IrisEditor.Panels
 {
@@ -42,7 +43,7 @@ namespace IrisEditor.Panels
 
             if (workspace == null)
             {
-                Debug.LogWarning("열린 프로젝트가 없습니다. 프로젝트를 먼저 여세요.");
+                Debug.LogWarning("No project is open. Open a project first.");
                 return;
             }
 
@@ -62,7 +63,7 @@ namespace IrisEditor.Panels
 
             ImGui.SetNextWindowSize(new Vector2(520f, 0f), ImGuiCond.FirstUseEver);
 
-            string title = $"프로젝트 설정{(_dirty ? " *" : "")}###ProjectSettingsWindow";
+            string title = $"{Loc.T("settings.title")}{(_dirty ? " *" : "")}###ProjectSettingsWindow";
 
             if (ImGui.Begin(title, ref _open))
                 DrawContent();
@@ -94,7 +95,7 @@ namespace IrisEditor.Panels
             }
             catch (Exception ex)
             {
-                Debug.LogException("project.json 읽기 실패", ex);
+                Debug.LogException("Failed to read project.json", ex);
                 _config = new ProjectConfig();
                 _raw = new JsonObject();
                 _dirty = false;
@@ -117,18 +118,18 @@ namespace IrisEditor.Panels
                 if (created)
                     _context.Workspace?.Refresh();
 
-                Debug.Log($"프로젝트 설정 저장: {_path}");
+                Debug.Log($"Project settings saved: {_path}");
             }
             catch (Exception ex)
             {
-                Debug.LogException("project.json 저장 실패", ex);
+                Debug.LogException("Failed to write project.json", ex);
             }
         }
 
         private void DrawBuildScenes(EditorWorkspace workspace)
         {
             ImGui.Spacing();
-            ImGui.SeparatorText("빌드 씬 (0번이 시작 씬)");
+            ImGui.SeparatorText(Loc.T("settings.buildScenes"));
 
             var scenes = _config.BuildScenes;
             int moveUp = -1;
@@ -144,7 +145,7 @@ namespace IrisEditor.Panels
                 ImGui.SameLine();
 
                 string display = string.IsNullOrEmpty(scenes[i])
-                    ? "(비어 있음)"
+                    ? Loc.T("settings.emptyScene")
                     : Path.GetFileNameWithoutExtension(scenes[i]);
 
                 ImGui.SetNextItemWidth(-120f);
@@ -191,7 +192,7 @@ namespace IrisEditor.Panels
             }
 
             ImGui.SetNextItemWidth(-120f);
-            var picked = AssetPicker.Draw("씬 추가", string.Empty, typeof(SceneData), workspace);
+            var picked = AssetPicker.Draw(Loc.T("settings.addScene"), string.Empty, typeof(SceneData), workspace);
 
             if (picked is JsonValue value && value.TryGetValue(out string scenePath) && !string.IsNullOrWhiteSpace(scenePath))
             {
@@ -206,7 +207,7 @@ namespace IrisEditor.Panels
 
             if (workspace == null)
             {
-                ImGui.TextDisabled("열린 프로젝트가 없습니다");
+                ImGui.TextDisabled(Loc.T("common.noProject"));
                 return;
             }
 
@@ -216,7 +217,7 @@ namespace IrisEditor.Panels
             ImGui.SetNextItemWidth(-160f);
             string title = _config.Title ?? string.Empty;
 
-            if (ImGui.InputText("창 제목", ref title, 128))
+            if (ImGui.InputText(Loc.T("settings.windowTitle"), ref title, 128))
             {
                 _config.Title = title;
                 _dirty = true;
@@ -225,12 +226,12 @@ namespace IrisEditor.Panels
             DrawBuildScenes(workspace);
 
             ImGui.Spacing();
-            ImGui.SeparatorText("창");
+            ImGui.SeparatorText(Loc.T("settings.window"));
 
             ImGui.SetNextItemWidth(-160f);
             int width = _config.DefaultWidth;
 
-            if (ImGui.InputInt("너비", ref width))
+            if (ImGui.InputInt(Loc.T("settings.width"), ref width))
             {
                 _config.DefaultWidth = Math.Max(1, width);
                 _dirty = true;
@@ -239,7 +240,7 @@ namespace IrisEditor.Panels
             ImGui.SetNextItemWidth(-160f);
             int height = _config.DefaultHeight;
 
-            if (ImGui.InputInt("높이", ref height))
+            if (ImGui.InputInt(Loc.T("settings.height"), ref height))
             {
                 _config.DefaultHeight = Math.Max(1, height);
                 _dirty = true;
@@ -247,7 +248,7 @@ namespace IrisEditor.Panels
 
             ImGui.SetNextItemWidth(-160f);
 
-            if (ImGui.BeginCombo("프리셋", CurrentResolutionLabel()))
+            if (ImGui.BeginCombo(Loc.T("settings.preset"), CurrentResolutionLabel()))
             {
                 foreach (var resolution in _resolutions)
                 {
@@ -267,7 +268,7 @@ namespace IrisEditor.Panels
 
             bool fullscreen = _config.Fullscreen;
 
-            if (ImGui.Checkbox("전체 화면", ref fullscreen))
+            if (ImGui.Checkbox(Loc.T("settings.fullscreen"), ref fullscreen))
             {
                 _config.Fullscreen = fullscreen;
                 _dirty = true;
@@ -275,18 +276,18 @@ namespace IrisEditor.Panels
 
             bool resizable = _config.Resizable;
 
-            if (ImGui.Checkbox("크기 조절 가능", ref resizable))
+            if (ImGui.Checkbox(Loc.T("settings.resizable"), ref resizable))
             {
                 _config.Resizable = resizable;
                 _dirty = true;
             }
 
             ImGui.Spacing();
-            ImGui.SeparatorText("프레임");
+            ImGui.SeparatorText(Loc.T("settings.frame"));
 
             bool vsync = _config.VSync;
 
-            if (ImGui.Checkbox("수직 동기화", ref vsync))
+            if (ImGui.Checkbox(Loc.T("settings.vsync"), ref vsync))
             {
                 _config.VSync = vsync;
                 _dirty = true;
@@ -295,7 +296,7 @@ namespace IrisEditor.Panels
             ImGui.SetNextItemWidth(-160f);
             int targetFrameRate = _config.TargetFrameRate;
 
-            if (ImGui.InputInt("최대 프레임", ref targetFrameRate))
+            if (ImGui.InputInt(Loc.T("settings.maxFrameRate"), ref targetFrameRate))
             {
                 _config.TargetFrameRate = Math.Max(0, targetFrameRate);
                 _dirty = true;
@@ -308,12 +309,12 @@ namespace IrisEditor.Panels
 
             ImGui.BeginDisabled(!_dirty);
 
-            if (ImGui.Button("저장", new Vector2(120f, 0f)))
+            if (ImGui.Button(Loc.T("common.save"), new Vector2(120f, 0f)))
                 Save();
 
             ImGui.SameLine();
 
-            if (ImGui.Button("되돌리기", new Vector2(120f, 0f)))
+            if (ImGui.Button(Loc.T("settings.revert"), new Vector2(120f, 0f)))
                 Reload();
 
             ImGui.EndDisabled();
@@ -321,7 +322,7 @@ namespace IrisEditor.Panels
             if (_dirty)
             {
                 ImGui.SameLine();
-                ImGui.TextDisabled("저장 안 된 변경사항");
+                ImGui.TextDisabled(Loc.T("settings.unsaved"));
             }
         }
 
@@ -329,12 +330,12 @@ namespace IrisEditor.Panels
         {
             if (_config.TargetFrameRate > 0)
                 return _config.VSync
-                    ? $"{_config.TargetFrameRate}fps 와 모니터 주사율 중 낮은 쪽으로 제한됩니다"
-                    : $"{_config.TargetFrameRate}fps 로 제한됩니다";
+                    ? Loc.T("settings.hint.cappedVsync", _config.TargetFrameRate)
+                    : Loc.T("settings.hint.capped", _config.TargetFrameRate);
 
             return _config.VSync
-                ? "모니터 주사율로 제한됩니다 (최대 프레임 0 = 제한 없음)"
-                : "제한이 없어 CPU/GPU를 최대로 사용합니다";
+                ? Loc.T("settings.hint.vsyncOnly")
+                : Loc.T("settings.hint.unlimited");
         }
 
         private string CurrentResolutionLabel()
@@ -345,7 +346,7 @@ namespace IrisEditor.Panels
                     return resolution.Label;
             }
 
-            return "사용자 지정";
+            return Loc.T("settings.customResolution");
         }
     }
 }
