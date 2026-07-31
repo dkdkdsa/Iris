@@ -305,6 +305,21 @@ namespace IrisEditor.Panels
             ImGui.TextDisabled(FrameRateHint());
 
             ImGui.Spacing();
+            ImGui.SeparatorText(Loc.T("settings.diagnostics"));
+
+            bool logToFile = _config.LogToFile;
+
+            if (ImGui.Checkbox(Loc.T("settings.logToFile"), ref logToFile))
+            {
+                _config.LogToFile = logToFile;
+                _dirty = true;
+            }
+
+            ImGui.TextDisabled(_config.LogToFile
+                ? Loc.T("settings.hint.logEnabled", FileLogSink.DefaultFileName)
+                : Loc.T("settings.hint.logDisabled"));
+
+            ImGui.Spacing();
             ImGui.Separator();
 
             ImGui.BeginDisabled(!_dirty);

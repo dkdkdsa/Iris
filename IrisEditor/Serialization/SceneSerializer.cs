@@ -83,6 +83,7 @@ namespace IrisEditor.Serialization
                     Id = ParseGuid(actorObj["id"]),
                     Name = actorObj["name"]?.GetValue<string>() ?? "Actor",
                     Tag = actorObj["tag"]?.GetValue<string>() ?? string.Empty,
+                    Active = ParseBool(actorObj["active"], true),
                     ParentId = Guid.TryParse(actorObj["parent"]?.GetValue<string>(), out var parentId)
                         ? parentId
                         : null,
@@ -121,6 +122,7 @@ namespace IrisEditor.Serialization
                             Id = ParseGuid(compObj["id"]),
                             TargetType = type,
                             TypeName = typeName,
+                            Enabled = ParseBool(compObj["enabled"], true),
                             Properties = properties,
                         });
                     }
@@ -143,12 +145,17 @@ namespace IrisEditor.Serialization
                 if (typeName == null)
                     continue;
 
-                components.Add(new JsonObject
+                var compObj = new JsonObject
                 {
                     ["id"] = comp.Id.ToString(),
                     ["type"] = typeName,
-                    ["properties"] = comp.Properties?.DeepClone() ?? new JsonObject(),
-                });
+                };
+
+                if (!comp.Enabled)
+                    compObj["enabled"] = false;
+
+                compObj["properties"] = comp.Properties?.DeepClone() ?? new JsonObject();
+                components.Add(compObj);
             }
 
             var actorObj = new JsonObject
@@ -156,6 +163,9 @@ namespace IrisEditor.Serialization
                 ["id"] = actor.Id.ToString(),
                 ["name"] = actor.Name,
             };
+
+            if (!actor.Active)
+                actorObj["active"] = false;
 
             if (!string.IsNullOrEmpty(actor.Tag))
                 actorObj["tag"] = actor.Tag;
@@ -205,6 +215,11 @@ namespace IrisEditor.Serialization
 
             properties.Remove(oldKey);
             properties[newKey] = node;
+        }
+
+        private static bool ParseBool(JsonNode node, bool fallback)
+        {
+            return node is JsonValue value && value.TryGetValue(out bool result) ? result : fallback;
         }
 
         private static Guid ParseGuid(JsonNode node)

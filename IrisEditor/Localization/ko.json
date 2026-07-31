@@ -52,6 +52,8 @@
   "inspector.addComponent": "컴포넌트 추가",
   "inspector.name": "이름",
   "inspector.tag": "태그",
+  "inspector.activeHint": "활성 (자식도 함께 꺼집니다)",
+  "inspector.enabledHint": "활성",
   "inspector.unresolved": "{0} (미해석)",
   "inspector.unknownComponent": "(알 수 없는 컴포넌트)",
 
@@ -102,6 +104,10 @@
   "settings.hint.cappedVsync": "{0}fps 와 모니터 주사율 중 낮은 쪽으로 제한됩니다",
   "settings.hint.vsyncOnly": "모니터 주사율로 제한됩니다 (최대 프레임 0 = 제한 없음)",
   "settings.hint.unlimited": "제한이 없어 CPU/GPU를 최대로 사용합니다",
+  "settings.diagnostics": "진단",
+  "settings.logToFile": "로그 파일 기록",
+  "settings.hint.logEnabled": "빌드 결과물 옆에 {0} 을 기록합니다 (직전 실행분은 .prev 로 보관)",
+  "settings.hint.logDisabled": "빌드에서 로깅이 완전히 꺼집니다. Debug 호출이 즉시 반환하고 메모리에 아무것도 남기지 않습니다",
 
   "slicer.title": "스프라이트 슬라이서",
   "slicer.source": "원본 {0} × {1}",

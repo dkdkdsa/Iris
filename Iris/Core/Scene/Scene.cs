@@ -28,12 +28,14 @@ namespace Iris.Core
 
         internal void Update()
         {
-            for (int i = 0; i < _actors.Count; i++)
+            int count = _actors.Count;
+
+            for (int i = 0; i < count && i < _actors.Count; i++)
             {
                 Actor item = _actors[i];
                 try
                 {
-                    if(item.Active)
+                    if (item.ActiveInHierarchy)
                         item.Update();
                 }
                 catch (Exception ex)
@@ -45,12 +47,14 @@ namespace Iris.Core
 
         internal void FixedUpdate()
         {
-            for (int i = 0; i < _actors.Count; i++)
+            int count = _actors.Count;
+
+            for (int i = 0; i < count && i < _actors.Count; i++)
             {
                 Actor item = _actors[i];
                 try
                 {
-                    if (item.Active)
+                    if (item.ActiveInHierarchy)
                         item.FixedUpdate();
                 }
                 catch (Exception ex)
@@ -62,15 +66,20 @@ namespace Iris.Core
 
         internal void LateUpdate()
         {
-            for (int i = 0; i < _actors.Count; i++)
+            int count = _actors.Count;
+
+            for (int i = 0; i < count && i < _actors.Count; i++)
             {
                 Actor item = _actors[i];
                 try
                 {
-                    if (!item.DestroyFlag && item.Active)
+                    if (item.DestroyFlag)
+                        continue;
+
+                    if (item.ActiveInHierarchy)
                         item.LateUpdate();
                     else
-                        item.Dispose();
+                        item.SweepComponents();
                 }
                 catch (Exception ex)
                 {
@@ -78,7 +87,24 @@ namespace Iris.Core
                 }
             }
 
-            _actors.RemoveAll(x => x.DestroyFlag);
+            for (int i = _actors.Count - 1; i >= 0; i--)
+            {
+                Actor item = _actors[i];
+
+                if (!item.DestroyFlag)
+                    continue;
+
+                _actors.RemoveAt(i);
+
+                try
+                {
+                    item.Dispose();
+                }
+                catch (Exception ex)
+                {
+                    Debug.LogExceptionOnce(ex, item);
+                }
+            }
         }
 
         public void Dispose()

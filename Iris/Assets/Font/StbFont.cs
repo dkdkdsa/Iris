@@ -58,7 +58,7 @@ namespace Iris.Assets
             Ascent = ascent * _scale;
             LineHeight = (ascent - descent + lineGap) * _scale;
 
-            Atlas = Factorys.Create<ITexture, Vector2D<int>>(new(AtlasWidth, AtlasHeight));
+            Atlas = Factories.Create<ITexture, Vector2D<int>>(new(AtlasWidth, AtlasHeight));
         }
 
         public bool TryGetGlyph(int codepoint, out FontGlyph glyph)

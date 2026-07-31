@@ -25,8 +25,12 @@ namespace Iris.Core
 
         public void AddSystem(SystemBase system)
         {
-            _systems.Add(system);
-            _systems.Sort((s1, s2) => s1.Order.CompareTo(s2.Order));
+            int index = _systems.Count;
+
+            while (index > 0 && _systems[index - 1].Order > system.Order)
+                index--;
+
+            _systems.Insert(index, system);
         }
 
         public T GetSystem<T>() where T : SystemBase

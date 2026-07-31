@@ -52,6 +52,8 @@
   "inspector.addComponent": "Add Component",
   "inspector.name": "Name",
   "inspector.tag": "Tag",
+  "inspector.activeHint": "Active (children follow the parent)",
+  "inspector.enabledHint": "Enabled",
   "inspector.unresolved": "{0} (unresolved)",
   "inspector.unknownComponent": "(unknown component)",
 
@@ -102,6 +104,10 @@
   "settings.hint.cappedVsync": "Capped at {0} fps or the monitor refresh rate, whichever is lower",
   "settings.hint.vsyncOnly": "Capped at the monitor refresh rate (max frame rate 0 = unlimited)",
   "settings.hint.unlimited": "Uncapped; uses as much CPU/GPU as available",
+  "settings.diagnostics": "Diagnostics",
+  "settings.logToFile": "Write a log file",
+  "settings.hint.logEnabled": "The build writes {0} next to the executable (previous run kept as .prev)",
+  "settings.hint.logDisabled": "Logging is fully off in the build; Debug calls return immediately and keep nothing in memory",
 
   "slicer.title": "Sprite Slicer",
   "slicer.source": "Source {0} x {1}",

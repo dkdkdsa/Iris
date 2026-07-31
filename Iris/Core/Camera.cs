@@ -27,13 +27,22 @@ namespace Iris.Core
 
         public Vector2D<float> Position => Transform.Position;
 
-        protected override void OnAttached()
+        protected override void OnEnable()
         {
-            _cameras.Add(this);
+            if (!_cameras.Contains(this))
+                _cameras.Add(this);
 
             var render = SystemManager.Instance?.GetSystem<RenderSystem>();
             if (render != null)
                 SetViewport(render.Viewport);
+        }
+
+        protected override void OnDisable()
+        {
+            _cameras.Remove(this);
+
+            if (_main == this)
+                _main = null;
         }
 
         public override void Dispose()

@@ -17,5 +17,7 @@ namespace Iris.Rendering
         public bool flipY;
 
         public bool screenSpace;
+
+        internal int sequence;
     }
 }

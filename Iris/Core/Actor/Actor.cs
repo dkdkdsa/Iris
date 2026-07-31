@@ -10,11 +10,31 @@ namespace Iris.Core
         private List<Component> _components = new();
         private readonly List<Actor> _children = new();
         private bool _awake;
+        private bool _active = true;
+        private bool _activeInHierarchy = true;
 
         public string Name { get; set; } = "Actor";
         public string Tag { get; set; } = "";
         public Transform Transform { get; private set; }
-        public bool Active { get; set; } = true;
+
+        public bool Active
+        {
+            get
+            {
+                return _active;
+            }
+            set
+            {
+                if (_active == value)
+                    return;
+
+                _active = value;
+                RefreshActiveInHierarchy();
+            }
+        }
+
+        public bool ActiveInHierarchy => _activeInHierarchy;
+
         public bool DestroyFlag { get; private set; }
         public Actor Parent { get; private set; }
         public IReadOnlyList<Actor> Children => _children;
@@ -51,6 +71,9 @@ namespace Iris.Core
             Parent = parent;
             parent?._children.Add(this);
 
+            Transform.MarkDirty();
+            RefreshActiveInHierarchy();
+
             if (worldPositionStays)
             {
                 Transform.Scale = scale;
@@ -64,8 +87,27 @@ namespace Iris.Core
             component.Attach(this);
             _components.Add(component);
 
-            if (_awake)
-                component.InvokeAwake();
+            if (!_awake)
+                return;
+
+            component.InvokeAwake();
+            component.RefreshEnabledInHierarchy();
+        }
+
+        private void RefreshActiveInHierarchy()
+        {
+            bool value = _active && (Parent?._activeInHierarchy ?? true);
+
+            if (_activeInHierarchy == value)
+                return;
+
+            _activeInHierarchy = value;
+
+            for (int i = 0; i < _components.Count; i++)
+                _components[i].RefreshEnabledInHierarchy();
+
+            for (int i = 0; i < _children.Count; i++)
+                _children[i].RefreshActiveInHierarchy();
         }
 
         internal void Awake()
@@ -76,7 +118,13 @@ namespace Iris.Core
             _awake = true;
 
             for (int i = 0; i < _components.Count; i++)
-                _components[i].InvokeAwake();
+            {
+                if (!_components[i].DestroyFlag)
+                    _components[i].InvokeAwake();
+            }
+
+            for (int i = 0; i < _components.Count; i++)
+                _components[i].RefreshEnabledInHierarchy();
         }
 
         public T AddComponent<T>() where T : Component, new()
@@ -87,11 +135,33 @@ namespace Iris.Core
             return compo;
         }
 
+        public bool RemoveComponent(Component component)
+        {
+            if (component == null || component.DestroyFlag || !_components.Contains(component))
+                return false;
+
+            if (component == Transform)
+            {
+                Debug.LogOnce(LogLevel.Warning, "Transform cannot be removed from an actor.", this);
+                return false;
+            }
+
+            component.MarkDestroy();
+            return true;
+        }
+
+        public bool RemoveComponent<T>() where T : class
+        {
+            return RemoveComponent(GetComponent<T>() as Component);
+        }
+
         public T GetComponent<T>() where T : class
         {
             for (int i = 0; i < _components.Count; i++)
             {
-                if (_components[i] is T match)
+                var component = _components[i];
+
+                if (!component.DestroyFlag && component is T match)
                     return match;
             }
 
@@ -116,30 +186,45 @@ namespace Iris.Core
 
         internal void Update()
         {
-            foreach (Component component in _components)
+            int count = _components.Count;
+
+            for (int i = 0; i < count && i < _components.Count; i++)
             {
+                if (DestroyFlag)
+                    break;
+
+                var component = _components[i];
+
+                if (!component.EnabledInHierarchy)
+                    continue;
+
                 try
                 {
-                    if (DestroyFlag)
-                        break;
                     component.Update();
                 }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
                     Debug.LogExceptionOnce(ex, this);
                 }
-
             }
         }
 
         internal void FixedUpdate()
         {
-            foreach (Component component in _components)
+            int count = _components.Count;
+
+            for (int i = 0; i < count && i < _components.Count; i++)
             {
+                if (DestroyFlag)
+                    break;
+
+                var component = _components[i];
+
+                if (!component.EnabledInHierarchy)
+                    continue;
+
                 try
                 {
-                    if (DestroyFlag)
-                        break;
                     component.FixedUpdate();
                 }
                 catch (Exception ex)
@@ -151,13 +236,45 @@ namespace Iris.Core
 
         internal void LateUpdate()
         {
-            foreach(Component component in _components)
+            int count = _components.Count;
+
+            for (int i = 0; i < count && i < _components.Count; i++)
             {
+                if (DestroyFlag)
+                    break;
+
+                var component = _components[i];
+
+                if (!component.EnabledInHierarchy)
+                    continue;
+
                 try
                 {
-                    if (DestroyFlag)
-                        break;
                     component.LateUpdate();
+                }
+                catch (Exception ex)
+                {
+                    Debug.LogExceptionOnce(ex, this);
+                }
+            }
+
+            SweepComponents();
+        }
+
+        internal void SweepComponents()
+        {
+            for (int i = _components.Count - 1; i >= 0; i--)
+            {
+                var component = _components[i];
+
+                if (!component.DestroyFlag)
+                    continue;
+
+                _components.RemoveAt(i);
+
+                try
+                {
+                    component.Dispose();
                 }
                 catch (Exception ex)
                 {
@@ -182,11 +299,12 @@ namespace Iris.Core
             Parent?._children.Remove(this);
             Parent = null;
 
-            foreach (Component component in _components)
+            for (int i = 0; i < _components.Count; i++)
             {
                 try
                 {
-                    component.Dispose();
+                    _components[i].MarkDestroy();
+                    _components[i].Dispose();
                 }
                 catch (Exception ex)
                 {

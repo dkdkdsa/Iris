@@ -31,8 +31,8 @@ namespace Iris.Platform
 
             _audioBackend.Init();
 
-            Factorys.Register(_renderBackend);
-            Factorys.Register(_audioBackend);
+            Factories.Register(_renderBackend);
+            Factories.Register(_audioBackend);
         }
 
         public bool IsCloseRequested => _closed;

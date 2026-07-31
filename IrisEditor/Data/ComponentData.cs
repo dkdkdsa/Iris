@@ -9,6 +9,7 @@ namespace IrisEditor.Data
         public Guid Id { get; set; }
         public Type TargetType { get; set; }
         public string TypeName { get; set; }
+        public bool Enabled { get; set; } = true;
         public JsonNode Properties { get; set; }
 
         public float GetFloat(string key, float fallback)

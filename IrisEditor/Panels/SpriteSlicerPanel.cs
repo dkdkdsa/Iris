@@ -9,6 +9,7 @@ using System.Numerics;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using IrisEditor.Localization;
+using IrisEditor.Workspace;
 
 namespace IrisEditor.Panels
 {
@@ -17,6 +18,7 @@ namespace IrisEditor.Panels
         private readonly EditorContext _context;
 
         private bool _open;
+        private EditorWorkspace _workspace;
         private string _texturePath;
         private ITexture _texture;
         private byte[] _pixels;
@@ -48,6 +50,9 @@ namespace IrisEditor.Panels
             if (pending != null)
                 Open(pending);
 
+            if (_open && _workspace != _context.Workspace)
+                Close();
+
             if (!_open)
                 return;
 
@@ -61,7 +66,16 @@ namespace IrisEditor.Panels
             ImGui.End();
 
             if (!_open)
-                _pixels = null;
+                Close();
+        }
+
+        private void Close()
+        {
+            _open = false;
+            _workspace = null;
+            _texturePath = null;
+            _texture = null;
+            _pixels = null;
         }
 
         private void Open(string relativePath)
@@ -83,6 +97,7 @@ namespace IrisEditor.Panels
                 }
 
                 _texture = AssetManager.Load<ITexture>(Path.Combine(workspace.RootPath, relativePath));
+                _workspace = workspace;
                 _texturePath = relativePath;
                 _name = Path.GetFileNameWithoutExtension(relativePath);
                 _gridDirty = true;

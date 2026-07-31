@@ -1,5 +1,6 @@
 using Box2D.NET;
 using Iris.Attributes;
+using Iris.Debugging;
 using Iris.Physics;
 using Silk.NET.Maths;
 using System;
@@ -160,7 +161,14 @@ namespace Iris.Core
 
         protected override void OnAttached()
         {
-            var sys = SystemManager.Instance.GetSystem<PhysicsSystem>();
+            var sys = SystemManager.Instance?.GetSystem<PhysicsSystem>();
+
+            if (sys == null)
+            {
+                Debug.LogOnce(LogLevel.Warning, "Rigidbody requires a PhysicsSystem; no body was created.", this);
+                return;
+            }
+
             var def = B2Types.b2DefaultBodyDef();
             def.type = B2BodyType.b2_dynamicBody;
             def.gravityScale = _gravityScale;
@@ -170,11 +178,27 @@ namespace Iris.Core
             def.angularVelocity = ToBodyAngular(_angularVelocity);
             def.position = new B2Vec2(Transform.Position.X, Transform.Position.Y);
             def.rotation = ToBodyRotation(Transform.Rotation);
+            def.isEnabled = false;
             _id = sys.CreateBody(def);
+        }
+
+        protected override void OnEnable()
+        {
+            if (B2Worlds.b2Body_IsValid(_id))
+                B2Bodies.b2Body_Enable(_id);
+        }
+
+        protected override void OnDisable()
+        {
+            if (B2Worlds.b2Body_IsValid(_id))
+                B2Bodies.b2Body_Disable(_id);
         }
 
         public override void FixedUpdate()
         {
+            if (!B2Worlds.b2Body_IsValid(_id))
+                return;
+
             var linVel = B2Bodies.b2Body_GetLinearVelocity(_id);
             _linearVelocity = new Vector2D<float>(linVel.X, linVel.Y);
 
@@ -185,7 +209,7 @@ namespace Iris.Core
             Transform.Rotation = ToTransformRotation(trm.q);
         }
 
-        private static B2Rot ToBodyRotation(float degrees)
+        internal static B2Rot ToBodyRotation(float degrees)
         {
             return B2MathFunction.b2MakeRot(-degrees * MathF.PI / 180f);
         }

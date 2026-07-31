@@ -1,5 +1,4 @@
 using Iris.Core;
-using Iris.Debugging;
 using IrisEditor.Data;
 using IrisEditor.Platform;
 using IrisEditor.Serialization;

@@ -42,6 +42,25 @@ namespace IrisEditor.Panels
             {
                 ImGui.PushID(comp.Id.ToString());
 
+                bool isTransform = comp.TargetType == typeof(Transform);
+                bool enabled = comp.Enabled;
+
+                if (isTransform)
+                    ImGui.BeginDisabled();
+
+                if (ImGui.Checkbox("##enabled", ref enabled))
+                {
+                    comp.Enabled = enabled;
+                    _context.MarkDirty();
+                }
+
+                if (isTransform)
+                    ImGui.EndDisabled();
+                else if (ImGui.IsItemHovered())
+                    ImGui.SetTooltip(Loc.T("inspector.enabledHint"));
+
+                ImGui.SameLine();
+
                 string title = comp.TargetType?.Name ?? (comp.TypeName != null ? Loc.T("inspector.unresolved", comp.TypeName) : Loc.T("inspector.unknownComponent"));
                 bool open = ImGui.CollapsingHeader(title, ImGuiTreeNodeFlags.DefaultOpen);
 
@@ -94,8 +113,21 @@ namespace IrisEditor.Panels
             var style = ImGui.GetStyle();
 
             float labels = ImGui.CalcTextSize(Loc.T("inspector.name")).X + ImGui.CalcTextSize(Loc.T("inspector.tag")).X;
-            float overhead = labels + style.ItemInnerSpacing.X * 2f + style.ItemSpacing.X;
+            float overhead = labels + style.ItemInnerSpacing.X * 2f + style.ItemSpacing.X * 2f + ImGui.GetFrameHeight();
             float field = MathF.Max((ImGui.GetContentRegionAvail().X - overhead) * 0.5f, 40f);
+
+            bool active = actor.Active;
+
+            if (ImGui.Checkbox("##active", ref active))
+            {
+                actor.Active = active;
+                _context.MarkDirty();
+            }
+
+            if (ImGui.IsItemHovered())
+                ImGui.SetTooltip(Loc.T("inspector.activeHint"));
+
+            ImGui.SameLine();
 
             ImGui.SetNextItemWidth(field);
             string name = actor.Name ?? string.Empty;

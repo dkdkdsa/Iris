@@ -28,7 +28,9 @@ namespace Iris.Rendering
             else if (!_warnedNoCamera)
                 _warnedNoCamera = true;
 
-            _commands.Sort((a, b) => a.order.CompareTo(b.order));
+            _commands.Sort(static (a, b) => a.order != b.order
+                ? a.order.CompareTo(b.order)
+                : a.sequence.CompareTo(b.sequence));
 
             foreach (var cmd in _commands)
             {
@@ -52,6 +54,12 @@ namespace Iris.Rendering
             _commands.Clear();
         }
 
-        public void Submit(in RenderCommand cmd) => _commands.Add(cmd);
+        public void Submit(in RenderCommand cmd)
+        {
+            var entry = cmd;
+            entry.sequence = _commands.Count;
+
+            _commands.Add(entry);
+        }
     }
 }

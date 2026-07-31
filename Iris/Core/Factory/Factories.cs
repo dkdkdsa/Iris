@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Iris.Core
 {
-    public static class Factorys
+    public static class Factories
     {
 
         private static readonly Dictionary<FactoryKey, object> _factories = new();

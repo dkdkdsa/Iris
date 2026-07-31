@@ -141,10 +141,20 @@ namespace Iris.UI
         protected override void OnAttached()
         {
             _system = SystemManager.Instance.GetSystem<RenderSystem>();
-            _canvases.Add(this);
 
             if (Layout != null)
                 ApplyLayout();
+        }
+
+        protected override void OnEnable()
+        {
+            if (!_canvases.Contains(this))
+                _canvases.Add(this);
+        }
+
+        protected override void OnDisable()
+        {
+            _canvases.Remove(this);
         }
 
         public override void LateUpdate()

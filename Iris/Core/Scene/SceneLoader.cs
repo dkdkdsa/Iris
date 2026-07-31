@@ -1,3 +1,4 @@
+using Iris.Assets;
 using Iris.Debugging;
 using Iris.Files;
 using System;
@@ -10,7 +11,32 @@ namespace Iris.Core
 {
     public static class SceneLoader
     {
-        public static string ContentRoot { get; set; } = AppContext.BaseDirectory;
+        private static string _contentRoot = Normalize(AppContext.BaseDirectory);
+
+        public static string ContentRoot
+        {
+            get
+            {
+                return _contentRoot;
+            }
+            set
+            {
+                string normalized = Normalize(value);
+
+                if (string.Equals(_contentRoot, normalized, StringComparison.OrdinalIgnoreCase))
+                    return;
+
+                _contentRoot = normalized;
+                AssetManager.UnloadAll();
+            }
+        }
+
+        private static string Normalize(string path)
+        {
+            string target = string.IsNullOrWhiteSpace(path) ? AppContext.BaseDirectory : path;
+
+            return Path.TrimEndingDirectorySeparator(Path.GetFullPath(target));
+        }
 
         public static void RegisterAssembly(Assembly assembly)
         {
@@ -76,6 +102,7 @@ namespace Iris.Core
             var actor = scene.CreateActorDeferred();
             actor.Name = actorObj["name"]?.GetValue<string>() ?? "Actor";
             actor.Tag = actorObj["tag"]?.GetValue<string>() ?? string.Empty;
+            actor.Active = ReadBool(actorObj["active"], true);
 
             if (actorObj["components"] is not JsonArray components)
                 return actor;
@@ -120,6 +147,7 @@ namespace Iris.Core
                 {
                     var component = (Component)Activator.CreateInstance(type);
                     JsonPropertyMapper.ApplyProperties(component, properties);
+                    component.Enabled = ReadBool(compObj["enabled"], true);
                     actor.AddComponent(component);
                 }
                 catch (Exception ex)
@@ -129,6 +157,11 @@ namespace Iris.Core
             }
 
             return actor;
+        }
+
+        private static bool ReadBool(JsonNode node, bool fallback)
+        {
+            return node is JsonValue value && value.TryGetValue(out bool result) ? result : fallback;
         }
     }
 }

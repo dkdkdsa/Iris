@@ -53,22 +53,22 @@ namespace Iris.Physics
                 for (int i = 0; i < evts.beginCount; i++)
                 {
                     B2SensorBeginTouchEvent item = evts.beginEvents[i];
-                    var sencer = B2Shapes.b2Shape_GetUserData(item.sensorShapeId).oValue as Collider;
+                    var sensor = B2Shapes.b2Shape_GetUserData(item.sensorShapeId).oValue as Collider;
                     var other = B2Shapes.b2Shape_GetUserData(item.visitorShapeId).oValue as Collider;
-                    if (sencer != null)
+                    if (sensor != null)
                     {
-                        sencer.NotifySencerEvent(other, true);
+                        sensor.NotifySensorEvent(other, true);
                     }
                 }
 
                 for (int i = 0; i < evts.endCount; i++)
                 {
                     B2SensorEndTouchEvent item = evts.endEvents[i];
-                    var sencer = B2Shapes.b2Shape_GetUserData(item.sensorShapeId).oValue as Collider;
+                    var sensor = B2Shapes.b2Shape_GetUserData(item.sensorShapeId).oValue as Collider;
                     var other = B2Shapes.b2Shape_GetUserData(item.visitorShapeId).oValue as Collider;
-                    if (sencer != null)
+                    if (sensor != null)
                     {
-                        sencer.NotifySencerEvent(other, false);
+                        sensor.NotifySensorEvent(other, false);
                     }
                 }
             }

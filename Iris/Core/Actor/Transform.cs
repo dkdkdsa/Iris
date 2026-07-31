@@ -1,3 +1,4 @@
+using Iris.Attributes;
 using Silk.NET.Maths;
 using System;
 
@@ -5,25 +6,65 @@ namespace Iris.Core
 {
     public sealed class Transform : Component
     {
-        public Vector2D<float> LocalPosition { get; set; }
-        public float LocalRotation { get; set; }
-        public Vector2D<float> LocalScale { get; set; } = Vector2D<float>.One;
+        private Vector2D<float> _localPosition;
+        private float _localRotation;
+        private Vector2D<float> _localScale = Vector2D<float>.One;
+
+        private Vector2D<float> _worldPosition;
+        private float _worldRotation;
+        private Vector2D<float> _worldScale = Vector2D<float>.One;
+        private bool _dirty = true;
 
         private Transform ParentTransform => OwnerActor?.Parent?.Transform;
+
+        [Show]
+        public Vector2D<float> LocalPosition
+        {
+            get
+            {
+                return _localPosition;
+            }
+            set
+            {
+                _localPosition = value;
+                MarkDirty();
+            }
+        }
+
+        [Show]
+        public float LocalRotation
+        {
+            get
+            {
+                return _localRotation;
+            }
+            set
+            {
+                _localRotation = value;
+                MarkDirty();
+            }
+        }
+
+        [Show]
+        public Vector2D<float> LocalScale
+        {
+            get
+            {
+                return _localScale;
+            }
+            set
+            {
+                _localScale = value;
+                MarkDirty();
+            }
+        }
 
         public Vector2D<float> Position
         {
             get
             {
-                var parent = ParentTransform;
-
-                if (parent == null)
-                    return LocalPosition;
-
-                var parentScale = parent.Scale;
-                var scaled = new Vector2D<float>(LocalPosition.X * parentScale.X, LocalPosition.Y * parentScale.Y);
-
-                return parent.Position + Rotate(scaled, parent.Rotation);
+                EnsureWorld();
+                return _worldPosition;
             }
             set
             {
@@ -35,12 +76,13 @@ namespace Iris.Core
                     return;
                 }
 
-                var parentScale = parent.Scale;
-                var delta = Rotate(value - parent.Position, -parent.Rotation);
+                parent.EnsureWorld();
+
+                var delta = Rotate(value - parent._worldPosition, -parent._worldRotation);
 
                 LocalPosition = new Vector2D<float>(
-                    parentScale.X != 0f ? delta.X / parentScale.X : 0f,
-                    parentScale.Y != 0f ? delta.Y / parentScale.Y : 0f);
+                    parent._worldScale.X != 0f ? delta.X / parent._worldScale.X : 0f,
+                    parent._worldScale.Y != 0f ? delta.Y / parent._worldScale.Y : 0f);
             }
         }
 
@@ -48,13 +90,22 @@ namespace Iris.Core
         {
             get
             {
-                var parent = ParentTransform;
-                return parent == null ? LocalRotation : parent.Rotation + LocalRotation;
+                EnsureWorld();
+                return _worldRotation;
             }
             set
             {
                 var parent = ParentTransform;
-                LocalRotation = parent == null ? value : value - parent.Rotation;
+
+                if (parent == null)
+                {
+                    LocalRotation = value;
+                    return;
+                }
+
+                parent.EnsureWorld();
+
+                LocalRotation = value - parent._worldRotation;
             }
         }
 
@@ -62,14 +113,8 @@ namespace Iris.Core
         {
             get
             {
-                var parent = ParentTransform;
-
-                if (parent == null)
-                    return LocalScale;
-
-                var parentScale = parent.Scale;
-
-                return new Vector2D<float>(LocalScale.X * parentScale.X, LocalScale.Y * parentScale.Y);
+                EnsureWorld();
+                return _worldScale;
             }
             set
             {
@@ -81,12 +126,63 @@ namespace Iris.Core
                     return;
                 }
 
-                var parentScale = parent.Scale;
+                parent.EnsureWorld();
 
                 LocalScale = new Vector2D<float>(
-                    parentScale.X != 0f ? value.X / parentScale.X : 0f,
-                    parentScale.Y != 0f ? value.Y / parentScale.Y : 0f);
+                    parent._worldScale.X != 0f ? value.X / parent._worldScale.X : 0f,
+                    parent._worldScale.Y != 0f ? value.Y / parent._worldScale.Y : 0f);
             }
+        }
+
+        internal void MarkDirty()
+        {
+            if (_dirty)
+                return;
+
+            _dirty = true;
+
+            var actor = OwnerActor;
+
+            if (actor == null)
+                return;
+
+            var children = actor.Children;
+
+            for (int i = 0; i < children.Count; i++)
+                children[i].Transform?.MarkDirty();
+        }
+
+        private void EnsureWorld()
+        {
+            if (!_dirty)
+                return;
+
+            var parent = ParentTransform;
+
+            if (parent == null)
+            {
+                _worldPosition = _localPosition;
+                _worldRotation = _localRotation;
+                _worldScale = _localScale;
+            }
+            else
+            {
+                parent.EnsureWorld();
+
+                _worldScale = new Vector2D<float>(
+                    _localScale.X * parent._worldScale.X,
+                    _localScale.Y * parent._worldScale.Y);
+
+                _worldRotation = parent._worldRotation + _localRotation;
+
+                var scaled = new Vector2D<float>(
+                    _localPosition.X * parent._worldScale.X,
+                    _localPosition.Y * parent._worldScale.Y);
+
+                _worldPosition = parent._worldPosition + Rotate(scaled, parent._worldRotation);
+            }
+
+            _dirty = false;
         }
 
         internal static Vector2D<float> Rotate(Vector2D<float> vector, float degrees)

@@ -28,7 +28,7 @@ namespace Iris.Platform.SDL
             _inputBackend = new SDLInputBackend();
             _clipboard = new SDLClipboard(_sdl);
 
-            Factorys.Register(_backend);
+            Factories.Register(_backend);
         }
 
         public bool IsCloseRequested => _closed;

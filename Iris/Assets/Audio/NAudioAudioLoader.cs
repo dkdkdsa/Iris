@@ -29,7 +29,7 @@ namespace Iris.Assets
                     samples.Add(buffer[i]);
             }
 
-            return Factorys.Create<IAudioClip, AudioClipData>(new AudioClipData
+            return Factories.Create<IAudioClip, AudioClipData>(new AudioClipData
             {
                 Channels = channels,
                 SampleRate = sampleRate,

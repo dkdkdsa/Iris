@@ -8,17 +8,46 @@ namespace Iris.Debugging
     public static class Debug
     {
         private const int MaxInnerExceptionDepth = 8;
+        private const int DefaultOnceCapacity = 1024;
 
         private static readonly object _gate = new();
-        private static readonly HashSet<string> _onceKeys = new(StringComparer.Ordinal);
+        private static readonly HashSet<(string Channel, string Text)> _onceKeys = new();
+        private static readonly Queue<(string Channel, string Text)> _onceOrder = new();
 
         private static volatile ILogSink[] _sinks = { new ConsoleLogSink() };
+        private static int _onceCapacity = DefaultOnceCapacity;
 
         public static LogLevel MinLevel { get; set; } = LogLevel.Trace;
 
         public static LogLevel StackTraceMinLevel { get; set; } = LogLevel.Warning;
 
         public static string DefaultChannel { get; set; } = "Iris";
+
+        public static int OnceCapacity
+        {
+            get
+            {
+                lock (_gate)
+                    return _onceCapacity;
+            }
+            set
+            {
+                lock (_gate)
+                {
+                    _onceCapacity = value < 1 ? 1 : value;
+                    TrimOnce();
+                }
+            }
+        }
+
+        public static int OnceCount
+        {
+            get
+            {
+                lock (_gate)
+                    return _onceKeys.Count;
+            }
+        }
 
         public static DebugChannel Channel(string name)
         {
@@ -142,7 +171,10 @@ namespace Iris.Debugging
         public static void ResetOnce()
         {
             lock (_gate)
+            {
                 _onceKeys.Clear();
+                _onceOrder.Clear();
+            }
         }
 
         internal static void Write(LogLevel level, string channel, object message, object context)
@@ -215,7 +247,23 @@ namespace Iris.Debugging
         private static bool TryClaimOnce(string channel, string text)
         {
             lock (_gate)
-                return _onceKeys.Add(channel == null ? text : channel + ' ' + text);
+            {
+                var key = (channel, text);
+
+                if (!_onceKeys.Add(key))
+                    return false;
+
+                _onceOrder.Enqueue(key);
+                TrimOnce();
+
+                return true;
+            }
+        }
+
+        private static void TrimOnce()
+        {
+            while (_onceOrder.Count > _onceCapacity)
+                _onceKeys.Remove(_onceOrder.Dequeue());
         }
 
         private static void Dispatch(ILogSink[] sinks, in LogEntry entry)

@@ -21,6 +21,15 @@ namespace Iris.Files
             return Package.PackageFormat.NormalizeKey(path);
         }
 
+        public static string GetCacheKey(string path)
+        {
+            string full = Path.IsPathRooted(path)
+                ? path
+                : Path.Combine(SceneLoader.ContentRoot, path);
+
+            return Package.PackageFormat.NormalizeKey(Path.GetFullPath(full));
+        }
+
         public static byte[] ReadAllBytes(string path)
         {
             if (TryGetKey(path, out var key))

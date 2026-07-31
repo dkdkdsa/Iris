@@ -18,12 +18,22 @@ namespace Iris.Core
             var def = B2Types.b2DefaultBodyDef();
             def.type = B2BodyType.b2_staticBody;
 
+            def.isEnabled = false;
+
             _bodyId = system.CreateBody(def);
             _attached = true;
         }
 
-        protected override void Awake()
+        protected override void OnEnable()
         {
+            if (B2Worlds.b2Body_IsValid(_bodyId))
+                B2Bodies.b2Body_Enable(_bodyId);
+        }
+
+        protected override void OnDisable()
+        {
+            if (B2Worlds.b2Body_IsValid(_bodyId))
+                B2Bodies.b2Body_Disable(_bodyId);
         }
 
         public override void FixedUpdate()

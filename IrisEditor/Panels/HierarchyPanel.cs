@@ -87,13 +87,15 @@ namespace IrisEditor.Panels
                 flags |= ImGuiTreeNodeFlags.Selected;
 
             bool isPrefabInstance = !string.IsNullOrEmpty(actor.PrefabSource);
+            bool inactive = !IsActiveInHierarchy(scene, actor);
+            bool tinted = inactive || isPrefabInstance;
 
-            if (isPrefabInstance)
-                ImGui.PushStyleColor(ImGuiCol.Text, 0xFFFFC896);
+            if (tinted)
+                ImGui.PushStyleColor(ImGuiCol.Text, inactive ? 0xFF808080 : 0xFFFFC896);
 
             bool open = ImGui.TreeNodeEx($"{actor.Name}##{actor.Id}", flags);
 
-            if (isPrefabInstance)
+            if (tinted)
                 ImGui.PopStyleColor();
 
             if ((ImGui.IsItemClicked(ImGuiMouseButton.Left) && !ImGui.IsItemToggledOpen()) ||
@@ -159,6 +161,21 @@ namespace IrisEditor.Panels
 
                 ImGui.TreePop();
             }
+        }
+
+        private static bool IsActiveInHierarchy(SceneData scene, ActorData actor)
+        {
+            var current = actor;
+
+            for (int guard = 0; current != null && guard < 64; guard++)
+            {
+                if (!current.Active)
+                    return false;
+
+                current = SceneTransforms.FindParent(scene, current);
+            }
+
+            return true;
         }
 
         private static List<ActorData> CollectChildren(SceneData scene, ActorData actor)
