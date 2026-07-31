@@ -10,8 +10,6 @@ namespace Iris.Assets
 {
     internal unsafe class StbFont : IFont
     {
-        private static readonly DebugChannel _log = Debug.Channel("Iris");
-
         private const int AtlasWidth = 2048;
         private const int AtlasHeight = 2048;
         private const int Padding = 1;
@@ -120,7 +118,7 @@ namespace Iris.Assets
                 if (!_warnedFull)
                 {
                     _warnedFull = true;
-                    _log.LogWarning("Font atlas is full; further glyphs will not be rendered.");
+                    Debug.LogWarning("Font atlas is full; further glyphs will not be rendered.");
                 }
 
                 return glyph;

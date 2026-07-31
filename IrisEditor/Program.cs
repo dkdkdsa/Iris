@@ -2,6 +2,7 @@ using Iris;
 using Iris.Assets;
 using Iris.Core;
 using Iris.Platform;
+using Debug = Iris.Debugging.Debug;
 
 namespace IrisEditor
 {
@@ -9,6 +10,8 @@ namespace IrisEditor
     {
         static void Main()
         {
+            Debug.DefaultChannel = "Editor";
+
             var host = new AppHost(new DefaultPlatform());
 
             host.Initialize(new WindowConfig

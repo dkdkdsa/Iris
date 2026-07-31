@@ -13,8 +13,6 @@ namespace IrisEditor.Panels
 {
     internal sealed unsafe class SpriteSlicerPanel
     {
-        private static readonly DebugChannel _log = Debug.Channel("Editor");
-
         private readonly EditorContext _context;
 
         private bool _open;
@@ -91,7 +89,7 @@ namespace IrisEditor.Panels
             }
             catch (Exception ex)
             {
-                _log.LogException("이미지 열기 실패", ex);
+                Debug.LogException("이미지 열기 실패", ex);
             }
         }
 
@@ -297,11 +295,11 @@ namespace IrisEditor.Panels
                 }
 
                 workspace.Refresh();
-                _log.Log($"{extension} {exported}개 생성");
+                Debug.Log($"{extension} {exported}개 생성");
             }
             catch (Exception ex)
             {
-                _log.LogException("슬라이스 실패", ex);
+                Debug.LogException("슬라이스 실패", ex);
             }
         }
 
@@ -324,7 +322,7 @@ namespace IrisEditor.Panels
 
             if (frameCount == 0)
             {
-                _log.LogWarning("잘라낼 프레임이 없습니다.");
+                Debug.LogWarning("잘라낼 프레임이 없습니다.");
                 return;
             }
 
@@ -335,11 +333,11 @@ namespace IrisEditor.Panels
                 WriteAnim(directory, $"{_name}.anim", _offsetX, _offsetY, _columns, frameCount);
 
                 workspace.Refresh();
-                _log.Log($"애니메이션 생성: {_name}.anim");
+                Debug.Log($"애니메이션 생성: {_name}.anim");
             }
             catch (Exception ex)
             {
-                _log.LogException("애니메이션 생성 실패", ex);
+                Debug.LogException("애니메이션 생성 실패", ex);
             }
         }
 
@@ -376,11 +374,11 @@ namespace IrisEditor.Panels
                 }
 
                 workspace.Refresh();
-                _log.Log($"행 애니메이션 {exported}개 생성");
+                Debug.Log($"행 애니메이션 {exported}개 생성");
             }
             catch (Exception ex)
             {
-                _log.LogException("애니메이션 생성 실패", ex);
+                Debug.LogException("애니메이션 생성 실패", ex);
             }
         }
 
@@ -417,11 +415,11 @@ namespace IrisEditor.Panels
                 }
 
                 workspace.Refresh();
-                _log.Log($"열 애니메이션 {exported}개 생성");
+                Debug.Log($"열 애니메이션 {exported}개 생성");
             }
             catch (Exception ex)
             {
-                _log.LogException("애니메이션 생성 실패", ex);
+                Debug.LogException("애니메이션 생성 실패", ex);
             }
         }
 

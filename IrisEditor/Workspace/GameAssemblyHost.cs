@@ -6,13 +6,12 @@ using System.IO;
 using System.Reflection;
 using System.Runtime.Loader;
 using System.Text;
+using Debug = Iris.Debugging.Debug;
 
 namespace IrisEditor.Workspace
 {
     internal sealed class GameAssemblyHost
     {
-        private static readonly DebugChannel _log = Iris.Debugging.Debug.Channel("Editor");
-
         private sealed class GameLoadContext : AssemblyLoadContext
         {
             public GameLoadContext() : base(isCollectible: true)
@@ -60,11 +59,11 @@ namespace IrisEditor.Workspace
                 _buildProcess.BeginOutputReadLine();
                 _buildProcess.BeginErrorReadLine();
 
-                _log.Log($"스크립트 빌드 시작: {Path.GetFileName(projectFile)}");
+                Debug.Log($"스크립트 빌드 시작: {Path.GetFileName(projectFile)}");
             }
             catch (Exception ex)
             {
-                _log.LogException("dotnet 실행 실패", ex);
+                Debug.LogException("dotnet 실행 실패", ex);
                 _buildProcess = null;
                 _onDone = null;
                 onDone?.Invoke(false);
@@ -97,7 +96,7 @@ namespace IrisEditor.Workspace
                     }
                 }
 
-                _log.LogError(builder.ToString());
+                Debug.LogError(builder.ToString());
 
                 onDone?.Invoke(false);
                 return;
@@ -112,7 +111,7 @@ namespace IrisEditor.Workspace
 
             if (dll == null)
             {
-                _log.LogError("빌드 산출물 DLL을 찾을 수 없습니다.");
+                Debug.LogError("빌드 산출물 DLL을 찾을 수 없습니다.");
                 return false;
             }
 
@@ -124,12 +123,12 @@ namespace IrisEditor.Workspace
                 using var stream = new MemoryStream(File.ReadAllBytes(dll));
                 Current = _loadContext.LoadFromStream(stream);
 
-                _log.Log($"게임 어셈블리 로드 완료: {Path.GetFileName(dll)}");
+                Debug.Log($"게임 어셈블리 로드 완료: {Path.GetFileName(dll)}");
                 return true;
             }
             catch (Exception ex)
             {
-                _log.LogException("어셈블리 로드 실패", ex);
+                Debug.LogException("어셈블리 로드 실패", ex);
                 Current = null;
                 return false;
             }

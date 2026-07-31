@@ -10,8 +10,6 @@ namespace Iris.Core
 {
     public static class JsonPropertyMapper
     {
-        private static readonly DebugChannel _log = Debug.Channel("Iris");
-
         public static void ApplyProperties(object target, JsonObject properties)
         {
             if (properties == null)
@@ -43,7 +41,7 @@ namespace Iris.Core
                 }
                 catch (Exception ex)
                 {
-                    _log.LogExceptionOnce($"Failed to apply member ({type.Name}.{pair.Key})", ex);
+                    Debug.LogExceptionOnce($"Failed to apply member ({type.Name}.{pair.Key})", ex);
                 }
             }
         }

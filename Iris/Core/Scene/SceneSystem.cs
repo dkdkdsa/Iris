@@ -5,8 +5,6 @@ namespace Iris.Core
 {
     public sealed class SceneSystem : SystemBase
     {
-        private static readonly DebugChannel _log = Debug.Channel("Iris");
-
         public Scene ActiveScene { get; private set; }
 
         private Scene _pendingScene;
@@ -37,7 +35,7 @@ namespace Iris.Core
             }
             catch (Exception ex)
             {
-                _log.LogExceptionOnce(ex);
+                Debug.LogExceptionOnce(ex);
             }
         }
 
@@ -51,7 +49,7 @@ namespace Iris.Core
             }
             catch (Exception ex)
             {
-                _log.LogExceptionOnce(ex);
+                Debug.LogExceptionOnce(ex);
             }
         }
 
@@ -65,7 +63,7 @@ namespace Iris.Core
             }
             catch (Exception ex)
             {
-                _log.LogExceptionOnce(ex);
+                Debug.LogExceptionOnce(ex);
             }
         }
 
@@ -95,7 +93,7 @@ namespace Iris.Core
             }
             catch (Exception ex)
             {
-                _log.LogExceptionOnce(ex);
+                Debug.LogExceptionOnce(ex);
             }
         }
     }

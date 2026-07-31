@@ -16,8 +16,6 @@ namespace IrisEditor.Panels
 {
     internal sealed class UIEditorPanel
     {
-        private static readonly DebugChannel _log = Debug.Channel("Editor");
-
         private static readonly (string Label, int Width, int Height)[] _resolutions =
         {
             ("800 × 600", 800, 600),
@@ -76,7 +74,7 @@ namespace IrisEditor.Panels
         private void OpenFile(string path)
         {
             if (_open && _dirty)
-                _log.LogWarning("저장 안 된 UI 변경사항을 버리고 다른 파일을 엽니다.");
+                Debug.LogWarning("저장 안 된 UI 변경사항을 버리고 다른 파일을 엽니다.");
 
             try
             {
@@ -89,7 +87,7 @@ namespace IrisEditor.Panels
             }
             catch (Exception ex)
             {
-                _log.LogException("UI 레이아웃 열기 실패", ex);
+                Debug.LogException("UI 레이아웃 열기 실패", ex);
             }
         }
 
@@ -102,7 +100,7 @@ namespace IrisEditor.Panels
             }
             catch (Exception ex)
             {
-                _log.LogException("UI 레이아웃 저장 실패", ex);
+                Debug.LogException("UI 레이아웃 저장 실패", ex);
             }
         }
 
@@ -258,7 +256,7 @@ namespace IrisEditor.Panels
                     }
                     catch (Exception ex)
                     {
-                        _log.LogExceptionOnce($"UI 미리보기 생성 실패({entry.TargetType.Name})", ex);
+                        Debug.LogExceptionOnce($"UI 미리보기 생성 실패({entry.TargetType.Name})", ex);
                         instance = null;
                     }
                 }

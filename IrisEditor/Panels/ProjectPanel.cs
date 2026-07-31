@@ -10,8 +10,6 @@ namespace IrisEditor.Panels
 {
     internal sealed class ProjectPanel : EditorPanel
     {
-        private static readonly DebugChannel _log = Debug.Channel("Editor");
-
         private readonly EditorContext _context;
         private Action _pendingAction;
 
@@ -145,11 +143,11 @@ namespace IrisEditor.Panels
 
                 _context.HandlePathDeleted(absolute, _deleteIsDirectory);
                 workspace.Refresh();
-                _log.Log($"삭제됨: {_deletePath}");
+                Debug.Log($"삭제됨: {_deletePath}");
             }
             catch (Exception ex)
             {
-                _log.LogException("삭제 실패", ex);
+                Debug.LogException("삭제 실패", ex);
             }
 
             _deletePath = null;
@@ -186,7 +184,7 @@ namespace IrisEditor.Panels
                     }
                     catch (Exception ex)
                     {
-                        _log.LogException("에셋 생성 실패", ex);
+                        Debug.LogException("에셋 생성 실패", ex);
                     }
                 };
             }
@@ -335,7 +333,7 @@ namespace IrisEditor.Panels
 
             if (!workspace.TryRename(relativePath, newName, isDirectory, out var error))
             {
-                _log.LogError($"이름 변경 실패: {error}");
+                Debug.LogError($"이름 변경 실패: {error}");
                 return;
             }
 
@@ -376,7 +374,7 @@ namespace IrisEditor.Panels
             }
             catch (Exception ex)
             {
-                _log.LogException("씬 열기 실패", ex);
+                Debug.LogException("씬 열기 실패", ex);
             }
         }
     }

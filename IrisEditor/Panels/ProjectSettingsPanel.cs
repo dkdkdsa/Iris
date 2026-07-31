@@ -13,8 +13,6 @@ namespace IrisEditor.Panels
 {
     internal sealed class ProjectSettingsPanel
     {
-        private static readonly DebugChannel _log = Debug.Channel("Editor");
-
         private static readonly (string Label, int Width, int Height)[] _resolutions =
         {
             ("800 × 600", 800, 600),
@@ -44,7 +42,7 @@ namespace IrisEditor.Panels
 
             if (workspace == null)
             {
-                _log.LogWarning("열린 프로젝트가 없습니다. 프로젝트를 먼저 여세요.");
+                Debug.LogWarning("열린 프로젝트가 없습니다. 프로젝트를 먼저 여세요.");
                 return;
             }
 
@@ -96,7 +94,7 @@ namespace IrisEditor.Panels
             }
             catch (Exception ex)
             {
-                _log.LogException("project.json 읽기 실패", ex);
+                Debug.LogException("project.json 읽기 실패", ex);
                 _config = new ProjectConfig();
                 _raw = new JsonObject();
                 _dirty = false;
@@ -119,11 +117,11 @@ namespace IrisEditor.Panels
                 if (created)
                     _context.Workspace?.Refresh();
 
-                _log.Log($"프로젝트 설정 저장: {_path}");
+                Debug.Log($"프로젝트 설정 저장: {_path}");
             }
             catch (Exception ex)
             {
-                _log.LogException("project.json 저장 실패", ex);
+                Debug.LogException("project.json 저장 실패", ex);
             }
         }
 

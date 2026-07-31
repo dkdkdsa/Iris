@@ -11,8 +11,6 @@ namespace Iris.Core
 {
     public class Tilemap : Component
     {
-        private static readonly DebugChannel _log = Debug.Channel("Iris");
-
         private readonly Dictionary<Vector2D<int>, Tile> _tiles = new();
         private string _serialized = string.Empty;
         private bool _parsed = true;
@@ -132,7 +130,7 @@ namespace Iris.Core
             }
             catch (Exception ex)
             {
-                _log.LogException("Failed to parse tilemap data", ex, this);
+                Debug.LogException("Failed to parse tilemap data", ex, this);
             }
         }
 
@@ -148,7 +146,7 @@ namespace Iris.Core
             }
             catch (Exception ex)
             {
-                _log.LogExceptionOnce($"Failed to load tile ({path})", ex);
+                Debug.LogExceptionOnce($"Failed to load tile ({path})", ex);
                 return null;
             }
         }

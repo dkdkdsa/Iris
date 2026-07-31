@@ -8,8 +8,6 @@ namespace Iris.UI
 {
     internal class UILayout : IUILayout
     {
-        private static readonly DebugChannel _log = Debug.Channel("Iris");
-
         private readonly List<(string TypeName, JsonObject Properties)> _entries = new();
 
         public UILayout(string json)
@@ -52,7 +50,7 @@ namespace Iris.UI
 
                 if (type == null)
                 {
-                    _log.LogOnce(LogLevel.Warning, $"Skipping unknown UI object type: {typeName}");
+                    Debug.LogOnce(LogLevel.Warning, $"Skipping unknown UI object type: {typeName}");
                     continue;
                 }
 
@@ -64,7 +62,7 @@ namespace Iris.UI
                 }
                 catch (Exception ex)
                 {
-                    _log.LogExceptionOnce($"Failed to create UI object ({typeName})", ex);
+                    Debug.LogExceptionOnce($"Failed to create UI object ({typeName})", ex);
                 }
             }
 

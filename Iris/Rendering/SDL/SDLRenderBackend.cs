@@ -13,8 +13,6 @@ namespace Iris.Rendering.SDL
 {
     internal unsafe class SDLRenderBackend : IRenderBackend, IImGuiRenderer, IFactory<ITexture, Vector2D<int>>
     {
-        private static readonly DebugChannel _log = Debug.Channel("Iris");
-
         private readonly Sdl _sdl;
         private Renderer* _renderer;
         private SDLWindow _window;
@@ -39,7 +37,7 @@ namespace Iris.Rendering.SDL
                     return;
 
                 if (_sdl.RenderSetVSync(_renderer, value ? 1 : 0) != 0)
-                    _log.LogWarning($"Failed to toggle vsync ({value}): {_sdl.GetErrorS()}");
+                    Debug.LogWarning($"Failed to toggle vsync ({value}): {_sdl.GetErrorS()}");
             }
         }
 
@@ -56,12 +54,12 @@ namespace Iris.Rendering.SDL
 
             if (_renderer == null)
             {
-                _log.LogError($"Failed to create renderer: {_sdl.GetErrorS()}");
+                Debug.LogError($"Failed to create renderer: {_sdl.GetErrorS()}");
                 return;
             }
 
             if (_vsync && !HasVSync())
-                _log.LogWarning("Could not enable vsync; use targetFrameRate to limit frames.");
+                Debug.LogWarning("Could not enable vsync; use targetFrameRate to limit frames.");
         }
 
         private bool HasVSync()

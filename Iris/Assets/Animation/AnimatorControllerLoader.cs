@@ -10,8 +10,6 @@ namespace Iris.Assets
 {
     internal class AnimatorControllerLoader : IAssetLoader
     {
-        private static readonly DebugChannel _log = Debug.Channel("Iris");
-
         public IAsset LoadAsset(string path)
         {
             if (JsonNode.Parse(VirtualFileSystem.ReadAllText(path)) is not JsonObject root)
@@ -142,7 +140,7 @@ namespace Iris.Assets
             }
             catch (Exception ex)
             {
-                _log.LogExceptionOnce($"Failed to load animation clip ({relativePath})", ex);
+                Debug.LogExceptionOnce($"Failed to load animation clip ({relativePath})", ex);
                 return null;
             }
         }

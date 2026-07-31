@@ -9,8 +9,6 @@ namespace Iris.Core
 {
     public sealed class Prefab : IAsset
     {
-        private static readonly DebugChannel _log = Debug.Channel("Iris");
-
         private readonly JsonArray _actors;
 
         internal Prefab(JsonArray actors)
@@ -34,7 +32,7 @@ namespace Iris.Core
 
             if (scene == null)
             {
-                _log.LogError("Cannot instantiate prefab: no active scene.");
+                Debug.LogError("Cannot instantiate prefab: no active scene.");
                 return null;
             }
 
@@ -66,7 +64,7 @@ namespace Iris.Core
                 }
                 catch (Exception ex)
                 {
-                    _log.LogExceptionOnce("Failed to build prefab actor", ex);
+                    Debug.LogExceptionOnce("Failed to build prefab actor", ex);
                 }
             }
 

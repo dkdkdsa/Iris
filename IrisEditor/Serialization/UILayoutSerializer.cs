@@ -10,8 +10,6 @@ namespace IrisEditor.Serialization
 {
     internal static class UILayoutSerializer
     {
-        private static readonly DebugChannel _log = Debug.Channel("Editor");
-
         public static List<ComponentData> Load(string path)
         {
             var entries = new List<ComponentData>();
@@ -31,7 +29,7 @@ namespace IrisEditor.Serialization
                 var type = UIObjectCatalog.Resolve(typeName);
 
                 if (type == null)
-                    _log.LogOnce(LogLevel.Warning, $"알 수 없는 UI 오브젝트 타입(데이터는 보존됨): {typeName}");
+                    Debug.LogOnce(LogLevel.Warning, $"알 수 없는 UI 오브젝트 타입(데이터는 보존됨): {typeName}");
 
                 var properties = obj["properties"]?.DeepClone() as JsonObject ?? new JsonObject();
 

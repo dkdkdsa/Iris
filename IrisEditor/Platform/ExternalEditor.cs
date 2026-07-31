@@ -3,14 +3,13 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Runtime.Versioning;
+using Debug = Iris.Debugging.Debug;
 
 namespace IrisEditor.Platform
 {
     [SupportedOSPlatform("windows")]
     internal static class ExternalEditor
     {
-        private static readonly DebugChannel _log = Iris.Debugging.Debug.Channel("Editor");
-
         private static string _devenvPath;
         private static bool _searched;
 
@@ -40,7 +39,7 @@ namespace IrisEditor.Platform
             }
             catch (Exception ex)
             {
-                _log.LogException("스크립트 열기 실패", ex);
+                Debug.LogException("스크립트 열기 실패", ex);
             }
         }
 
@@ -81,11 +80,11 @@ namespace IrisEditor.Platform
             }
             catch (Exception ex)
             {
-                _log.LogException("Visual Studio 탐색 실패", ex);
+                Debug.LogException("Visual Studio 탐색 실패", ex);
             }
 
             if (_devenvPath == null)
-                _log.LogWarning("Visual Studio를 찾지 못했습니다. OS 기본 프로그램으로 엽니다.");
+                Debug.LogWarning("Visual Studio를 찾지 못했습니다. OS 기본 프로그램으로 엽니다.");
 
             return _devenvPath;
         }

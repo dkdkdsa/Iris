@@ -10,8 +10,6 @@ namespace Iris.Core
 {
     public static class SceneLoader
     {
-        private static readonly DebugChannel _log = Debug.Channel("Iris");
-
         public static string ContentRoot { get; set; } = AppContext.BaseDirectory;
 
         public static void RegisterAssembly(Assembly assembly)
@@ -55,7 +53,7 @@ namespace Iris.Core
                 }
                 catch (Exception ex)
                 {
-                    _log.LogException("Failed to load actor", ex);
+                    Debug.LogException("Failed to load actor", ex);
                 }
             }
 
@@ -64,7 +62,7 @@ namespace Iris.Core
                 if (byId.TryGetValue(parentId, out var parent))
                     child.SetParent(parent, worldPositionStays: false);
                 else
-                    _log.LogWarning($"Parent actor not found; keeping at root: {child.Name}", child);
+                    Debug.LogWarning($"Parent actor not found; keeping at root: {child.Name}", child);
             }
 
             foreach (var actor in built)
@@ -102,7 +100,7 @@ namespace Iris.Core
 
                 if (type == null)
                 {
-                    _log.LogOnce(LogLevel.Warning, $"Skipping unknown component type: {typeName}");
+                    Debug.LogOnce(LogLevel.Warning, $"Skipping unknown component type: {typeName}");
                     continue;
                 }
 
@@ -126,7 +124,7 @@ namespace Iris.Core
                 }
                 catch (Exception ex)
                 {
-                    _log.LogExceptionOnce($"Failed to load component ({type.Name})", ex);
+                    Debug.LogExceptionOnce($"Failed to load component ({type.Name})", ex);
                 }
             }
 

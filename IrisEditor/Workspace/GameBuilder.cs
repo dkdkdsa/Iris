@@ -9,8 +9,6 @@ namespace IrisEditor.Workspace
 {
     internal sealed class GameBuilder
     {
-        private static readonly DebugChannel _log = Debug.Channel("Editor");
-
         private Task<bool> _task;
         private Action<bool> _onDone;
         private readonly ConcurrentQueue<string> _logs = new();
@@ -32,7 +30,7 @@ namespace IrisEditor.Workspace
                 Log = message => _logs.Enqueue(message),
             };
 
-            _log.Log($"게임 빌드 시작: {Path.GetFileName(projectFile)} → {outputDirectory}");
+            Debug.Log($"게임 빌드 시작: {Path.GetFileName(projectFile)} → {outputDirectory}");
 
             _task = Task.Run(() => BuildPipeline.CreateDefault().Run(context));
         }
@@ -40,7 +38,7 @@ namespace IrisEditor.Workspace
         public void Update()
         {
             while (_logs.TryDequeue(out var message))
-                _log.Log(message);
+                Debug.Log(message);
 
             if (_task == null || !_task.IsCompleted)
                 return;
@@ -48,7 +46,7 @@ namespace IrisEditor.Workspace
             bool success = _task.Status == TaskStatus.RanToCompletion && _task.Result;
 
             if (_task.IsFaulted && _task.Exception != null)
-                _log.LogException("빌드 예외", _task.Exception.GetBaseException());
+                Debug.LogException("빌드 예외", _task.Exception.GetBaseException());
 
             _task = null;
 

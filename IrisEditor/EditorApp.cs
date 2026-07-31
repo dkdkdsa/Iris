@@ -13,8 +13,6 @@ namespace IrisEditor
 {
     internal sealed unsafe class EditorApp
     {
-        private static readonly DebugChannel _log = Debug.Channel("Editor");
-
         private readonly EditorContext _context;
         private readonly HierarchyPanel _hierarchy;
         private readonly ScenePanel _scene;
@@ -179,7 +177,7 @@ namespace IrisEditor
             }
             catch (Exception ex)
             {
-                _log.LogException("씬 저장 실패", ex);
+                Debug.LogException("씬 저장 실패", ex);
             }
         }
 

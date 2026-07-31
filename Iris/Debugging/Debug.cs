@@ -18,6 +18,8 @@ namespace Iris.Debugging
 
         public static LogLevel StackTraceMinLevel { get; set; } = LogLevel.Warning;
 
+        public static string DefaultChannel { get; set; } = "Iris";
+
         public static DebugChannel Channel(string name)
         {
             return new DebugChannel(name);
@@ -156,7 +158,7 @@ namespace Iris.Debugging
             string text = message?.ToString() ?? string.Empty;
             string stack = level >= StackTraceMinLevel ? CaptureStack() : null;
 
-            Dispatch(sinks, new LogEntry(level, channel, text, stack, context, DateTime.UtcNow));
+            Dispatch(sinks, new LogEntry(level, channel ?? DefaultChannel, text, stack, context, DateTime.UtcNow));
         }
 
         internal static bool WriteOnce(LogLevel level, string channel, object message, object context)
@@ -168,6 +170,8 @@ namespace Iris.Debugging
 
             if (sinks.Length == 0)
                 return false;
+
+            channel ??= DefaultChannel;
 
             string text = message?.ToString() ?? string.Empty;
 
@@ -193,6 +197,8 @@ namespace Iris.Debugging
             string detail = exception == null
                 ? "null exception"
                 : $"{exception.GetType().Name}: {exception.Message}";
+
+            channel ??= DefaultChannel;
 
             string prefix = message?.ToString();
             string text = string.IsNullOrEmpty(prefix) ? detail : prefix + " — " + detail;

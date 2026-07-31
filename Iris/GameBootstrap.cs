@@ -10,8 +10,6 @@ namespace Iris
 {
     public static class GameBootstrap
     {
-        private static readonly DebugChannel _log = Debug.Channel("Iris");
-
         public static void Run(string[] args, Action onInit = null)
         {
             args ??= Array.Empty<string>();
@@ -26,7 +24,7 @@ namespace Iris
             {
                 var packageProvider = new PackageFileProvider(packagePath);
                 VirtualFileSystem.InjectProvider(packageProvider);
-                _log.Log($"Mounted package: {Files.Package.PackageFormat.DefaultFileName} ({packageProvider.EntryCount} entries)");
+                Debug.Log($"Mounted package: {Files.Package.PackageFormat.DefaultFileName} ({packageProvider.EntryCount} entries)");
             }
             else
             {
@@ -57,7 +55,7 @@ namespace Iris
                 }
                 catch (Exception ex)
                 {
-                    _log.LogException("Failed to load startup scene", ex);
+                    Debug.LogException("Failed to load startup scene", ex);
                     sceneSystem.LoadScene(new Scene());
                 }
             };
@@ -111,7 +109,7 @@ namespace Iris
             }
             catch (Exception ex)
             {
-                _log.LogException("Failed to read project.json", ex);
+                Debug.LogException("Failed to read project.json", ex);
             }
 
             return config;

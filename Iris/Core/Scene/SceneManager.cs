@@ -7,8 +7,6 @@ namespace Iris.Core
 {
     public static class SceneManager
     {
-        private static readonly DebugChannel _log = Debug.Channel("Iris");
-
         private static readonly List<string> _buildScenes = new();
 
         public static Scene Active => SystemManager.Instance.GetSystem<SceneSystem>().ActiveScene;
@@ -35,7 +33,7 @@ namespace Iris.Core
 
             if (path == null)
             {
-                _log.LogError($"Scene '{name}' is not in the build scene list.");
+                Debug.LogError($"Scene '{name}' is not in the build scene list.");
                 return null;
             }
 
@@ -46,7 +44,7 @@ namespace Iris.Core
         {
             if (buildIndex < 0 || buildIndex >= _buildScenes.Count)
             {
-                _log.LogError($"Build scene index out of range: {buildIndex} (0~{_buildScenes.Count - 1})");
+                Debug.LogError($"Build scene index out of range: {buildIndex} (0~{_buildScenes.Count - 1})");
                 return null;
             }
 

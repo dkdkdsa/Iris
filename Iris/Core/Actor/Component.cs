@@ -5,8 +5,6 @@ namespace Iris.Core
 {
     public abstract class Component : EngineObject, IDisposable
     {
-        private static readonly DebugChannel _log = Debug.Channel("Iris");
-
         private bool _awakened;
 
         public Actor OwnerActor { get; private set; }
@@ -31,7 +29,7 @@ namespace Iris.Core
             }
             catch (Exception ex)
             {
-                _log.LogExceptionOnce(ex, this);
+                Debug.LogExceptionOnce(ex, this);
             }
         }
 

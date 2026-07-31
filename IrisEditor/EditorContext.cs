@@ -12,13 +12,12 @@ using System.Linq;
 using System.Numerics;
 using System.Text;
 using System.Text.Json.Nodes;
+using Debug = Iris.Debugging.Debug;
 
 namespace IrisEditor
 {
     internal sealed class EditorContext
     {
-        private static readonly DebugChannel _log = Iris.Debugging.Debug.Channel("Editor");
-
         public SceneData Scene { get; private set; } = new();
         public ActorData Selected;
         public string ScenePath { get; private set; }
@@ -80,7 +79,25 @@ namespace IrisEditor
 
             SceneLoader.ContentRoot = rootPath;
 
+            RefreshEngineReferences();
             RefreshScripts();
+        }
+
+        private void RefreshEngineReferences()
+        {
+            if (Workspace?.ProjectFile == null)
+                return;
+
+            string projectRoot = Path.GetDirectoryName(Workspace.ProjectFile);
+
+            if (!ProjectScaffolder.TryWriteEngineReferences(projectRoot, out var error))
+            {
+                Debug.LogWarning($"엔진 참조 갱신 실패: {error}");
+                return;
+            }
+
+            if (!File.ReadAllText(Workspace.ProjectFile).Contains(ProjectScaffolder.EnginePropsFileName, StringComparison.Ordinal))
+                Debug.LogWarning($"{Path.GetFileName(Workspace.ProjectFile)}에 {ProjectScaffolder.EnginePropsFileName} Import가 없습니다. 엔진 참조가 갱신되지 않습니다.");
         }
 
         public void OpenProjectWithDialog()
@@ -101,7 +118,7 @@ namespace IrisEditor
 
                 if (!ProjectScaffolder.TryCreate(path, out var error))
                 {
-                    _log.LogError($"프로젝트 생성 실패: {error}");
+                    Debug.LogError($"프로젝트 생성 실패: {error}");
                     return;
                 }
 
@@ -113,7 +130,7 @@ namespace IrisEditor
                 }
                 catch (Exception ex)
                 {
-                    _log.LogException("씬 열기 실패", ex);
+                    Debug.LogException("씬 열기 실패", ex);
                 }
             });
         }
@@ -144,13 +161,13 @@ namespace IrisEditor
         {
             if (Workspace?.ProjectFile == null)
             {
-                _log.LogWarning("실행할 프로젝트가 없습니다. 프로젝트를 먼저 여세요.");
+                Debug.LogWarning("실행할 프로젝트가 없습니다. 프로젝트를 먼저 여세요.");
                 return;
             }
 
             if (Scripts.Building || Builder.Building)
             {
-                _log.LogWarning("빌드 중에는 실행할 수 없습니다.");
+                Debug.LogWarning("빌드 중에는 실행할 수 없습니다.");
                 return;
             }
 
@@ -162,7 +179,7 @@ namespace IrisEditor
                 }
                 catch (Exception ex)
                 {
-                    _log.LogException("씬 저장 실패", ex);
+                    Debug.LogException("씬 저장 실패", ex);
                     return;
                 }
             }
@@ -191,11 +208,11 @@ namespace IrisEditor
             try
             {
                 Process.Start(info);
-                _log.Log("게임을 실행합니다...");
+                Debug.Log("게임을 실행합니다...");
             }
             catch (Exception ex)
             {
-                _log.LogException("게임 실행 실패", ex);
+                Debug.LogException("게임 실행 실패", ex);
             }
         }
 
@@ -222,7 +239,7 @@ namespace IrisEditor
         {
             if (Workspace?.ProjectFile == null)
             {
-                _log.LogWarning("빌드할 프로젝트가 없습니다. 프로젝트를 먼저 여세요.");
+                Debug.LogWarning("빌드할 프로젝트가 없습니다. 프로젝트를 먼저 여세요.");
                 return;
             }
 
@@ -230,7 +247,7 @@ namespace IrisEditor
                 return;
 
             if (Dirty)
-                _log.LogWarning("저장 안 된 씬 변경사항이 있습니다. 빌드에는 저장된 파일이 들어갑니다.");
+                Debug.LogWarning("저장 안 된 씬 변경사항이 있습니다. 빌드에는 저장된 파일이 들어갑니다.");
 
             FileDialog.OpenFolder(path =>
             {
@@ -243,7 +260,7 @@ namespace IrisEditor
                 if (string.Equals(fullOut, fullRoot, StringComparison.OrdinalIgnoreCase) ||
                     fullOut.StartsWith(fullRoot + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))
                 {
-                    _log.LogError("출력 폴더는 프로젝트 폴더 밖이어야 합니다.");
+                    Debug.LogError("출력 폴더는 프로젝트 폴더 밖이어야 합니다.");
                     return;
                 }
 
@@ -252,7 +269,7 @@ namespace IrisEditor
                     if (!success)
                         return;
 
-                    _log.Log($"빌드 완료: {fullOut}");
+                    Debug.Log($"빌드 완료: {fullOut}");
 
                     try
                     {
@@ -319,7 +336,7 @@ namespace IrisEditor
         {
             if (Workspace == null)
             {
-                _log.LogWarning("프로젝트가 없어 프리팹을 저장할 수 없습니다.");
+                Debug.LogWarning("프로젝트가 없어 프리팹을 저장할 수 없습니다.");
                 return;
             }
 
@@ -339,11 +356,11 @@ namespace IrisEditor
 
                 SceneSerializer.SavePrefab(Scene, actor, path);
                 Workspace.Refresh();
-                _log.Log($"프리팹 저장: {Path.GetFileName(path)}");
+                Debug.Log($"프리팹 저장: {Path.GetFileName(path)}");
             }
             catch (Exception ex)
             {
-                _log.LogException("프리팹 저장 실패", ex);
+                Debug.LogException("프리팹 저장 실패", ex);
             }
         }
 
@@ -359,7 +376,7 @@ namespace IrisEditor
                 if (JsonNode.Parse(File.ReadAllText(fullPath)) is not JsonObject root ||
                     root["actors"] is not JsonArray actorsJson)
                 {
-                    _log.LogError($"프리팹 파일 형식이 아닙니다: {relativePath}");
+                    Debug.LogError($"프리팹 파일 형식이 아닙니다: {relativePath}");
                     return;
                 }
 
@@ -407,7 +424,7 @@ namespace IrisEditor
             }
             catch (Exception ex)
             {
-                _log.LogException("프리팹 배치 실패", ex);
+                Debug.LogException("프리팹 배치 실패", ex);
             }
         }
 

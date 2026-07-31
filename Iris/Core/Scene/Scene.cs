@@ -8,8 +8,6 @@ namespace Iris.Core
 {
     public sealed class Scene : IDisposable
     {
-        private static readonly DebugChannel _log = Debug.Channel("Iris");
-
         private readonly List<Actor> _actors = new();
 
         public IReadOnlyList<Actor> Actors => _actors;
@@ -35,11 +33,12 @@ namespace Iris.Core
                 Actor item = _actors[i];
                 try
                 {
-                    item.Update();
+                    if(item.Active)
+                        item.Update();
                 }
                 catch (Exception ex)
                 {
-                    _log.LogExceptionOnce(ex, item);
+                    Debug.LogExceptionOnce(ex, item);
                 }
             }
         }
@@ -51,11 +50,12 @@ namespace Iris.Core
                 Actor item = _actors[i];
                 try
                 {
-                    item.FixedUpdate();
+                    if (item.Active)
+                        item.FixedUpdate();
                 }
                 catch (Exception ex)
                 {
-                    _log.LogExceptionOnce(ex, item);
+                    Debug.LogExceptionOnce(ex, item);
                 }
             }
         }
@@ -67,14 +67,14 @@ namespace Iris.Core
                 Actor item = _actors[i];
                 try
                 {
-                    if (!item.DestroyFlag)
+                    if (!item.DestroyFlag && item.Active)
                         item.LateUpdate();
                     else
                         item.Dispose();
                 }
                 catch (Exception ex)
                 {
-                    _log.LogExceptionOnce(ex, item);
+                    Debug.LogExceptionOnce(ex, item);
                 }
             }
 
@@ -92,7 +92,7 @@ namespace Iris.Core
                 }
                 catch (Exception ex)
                 {
-                    _log.LogExceptionOnce(ex, item);
+                    Debug.LogExceptionOnce(ex, item);
                 }
             }
 

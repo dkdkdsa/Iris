@@ -7,8 +7,6 @@ namespace Iris.Core
 {
     public sealed class Actor : EngineObject, IDisposable
     {
-        private static readonly DebugChannel _log = Debug.Channel("Iris");
-
         private List<Component> _components = new();
         private readonly List<Actor> _children = new();
         private bool _awake;
@@ -16,6 +14,7 @@ namespace Iris.Core
         public string Name { get; set; } = "Actor";
         public string Tag { get; set; } = "";
         public Transform Transform { get; private set; }
+        public bool Active { get; set; } = true;
         public bool DestroyFlag { get; private set; }
         public Actor Parent { get; private set; }
         public IReadOnlyList<Actor> Children => _children;
@@ -127,7 +126,7 @@ namespace Iris.Core
                 }
                 catch(Exception ex)
                 {
-                    _log.LogExceptionOnce(ex, this);
+                    Debug.LogExceptionOnce(ex, this);
                 }
 
             }
@@ -145,7 +144,7 @@ namespace Iris.Core
                 }
                 catch (Exception ex)
                 {
-                    _log.LogExceptionOnce(ex, this);
+                    Debug.LogExceptionOnce(ex, this);
                 }
             }
         }
@@ -162,7 +161,7 @@ namespace Iris.Core
                 }
                 catch (Exception ex)
                 {
-                    _log.LogExceptionOnce(ex, this);
+                    Debug.LogExceptionOnce(ex, this);
                 }
             }
         }
@@ -191,7 +190,7 @@ namespace Iris.Core
                 }
                 catch (Exception ex)
                 {
-                    _log.LogExceptionOnce(ex, this);
+                    Debug.LogExceptionOnce(ex, this);
                 }
             }
 
@@ -200,7 +199,14 @@ namespace Iris.Core
 
         public static Actor Create()
         {
-            return SystemManager.Instance.GetSystem<SceneSystem>().ActiveScene.CreateActor();
+            var scene = SystemManager.Instance?.GetSystem<SceneSystem>()?.ActiveScene;
+
+            if (scene == null)
+                throw new InvalidOperationException(
+                    "Cannot create actor: no active scene. Load a scene first (SceneManager.LoadScene), " +
+                    "or start an empty one with SceneSystem.LoadScene(new Scene()).");
+
+            return scene.CreateActor();
         }
     }
 }

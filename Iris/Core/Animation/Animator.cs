@@ -9,8 +9,6 @@ namespace Iris.Core
     {
         private const float Epsilon = 0.0001f;
 
-        private static readonly DebugChannel _log = Debug.Channel("Iris");
-
         private readonly Dictionary<string, AnimatorState> _states = new();
         private readonly List<AnimatorTransition> _anyTransitions = new();
 
@@ -92,7 +90,7 @@ namespace Iris.Core
         {
             if (!_states.TryGetValue(source.To, out var target))
             {
-                _log.LogOnce(LogLevel.Warning, $"Animator transition target state not found: {source.To}", this);
+                Debug.LogOnce(LogLevel.Warning, $"Animator transition target state not found: {source.To}", this);
                 return null;
             }
 
