@@ -1,0 +1,130 @@
+name: Release
+
+on:
+  push:
+    tags: [ 'v*' ]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Resolve version
+        id: meta
+        shell: pwsh
+        run: |
+          $tag = '${{ github.ref_name }}'
+          $version = $tag -replace '^v', ''
+          $prerelease = if ($version -match '-') { 'true' } else { 'false' }
+          $name = "Iris-Editor-$tag-win-x64"
+
+          "tag=$tag"               | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          "version=$version"       | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          "prerelease=$prerelease" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          "name=$name"             | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+
+      - name: Publish editor
+        run: >
+          dotnet publish IrisEditor/IrisEditor.csproj
+          -c Release
+          -r win-x64
+          --self-contained false
+          -p:Version=${{ steps.meta.outputs.version }}
+          -p:PublishSingleFile=false
+          -p:PublishTrimmed=false
+          -o staging/${{ steps.meta.outputs.name }}
+          --nologo
+
+      - name: Bundle license files
+        shell: pwsh
+        run: |
+          $dir = 'staging/${{ steps.meta.outputs.name }}'
+
+          Copy-Item LICENSE $dir/
+          Copy-Item THIRD-PARTY-NOTICES.md $dir/
+
+      - name: Verify payload
+        shell: pwsh
+        run: |
+          $dir = 'staging/${{ steps.meta.outputs.name }}'
+
+          $required = @(
+            'IrisEditor.exe', 'Iris.dll', 'Iris.Build.dll',
+            'SDL2.dll', 'cimgui.dll', 'stbi.dll',
+            'Localization/en.json', 'Localization/ko.json',
+            'LICENSE', 'THIRD-PARTY-NOTICES.md'
+          )
+
+          $missing = $required | Where-Object { -not (Test-Path (Join-Path $dir $_)) }
+
+          if ($missing) {
+            Write-Error "Missing from the release payload: $($missing -join ', ')"
+            exit 1
+          }
+
+          Write-Host "Payload OK ($((Get-ChildItem $dir -Recurse -File).Count) files)"
+
+      - name: Package
+        id: package
+        shell: pwsh
+        run: |
+          $name = '${{ steps.meta.outputs.name }}'
+          $zip = Join-Path (Get-Location) "$name.zip"
+
+          if (Test-Path $zip) { Remove-Item $zip }
+
+          Add-Type -AssemblyName System.IO.Compression
+          Add-Type -AssemblyName System.IO.Compression.FileSystem
+
+          $source = (Resolve-Path "staging/$name").Path
+          $stream = [System.IO.File]::Open($zip, [System.IO.FileMode]::Create)
+          $writer = New-Object System.IO.Compression.ZipArchive($stream, [System.IO.Compression.ZipArchiveMode]::Create)
+
+          foreach ($file in Get-ChildItem $source -Recurse -File) {
+            $relative = $file.FullName.Substring($source.Length + 1).Replace('\', '/')
+
+            [System.IO.Compression.ZipFileExtensions]::CreateEntryFromFile(
+              $writer, $file.FullName, "$name/$relative",
+              [System.IO.Compression.CompressionLevel]::Optimal) | Out-Null
+          }
+
+          $writer.Dispose()
+          $stream.Dispose()
+
+          $archive = [System.IO.Compression.ZipFile]::OpenRead($zip)
+          $bad = $archive.Entries | Where-Object { $_.FullName -like '*\*' } | Select-Object -First 1
+          $count = $archive.Entries.Count
+          $archive.Dispose()
+
+          if ($bad) {
+            Write-Error "Zip entry uses a backslash separator: $($bad.FullName)"
+            exit 1
+          }
+
+          Write-Host "Packaged $count entries into $name.zip"
+          "zip=$zip" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: pwsh
+        run: |
+          $flags = @()
+
+          if ('${{ steps.meta.outputs.prerelease }}' -eq 'true') {
+            $flags += '--prerelease'
+          }
+
+          gh release create '${{ steps.meta.outputs.tag }}' '${{ steps.package.outputs.zip }}' `
+            --title 'Iris ${{ steps.meta.outputs.tag }}' `
+            --generate-notes `
+            @flags

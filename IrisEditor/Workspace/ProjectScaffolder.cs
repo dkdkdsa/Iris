@@ -208,12 +208,10 @@ namespace IrisEditor.Workspace
             var excludes = new StringBuilder();
 
             foreach (var excluded in _editorOnlyDlls)
-            {
-                if (excludes.Length > 0)
-                    excludes.Append(';');
+                AppendExclude(excludes, excluded);
 
-                excludes.Append("$(IrisEngineDir)\\").Append(excluded);
-            }
+            foreach (var excluded in _nativeDlls)
+                AppendExclude(excludes, excluded);
 
             return $"""
                 <Project>
@@ -233,6 +231,14 @@ namespace IrisEditor.Workspace
 
                 </Project>
                 """;
+        }
+
+        private static void AppendExclude(StringBuilder builder, string fileName)
+        {
+            if (builder.Length > 0)
+                builder.Append(';');
+
+            builder.Append("$(IrisEngineDir)\\").Append(fileName);
         }
 
         private static string NativeItems(string engineDir)
