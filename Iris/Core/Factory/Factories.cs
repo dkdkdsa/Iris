@@ -6,7 +6,6 @@ namespace Iris.Core
 {
     public static class Factories
     {
-
         private static readonly Dictionary<FactoryKey, object> _factories = new();
 
         public static void Register<TProduct, TRequest>(IFactory<TProduct, TRequest> factory)

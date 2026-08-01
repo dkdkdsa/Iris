@@ -61,7 +61,11 @@
   "project.create": "Create New Project",
   "project.refresh": "Refresh",
   "project.createMenu": "Create",
+  "project.addAsset": "Add Asset...",
   "project.sliceSprite": "Slice Sprite",
+  "project.dropFailed": "Could not import {0}: {1}",
+  "project.dropNoProject": "Open a project before dropping files into the editor.",
+  "project.moveFailed": "Could not move {0}: {1}",
   "project.deletePopup": "Confirm Delete",
   "project.deleteConfirm": "Delete '{0}'?",
   "project.deleteFolderWarning": "Every file inside the folder will be deleted.",
@@ -182,5 +186,7 @@
 
   "dialog.sceneFilter": "Iris Scene (*.scene)",
   "dialog.allFilesFilter": "All Files (*.*)",
+  "dialog.assetFilter": "Assets",
+  "dialog.pickAssets": "Select assets to copy into the project",
   "dialog.pickWorkspace": "Select workspace folder"
 }

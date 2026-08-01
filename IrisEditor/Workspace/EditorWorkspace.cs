@@ -122,6 +122,60 @@ namespace IrisEditor.Workspace
             }
         }
 
+        public bool TryMove(string relativePath, string targetPrefix, bool isDirectory, out string newRelativePath, out string error)
+        {
+            newRelativePath = relativePath;
+            error = null;
+
+            string source = System.IO.Path.TrimEndingDirectorySeparator(ToAbsolute(relativePath));
+            string targetDirectory = System.IO.Path.TrimEndingDirectorySeparator(
+                System.IO.Path.GetFullPath(System.IO.Path.Combine(RootPath, targetPrefix ?? string.Empty)));
+
+            string destination = System.IO.Path.Combine(targetDirectory, System.IO.Path.GetFileName(source));
+
+            if (string.Equals(source, destination, StringComparison.OrdinalIgnoreCase))
+                return true;
+
+            if (isDirectory && IsSelfOrDescendant(source, targetDirectory))
+            {
+                error = "A folder cannot be moved into itself.";
+                return false;
+            }
+
+            if (File.Exists(destination) || Directory.Exists(destination))
+            {
+                error = "An item with the same name already exists in the target folder.";
+                return false;
+            }
+
+            try
+            {
+                Directory.CreateDirectory(targetDirectory);
+
+                if (isDirectory)
+                    Directory.Move(source, destination);
+                else
+                    File.Move(source, destination);
+
+                newRelativePath = System.IO.Path.GetRelativePath(RootPath, destination).Replace('\\', '/');
+                Refresh();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                error = ex.Message;
+                return false;
+            }
+        }
+
+        private static bool IsSelfOrDescendant(string folder, string candidate)
+        {
+            if (string.Equals(folder, candidate, StringComparison.OrdinalIgnoreCase))
+                return true;
+
+            return candidate.StartsWith(folder + System.IO.Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase);
+        }
+
         public void Refresh()
         {
             _assets.Clear();

@@ -61,7 +61,11 @@
   "project.create": "새로운 프로젝트 생성",
   "project.refresh": "새로고침",
   "project.createMenu": "생성",
+  "project.addAsset": "에셋 추가...",
   "project.sliceSprite": "스프라이트 슬라이스",
+  "project.dropFailed": "{0} 을(를) 가져오지 못했습니다: {1}",
+  "project.dropNoProject": "파일을 끌어다 놓으려면 먼저 프로젝트를 여세요.",
+  "project.moveFailed": "{0} 을(를) 옮기지 못했습니다: {1}",
   "project.deletePopup": "삭제 확인",
   "project.deleteConfirm": "'{0}' 을(를) 삭제할까요?",
   "project.deleteFolderWarning": "폴더 안의 모든 파일이 함께 삭제됩니다.",
@@ -182,5 +186,7 @@
 
   "dialog.sceneFilter": "Iris 씬 (*.scene)",
   "dialog.allFilesFilter": "모든 파일 (*.*)",
+  "dialog.assetFilter": "에셋",
+  "dialog.pickAssets": "프로젝트로 복사할 에셋 선택",
   "dialog.pickWorkspace": "워크스페이스 폴더 선택"
 }

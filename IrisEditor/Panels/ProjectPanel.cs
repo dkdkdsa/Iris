@@ -4,7 +4,9 @@ using IrisEditor.Data;
 using IrisEditor.Platform;
 using IrisEditor.Workspace;
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Numerics;
 using IrisEditor.Localization;
 
 namespace IrisEditor.Panels
@@ -12,6 +14,7 @@ namespace IrisEditor.Panels
     internal sealed class ProjectPanel : EditorPanel
     {
         private readonly EditorContext _context;
+        private readonly List<(Vector2 Min, Vector2 Max, string Prefix)> _folderRects = new();
         private Action _pendingAction;
 
         private string _renamingPath;
@@ -50,7 +53,11 @@ namespace IrisEditor.Panels
                 return;
             }
 
-            ImGui.Text(Path.GetFileName(Path.TrimEndingDirectorySeparator(workspace.RootPath)));
+            ImGui.Selectable(Path.GetFileName(Path.TrimEndingDirectorySeparator(workspace.RootPath)),
+                false, ImGuiSelectableFlags.None, new Vector2(180f, 0f));
+
+            HandleDropTarget(workspace, string.Empty);
+
             ImGui.SameLine();
 
             if (ImGui.SmallButton(Loc.T("project.refresh")))
@@ -58,12 +65,15 @@ namespace IrisEditor.Panels
 
             ImGui.Separator();
 
+            _folderRects.Clear();
+
             ImGui.BeginChild("AssetTree");
             DrawDirectory(workspace, string.Empty);
 
             if (ImGui.BeginPopupContextWindow("ProjectContext", ImGuiPopupFlags.MouseButtonRight | ImGuiPopupFlags.NoOpenOverItems))
             {
                 DrawCreateMenu(workspace, string.Empty);
+                DrawAddAssetItem(workspace, string.Empty);
                 ImGui.EndPopup();
             }
 
@@ -83,6 +93,63 @@ namespace IrisEditor.Panels
             }
 
             DrawDeleteConfirm(workspace);
+        }
+
+        private void HandleDropTarget(EditorWorkspace workspace, string targetPrefix)
+        {
+            if (!ImGui.BeginDragDropTarget())
+                return;
+
+            if (!ImGui.AcceptDragDropPayload(AssetDragDrop.PayloadType).IsNull)
+            {
+                string source = AssetDragDrop.DirectoryPath ?? AssetDragDrop.Current?.Path;
+                bool isDirectory = AssetDragDrop.DirectoryPath != null;
+
+                if (source != null)
+                    _pendingAction = () => ApplyMove(workspace, source, targetPrefix, isDirectory);
+            }
+
+            ImGui.EndDragDropTarget();
+        }
+
+        private void ApplyMove(EditorWorkspace workspace, string source, string targetPrefix, bool isDirectory)
+        {
+            string oldAbsolute = workspace.ToAbsolute(source);
+
+            if (!workspace.TryMove(source, targetPrefix, isDirectory, out var moved, out var error))
+            {
+                Debug.LogWarning(Loc.T("project.moveFailed",
+                    Path.GetFileName(Path.TrimEndingDirectorySeparator(source)), error));
+                return;
+            }
+
+            if (string.Equals(moved, source, StringComparison.Ordinal))
+                return;
+
+            _context.HandlePathRenamed(oldAbsolute, workspace.ToAbsolute(moved), isDirectory);
+
+            RewriteReferences(workspace, source, moved, isDirectory);
+        }
+
+        private void RewriteReferences(EditorWorkspace workspace, string oldRelative, string newRelative, bool isDirectory)
+        {
+            AssetReferenceRewriter.RewriteProject(workspace, oldRelative, newRelative, isDirectory);
+            AssetReferenceRewriter.RewriteScene(_context.Scene, oldRelative, newRelative, isDirectory);
+        }
+
+        public string ResolveDropFolder(Vector2 screenPosition)
+        {
+            if (!IsOpen)
+                return string.Empty;
+
+            foreach (var (min, max, prefix) in _folderRects)
+            {
+                if (screenPosition.X >= min.X && screenPosition.X <= max.X &&
+                    screenPosition.Y >= min.Y && screenPosition.Y <= max.Y)
+                    return prefix;
+            }
+
+            return string.Empty;
         }
 
         private void DrawDeleteConfirm(EditorWorkspace workspace)
@@ -161,6 +228,34 @@ namespace IrisEditor.Panels
             _deletePopupPending = true;
         }
 
+        private void DrawAddAssetItem(EditorWorkspace workspace, string prefix)
+        {
+            if (!ImGui.MenuItem(Loc.T("project.addAsset")))
+                return;
+
+            string target = prefix;
+            FileDialog.OpenAssets(paths => ImportPicked(workspace, paths, target));
+        }
+
+        private void ImportPicked(EditorWorkspace workspace, string[] paths, string targetPrefix)
+        {
+            if (paths == null || paths.Length == 0)
+                return;
+
+            int imported = 0;
+
+            foreach (var path in paths)
+            {
+                if (AssetImporter.TryImport(workspace, path, targetPrefix, out _, out var error))
+                    imported++;
+                else
+                    Debug.LogWarning(Loc.T("project.dropFailed", Path.GetFileName(path), error));
+            }
+
+            if (imported > 0)
+                workspace.Refresh();
+        }
+
         private void DrawCreateMenu(EditorWorkspace workspace, string prefix)
         {
             if (!ImGui.BeginMenu(Loc.T("project.createMenu")))
@@ -212,9 +307,28 @@ namespace IrisEditor.Panels
 
                 bool nodeOpen = ImGui.TreeNode(rest);
 
+                _folderRects.Add((ImGui.GetItemRectMin(), ImGui.GetItemRectMax(), prefix + rest + "/"));
+
+                if (ImGui.BeginDragDropSource())
+                {
+                    AssetDragDrop.SetDirectory(dir);
+
+                    unsafe
+                    {
+                        byte dummy = 0;
+                        ImGui.SetDragDropPayload(AssetDragDrop.PayloadType, &dummy, 1);
+                    }
+
+                    ImGui.Text(rest);
+                    ImGui.EndDragDropSource();
+                }
+
+                HandleDropTarget(workspace, prefix + rest + "/");
+
                 if (ImGui.BeginPopupContextItem())
                 {
                     DrawCreateMenu(workspace, prefix + rest + "/");
+                    DrawAddAssetItem(workspace, prefix + rest + "/");
 
                     ImGui.Separator();
 
@@ -276,9 +390,9 @@ namespace IrisEditor.Panels
                     ImGui.EndPopup();
                 }
 
-                if (known && ImGui.BeginDragDropSource())
+                if (ImGui.BeginDragDropSource())
                 {
-                    AssetDragDrop.Current = asset;
+                    AssetDragDrop.SetAsset(asset);
 
                     unsafe
                     {
@@ -340,6 +454,11 @@ namespace IrisEditor.Panels
 
             string newAbsolute = Path.Combine(Path.GetDirectoryName(oldAbsolute), newName);
             _context.HandlePathRenamed(oldAbsolute, newAbsolute, isDirectory);
+
+            string directory = Path.GetDirectoryName(relativePath)?.Replace('\\', '/') ?? string.Empty;
+            string newRelative = directory.Length == 0 ? newName : directory + "/" + newName;
+
+            RewriteReferences(workspace, relativePath, newRelative, isDirectory);
         }
 
         private void HandleDoubleClick(EditorWorkspace workspace, AssetEntry asset)

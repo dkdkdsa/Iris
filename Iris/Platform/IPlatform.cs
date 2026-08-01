@@ -9,6 +9,7 @@ namespace Iris.Platform
 {
     public interface IPlatform : IDisposable
     {
+        public event Action<FileDropEvent> FileDropped;
 
         public IWindow Window { get; }
         public IRenderBackend RenderBackend { get; }

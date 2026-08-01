@@ -37,6 +37,8 @@ namespace IrisEditor
             var context = new EditorContext();
             var editor = new EditorApp(context);
 
+            host.Platform.FileDropped += context.QueueDroppedPath;
+
             while (!host.IsCloseRequested)
             {
                 if (!host.BeginFrame())
