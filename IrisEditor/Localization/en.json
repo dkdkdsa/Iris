@@ -61,6 +61,7 @@
   "project.create": "Create New Project",
   "project.refresh": "Refresh",
   "project.createMenu": "Create",
+  "project.addAsset": "Add Asset...",
   "project.sliceSprite": "Slice Sprite",
   "project.dropFailed": "Could not import {0}: {1}",
   "project.dropNoProject": "Open a project before dropping files into the editor.",
@@ -185,5 +186,7 @@
 
   "dialog.sceneFilter": "Iris Scene (*.scene)",
   "dialog.allFilesFilter": "All Files (*.*)",
+  "dialog.assetFilter": "Assets",
+  "dialog.pickAssets": "Select assets to copy into the project",
   "dialog.pickWorkspace": "Select workspace folder"
 }

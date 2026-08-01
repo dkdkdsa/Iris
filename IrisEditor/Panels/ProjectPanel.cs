@@ -73,6 +73,7 @@ namespace IrisEditor.Panels
             if (ImGui.BeginPopupContextWindow("ProjectContext", ImGuiPopupFlags.MouseButtonRight | ImGuiPopupFlags.NoOpenOverItems))
             {
                 DrawCreateMenu(workspace, string.Empty);
+                DrawAddAssetItem(workspace, string.Empty);
                 ImGui.EndPopup();
             }
 
@@ -227,6 +228,34 @@ namespace IrisEditor.Panels
             _deletePopupPending = true;
         }
 
+        private void DrawAddAssetItem(EditorWorkspace workspace, string prefix)
+        {
+            if (!ImGui.MenuItem(Loc.T("project.addAsset")))
+                return;
+
+            string target = prefix;
+            FileDialog.OpenAssets(paths => ImportPicked(workspace, paths, target));
+        }
+
+        private void ImportPicked(EditorWorkspace workspace, string[] paths, string targetPrefix)
+        {
+            if (paths == null || paths.Length == 0)
+                return;
+
+            int imported = 0;
+
+            foreach (var path in paths)
+            {
+                if (AssetImporter.TryImport(workspace, path, targetPrefix, out _, out var error))
+                    imported++;
+                else
+                    Debug.LogWarning(Loc.T("project.dropFailed", Path.GetFileName(path), error));
+            }
+
+            if (imported > 0)
+                workspace.Refresh();
+        }
+
         private void DrawCreateMenu(EditorWorkspace workspace, string prefix)
         {
             if (!ImGui.BeginMenu(Loc.T("project.createMenu")))
@@ -299,6 +328,7 @@ namespace IrisEditor.Panels
                 if (ImGui.BeginPopupContextItem())
                 {
                     DrawCreateMenu(workspace, prefix + rest + "/");
+                    DrawAddAssetItem(workspace, prefix + rest + "/");
 
                     ImGui.Separator();
 
