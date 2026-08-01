@@ -1,11 +1,13 @@
 ﻿using Box2D.NET;
 using Iris.Core;
+using System.Collections.Generic;
 
 namespace Iris.Physics
 {
     internal class PhysicsSystem : SystemBase
     {
         private readonly B2WorldId _worldId;
+        private readonly List<Rigidbody> _bodies = new();
 
         public PhysicsSystem()
         {
@@ -14,12 +16,26 @@ namespace Iris.Physics
 
             _worldId = B2Worlds.b2CreateWorld(def);
 
-            Order = -100;
+            Order = 100;
+        }
+
+        internal void Register(Rigidbody body)
+        {
+            if (body != null && !_bodies.Contains(body))
+                _bodies.Add(body);
+        }
+
+        internal void Unregister(Rigidbody body)
+        {
+            _bodies.Remove(body);
         }
 
         public override void FixedUpdate()
         {
             B2Worlds.b2World_Step(_worldId, Time.FixedTimeStep, 4);
+
+            for (int i = 0; i < _bodies.Count; i++)
+                _bodies[i].SyncFromBody();
 
             {
                 var evts = B2Worlds.b2World_GetContactEvents(_worldId);

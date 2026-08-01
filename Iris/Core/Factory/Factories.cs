@@ -19,7 +19,7 @@ namespace Iris.Core
             _factories[FactoryKey.Of<TProduct, TRequest>()] = factory;
         }
 
-        public  static bool Unregister<TProduct, TRequest>()
+        public static bool Unregister<TProduct, TRequest>()
         {
             return _factories.Remove(FactoryKey.Of<TProduct, TRequest>());
         }

@@ -15,6 +15,7 @@ namespace Iris.Core
         private float _linearDamping;
         private float _angularDamping;
         private B2BodyId _id;
+        private PhysicsSystem _system;
 
         [Show]
         public Vector2D<float> LinearVelocity
@@ -162,6 +163,7 @@ namespace Iris.Core
         protected override void OnAttached()
         {
             var sys = SystemManager.Instance?.GetSystem<PhysicsSystem>();
+            _system = sys;
 
             if (sys == null)
             {
@@ -186,15 +188,19 @@ namespace Iris.Core
         {
             if (B2Worlds.b2Body_IsValid(_id))
                 B2Bodies.b2Body_Enable(_id);
+
+            _system?.Register(this);
         }
 
         protected override void OnDisable()
         {
+            _system?.Unregister(this);
+
             if (B2Worlds.b2Body_IsValid(_id))
                 B2Bodies.b2Body_Disable(_id);
         }
 
-        public override void FixedUpdate()
+        internal void SyncFromBody()
         {
             if (!B2Worlds.b2Body_IsValid(_id))
                 return;

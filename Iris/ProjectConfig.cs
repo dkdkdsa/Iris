@@ -13,6 +13,7 @@ namespace Iris
         public bool VSync = true;
         public int TargetFrameRate = 0;
         public bool LogToFile = true;
+        public bool Stats = false;
         public string Title = "NewGame";
         public List<string> BuildScenes = new();
     }

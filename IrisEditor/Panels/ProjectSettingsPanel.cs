@@ -320,6 +320,20 @@ namespace IrisEditor.Panels
                 : Loc.T("settings.hint.logDisabled"));
 
             ImGui.Spacing();
+
+            bool stats = _config.Stats;
+
+            if (ImGui.Checkbox(Loc.T("settings.stats"), ref stats))
+            {
+                _config.Stats = stats;
+                _dirty = true;
+            }
+
+            ImGui.TextDisabled(_config.Stats
+                ? Loc.T("settings.hint.statsEnabled")
+                : Loc.T("settings.hint.statsDisabled"));
+
+            ImGui.Spacing();
             ImGui.Separator();
 
             ImGui.BeginDisabled(!_dirty);

@@ -95,6 +95,9 @@ namespace IrisEditor
                 if (ImGui.MenuItem(Loc.T("menu.file.newProject")))
                     _context.CreateProjectWithDialog();
 
+                if (ImGui.MenuItem(Loc.T("menu.file.openProject")))
+                    _context.OpenProjectWithDialog();
+
                 ImGui.Separator();
 
                 if (ImGui.MenuItem(Loc.T("menu.file.saveScene"), "Ctrl+S"))
@@ -104,9 +107,6 @@ namespace IrisEditor
                     SaveScene(saveAs: true);
 
                 ImGui.Separator();
-
-                if (ImGui.MenuItem(Loc.T("menu.file.openProject")))
-                    _context.OpenProjectWithDialog();
 
                 if (ImGui.MenuItem(Loc.T("menu.file.refreshScripts"), string.Empty, false, !_context.Scripts.Building))
                     _context.RefreshScripts();

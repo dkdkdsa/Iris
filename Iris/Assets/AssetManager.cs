@@ -9,6 +9,10 @@ namespace Iris.Assets
     {
         private static Dictionary<(Type Type, string Path), IAsset> _assetContainer = new();
 
+        public static int CachedCount => _assetContainer.Count;
+
+        public static IReadOnlyDictionary<(Type Type, string Path), IAsset> Cached => _assetContainer;
+
         public static void Initialize()
         {
             AssetAPI.ActiveAPI = new InternalAssetAPI();

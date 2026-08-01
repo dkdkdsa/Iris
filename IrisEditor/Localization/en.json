@@ -108,6 +108,9 @@
   "settings.logToFile": "Write a log file",
   "settings.hint.logEnabled": "The build writes {0} next to the executable (previous run kept as .prev)",
   "settings.hint.logDisabled": "Logging is fully off in the build; Debug calls return immediately and keep nothing in memory",
+  "settings.stats": "Show stats overlay",
+  "settings.hint.statsEnabled": "The build shows frame time, draw calls and asset counts on screen; toggle at runtime with Stats.Visible",
+  "settings.hint.statsDisabled": "No overlay, and the counters cost nothing while off",
 
   "slicer.title": "Sprite Slicer",
   "slicer.source": "Source {0} x {1}",

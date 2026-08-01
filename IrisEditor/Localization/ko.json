@@ -107,6 +107,9 @@
   "settings.diagnostics": "진단",
   "settings.logToFile": "로그 파일 기록",
   "settings.hint.logEnabled": "빌드 결과물 옆에 {0} 을 기록합니다 (직전 실행분은 .prev 로 보관)",
+  "settings.stats": "통계 오버레이 표시",
+  "settings.hint.statsEnabled": "빌드에서 프레임 타임 · 드로우 콜 · 에셋 수를 화면에 표시합니다. 실행 중에는 Stats.Visible로 껐다 켤 수 있습니다",
+  "settings.hint.statsDisabled": "오버레이가 없고, 꺼진 동안 계측 비용도 들지 않습니다",
   "settings.hint.logDisabled": "빌드에서 로깅이 완전히 꺼집니다. Debug 호출이 즉시 반환하고 메모리에 아무것도 남기지 않습니다",
 
   "slicer.title": "스프라이트 슬라이서",

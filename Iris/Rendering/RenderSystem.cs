@@ -1,7 +1,9 @@
 using Iris.Core;
+using Iris.Diagnostics;
 using Silk.NET.Maths;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace Iris.Rendering
 {
@@ -21,6 +23,11 @@ namespace Iris.Rendering
 
         internal void Flush()
         {
+            bool measure = Stats.Enabled;
+            long started = measure ? Stopwatch.GetTimestamp() : 0L;
+            int submitted = _commands.Count;
+            int drawn = 0;
+
             var camera = Camera.Main;
 
             if (camera != null)
@@ -42,16 +49,21 @@ namespace Iris.Rendering
                         (int)MathF.Round(d.Size.X), (int)MathF.Round(d.Size.Y));
 
                     _backend.DrawTexture(cmd.texture, cmd.src, dest, cmd.rotation, cmd.flipX, cmd.flipY, cmd.color);
+                    drawn++;
                 }
                 else if (camera != null)
                 {
                     _backend.DrawTexture(
                         cmd.texture, cmd.src, camera.WorldToScreen(cmd.dest),
                         cmd.rotation, cmd.flipX, cmd.flipY, cmd.color);
+                    drawn++;
                 }
             }
 
             _commands.Clear();
+
+            if (measure)
+                Stats.RecordRender(submitted, drawn, Stopwatch.GetElapsedTime(started));
         }
 
         public void Submit(in RenderCommand cmd)

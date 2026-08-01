@@ -39,6 +39,8 @@ namespace Iris
             var config = LoadConfig();
             ConfigureLogging(config);
 
+            Diagnostics.Stats.Enabled = config.Stats;
+
             if (packageEntries >= 0)
                 Debug.Log($"Mounted package: {Files.Package.PackageFormat.DefaultFileName} ({packageEntries} entries)");
 
@@ -155,6 +157,7 @@ namespace Iris
                     config.VSync = obj["vsync"]?.GetValue<bool>() ?? config.VSync;
                     config.TargetFrameRate = (int)(obj["targetFrameRate"]?.GetValue<float>() ?? config.TargetFrameRate);
                     config.LogToFile = obj["logToFile"]?.GetValue<bool>() ?? config.LogToFile;
+                    config.Stats = obj["stats"]?.GetValue<bool>() ?? config.Stats;
 
                     if (obj["buildScenes"] is JsonArray buildScenes)
                     {

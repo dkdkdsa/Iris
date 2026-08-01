@@ -1,6 +1,7 @@
 using Iris.Assets;
 using Iris.Audio;
 using Iris.Core;
+using Iris.Diagnostics;
 using Iris.Physics;
 using Iris.Platform;
 using Iris.Rendering;
@@ -58,11 +59,13 @@ namespace Iris
                 return;
 
             Time.DeltaTime = _host.DeltaTime;
+            Stats.BeginFrame(_host.DeltaTime);
             _fixedAccumulator += _host.DeltaTime;
 
             while (_fixedAccumulator >= Time.FixedTimeStep)
             {
                 _systemManager.FixedUpdate();
+                Stats.CountFixedStep();
                 _fixedAccumulator -= Time.FixedTimeStep;
             }
 
@@ -73,7 +76,12 @@ namespace Iris
             _backBufferSize = new Vector2D<int>(window.Width, window.Height);
 
             _renderSystem.Viewport = _backBufferSize;
+
+            StatsOverlay.Draw();
+
             _host.Present(_renderSystem.Flush);
+
+            Stats.EndFrame();
         }
 
         public void Shutdown()
