@@ -25,9 +25,24 @@ namespace IrisEditor
         public GameBuilder Builder { get; } = new();
         public bool Dirty { get; private set; }
 
+        private readonly List<Iris.Platform.FileDropEvent> _droppedPaths = new();
+
+        public IReadOnlyList<Iris.Platform.FileDropEvent> DroppedPaths => _droppedPaths;
+
         public void MarkDirty()
         {
             Dirty = true;
+        }
+
+        public void QueueDroppedPath(Iris.Platform.FileDropEvent drop)
+        {
+            if (!string.IsNullOrWhiteSpace(drop.Path))
+                _droppedPaths.Add(drop);
+        }
+
+        public void ClearDroppedPaths()
+        {
+            _droppedPaths.Clear();
         }
 
         public string PendingUILayoutPath { get; private set; }
