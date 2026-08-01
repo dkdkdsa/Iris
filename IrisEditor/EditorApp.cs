@@ -65,6 +65,7 @@ namespace IrisEditor
             FileDialog.Update();
             _context.Scripts.Update();
             _context.Builder.Update();
+            ConsumeDroppedPaths();
 
             if (ImGui.IsKeyPressed(ImGuiKey.F5, false))
                 _context.RunGame();
@@ -83,6 +84,45 @@ namespace IrisEditor
             if (!_animator.ConsumedSaveShortcut &&
                 ImGui.GetIO().KeyCtrl && ImGui.IsKeyPressed(ImGuiKey.S) && _context.Dirty)
                 SaveScene(saveAs: false);
+        }
+
+        private void ConsumeDroppedPaths()
+        {
+            if (_context.DroppedPaths.Count == 0)
+                return;
+
+            var workspace = _context.Workspace;
+
+            if (workspace == null)
+            {
+                _context.ClearDroppedPaths();
+                Debug.LogWarning(Loc.T("project.dropNoProject"));
+                return;
+            }
+
+            int imported = 0;
+            var viewportPos = ImGui.GetMainViewport().Pos;
+
+            foreach (var drop in _context.DroppedPaths)
+            {
+                var screen = new Vector2(drop.Position.X, drop.Position.Y) + viewportPos;
+                string folder = _project.ResolveDropFolder(screen);
+
+                if (AssetImporter.TryImport(workspace, drop.Path, folder, out _, out var error))
+                {
+                    imported++;
+                }
+                else
+                {
+                    Debug.LogWarning(Loc.T("project.dropFailed",
+                        Path.GetFileName(Path.TrimEndingDirectorySeparator(drop.Path)), error));
+                }
+            }
+
+            _context.ClearDroppedPaths();
+
+            if (imported > 0)
+                workspace.Refresh();
         }
 
         private void DrawMainMenuBar()

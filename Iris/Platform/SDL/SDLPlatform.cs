@@ -31,6 +31,8 @@ namespace Iris.Platform.SDL
             Factories.Register(_backend);
         }
 
+        public event Action<FileDropEvent> FileDropped;
+
         public bool IsCloseRequested => _closed;
 
         public IWindow Window => _window;
@@ -49,6 +51,7 @@ namespace Iris.Platform.SDL
             _backend.VSync = config.vsync;
             _backend.Init(_window);
             _sdl.StartTextInput();
+            _sdl.EventState((uint)EventType.Dropfile, Sdl.Enable);
         }
 
         public void PumpEvents()
@@ -60,8 +63,44 @@ namespace Iris.Platform.SDL
                     _closed = true;
                 }
 
+                if (_evt.Type == (uint)EventType.Dropfile)
+                    RaiseFileDropped(_evt);
+
                 _inputBackend.ProcessEvent(_evt);
             }
+        }
+
+        private unsafe void RaiseFileDropped(in Event evt)
+        {
+            byte* file = evt.Drop.File;
+
+            if (file == null)
+                return;
+
+            try
+            {
+                string path = System.Runtime.InteropServices.Marshal.PtrToStringUTF8((nint)file);
+
+                if (!string.IsNullOrEmpty(path))
+                    FileDropped?.Invoke(new FileDropEvent(path, GetDropPosition()));
+            }
+            finally
+            {
+                _sdl.Free(file);
+            }
+        }
+
+        private unsafe Silk.NET.Maths.Vector2D<int> GetDropPosition()
+        {
+            if (_window == null)
+                return default;
+
+            int globalX, globalY, windowX, windowY;
+
+            _sdl.GetGlobalMouseState(&globalX, &globalY);
+            _sdl.GetWindowPosition(_window.GetNativeWindow(), &windowX, &windowY);
+
+            return new Silk.NET.Maths.Vector2D<int>(globalX - windowX, globalY - windowY);
         }
 
         public void Dispose()
