@@ -18,7 +18,17 @@ namespace Iris.Assets
             if (IsImageFile(path))
             {
                 var imageSprite = CreateInstance();
-                imageSprite.Texture = AssetManager.Load<ITexture>(path);
+
+                if (AtlasManifest.TryResolve(path, out string imagePage, out var imageRegion))
+                {
+                    imageSprite.Texture = AssetManager.Load<ITexture>(imagePage);
+                    imageSprite.SrcRect = imageRegion;
+                }
+                else
+                {
+                    imageSprite.Texture = AssetManager.Load<ITexture>(path);
+                }
+
                 return imageSprite;
             }
 
@@ -35,13 +45,27 @@ namespace Iris.Assets
                 : Path.Combine(SceneLoader.ContentRoot, texturePath);
 
             var sprite = CreateInstance();
-            sprite.Texture = AssetManager.Load<ITexture>(fullTexturePath);
 
             int width = GetInt(root["width"]);
             int height = GetInt(root["height"]);
+            int x = GetInt(root["x"]);
+            int y = GetInt(root["y"]);
+
+            if (AtlasManifest.TryResolve(fullTexturePath, out string page, out var region))
+            {
+                sprite.Texture = AssetManager.Load<ITexture>(page);
+
+                sprite.SrcRect = width > 0 && height > 0
+                    ? new Rectangle<int>(region.Origin.X + x, region.Origin.Y + y, width, height)
+                    : region;
+
+                return sprite;
+            }
+
+            sprite.Texture = AssetManager.Load<ITexture>(fullTexturePath);
 
             if (width > 0 && height > 0)
-                sprite.SrcRect = new Rectangle<int>(GetInt(root["x"]), GetInt(root["y"]), width, height);
+                sprite.SrcRect = new Rectangle<int>(x, y, width, height);
 
             return sprite;
         }

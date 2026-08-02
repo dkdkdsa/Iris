@@ -16,6 +16,7 @@ namespace Iris.Build
                 .AddStep(new ValidateContentStep())
                 .AddStep(new CompileStep())
                 .AddStep(new CleanContentStep())
+                .AddStep(new AtlasStep())
                 .AddStep(new PackStep());
         }
 

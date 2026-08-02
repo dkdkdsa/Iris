@@ -52,6 +52,7 @@ namespace Iris.Diagnostics
                 ImGui.SeparatorText("Render");
                 Row("commands", Stats.RenderCommands.ToString("N0"));
                 Row("draw calls", Stats.DrawCalls.ToString("N0"));
+                Row("tex switches", Stats.TextureSwitches.ToString("N0"));
                 Row("flush", $"{Stats.RenderMs:F2} ms");
 
                 ImGui.SeparatorText("Simulation");

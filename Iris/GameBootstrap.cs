@@ -54,6 +54,11 @@ namespace Iris
             {
                 onInit?.Invoke();
 
+                var renderSystem = SystemManager.Instance.GetSystem<Rendering.RenderSystem>();
+
+                if (renderSystem != null)
+                    renderSystem.SortByTexture = config.BatchByTexture;
+
                 var sceneSystem = SystemManager.Instance.GetSystem<SceneSystem>();
 
                 try
@@ -157,6 +162,7 @@ namespace Iris
                     config.VSync = obj["vsync"]?.GetValue<bool>() ?? config.VSync;
                     config.TargetFrameRate = (int)(obj["targetFrameRate"]?.GetValue<float>() ?? config.TargetFrameRate);
                     config.LogToFile = obj["logToFile"]?.GetValue<bool>() ?? config.LogToFile;
+                    config.BatchByTexture = obj["batchByTexture"]?.GetValue<bool>() ?? config.BatchByTexture;
                     config.Stats = obj["stats"]?.GetValue<bool>() ?? config.Stats;
 
                     if (obj["buildScenes"] is JsonArray buildScenes)
