@@ -425,7 +425,8 @@ namespace IrisEditor.Workspace
                   "vsync": true,
                   "targetFrameRate": 0,
                   "logToFile": true,
-                  "stats": false
+                  "stats": false,
+                  "batchByTexture": false
                 }
                 """;
         }

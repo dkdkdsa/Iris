@@ -14,6 +14,7 @@ namespace Iris
         public int TargetFrameRate = 0;
         public bool LogToFile = true;
         public bool Stats = false;
+        public bool BatchByTexture = false;
         public string Title = "NewGame";
         public List<string> BuildScenes = new();
     }

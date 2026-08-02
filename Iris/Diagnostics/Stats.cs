@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 
 namespace Iris.Diagnostics
 {
@@ -14,6 +14,7 @@ namespace Iris.Diagnostics
         private static int _liveFixedSteps;
         private static int _liveCommands;
         private static int _liveDrawCalls;
+        private static int _liveTextureSwitches;
         private static float _liveRenderMs;
 
         public static bool Enabled { get; set; }
@@ -28,6 +29,7 @@ namespace Iris.Diagnostics
         public static int FixedSteps { get; private set; }
         public static int RenderCommands { get; private set; }
         public static int DrawCalls { get; private set; }
+        public static int TextureSwitches { get; private set; }
         public static float RenderMs { get; private set; }
 
         public static float Fps => FrameMs > 0f ? 1000f / FrameMs : 0f;
@@ -51,6 +53,7 @@ namespace Iris.Diagnostics
             FixedSteps = 0;
             RenderCommands = 0;
             DrawCalls = 0;
+            TextureSwitches = 0;
             RenderMs = 0f;
         }
 
@@ -90,6 +93,7 @@ namespace Iris.Diagnostics
             _liveFixedSteps = 0;
             _liveCommands = 0;
             _liveDrawCalls = 0;
+            _liveTextureSwitches = 0;
             _liveRenderMs = 0f;
         }
 
@@ -98,10 +102,11 @@ namespace Iris.Diagnostics
             _liveFixedSteps++;
         }
 
-        internal static void RecordRender(int commands, int drawCalls, TimeSpan elapsed)
+        internal static void RecordRender(int commands, int drawCalls, int textureSwitches, TimeSpan elapsed)
         {
             _liveCommands += commands;
             _liveDrawCalls += drawCalls;
+            _liveTextureSwitches += textureSwitches;
             _liveRenderMs += (float)elapsed.TotalMilliseconds;
         }
 
@@ -113,6 +118,7 @@ namespace Iris.Diagnostics
             FixedSteps = _liveFixedSteps;
             RenderCommands = _liveCommands;
             DrawCalls = _liveDrawCalls;
+            TextureSwitches = _liveTextureSwitches;
             RenderMs = _liveRenderMs;
         }
     }

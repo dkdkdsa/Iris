@@ -39,6 +39,7 @@ namespace IrisEditor.Serialization
             config.TargetFrameRate = ReadInt(obj, "targetFrameRate") ?? config.TargetFrameRate;
             config.LogToFile = ReadBool(obj, "logToFile") ?? config.LogToFile;
             config.Stats = ReadBool(obj, "stats") ?? config.Stats;
+            config.BatchByTexture = ReadBool(obj, "batchByTexture") ?? config.BatchByTexture;
 
             if (obj["buildScenes"] is JsonArray buildScenes)
             {
@@ -81,6 +82,7 @@ namespace IrisEditor.Serialization
             obj["targetFrameRate"] = JsonValue.Create(Math.Max(0, config.TargetFrameRate));
             obj["logToFile"] = JsonValue.Create(config.LogToFile);
             obj["stats"] = JsonValue.Create(config.Stats);
+            obj["batchByTexture"] = JsonValue.Create(config.BatchByTexture);
 
             File.WriteAllText(path, obj.ToJsonString(_writeOptions));
         }

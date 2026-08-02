@@ -24,7 +24,28 @@ namespace Iris.Assets
                 ? texturePath
                 : Path.Combine(SceneLoader.ContentRoot, texturePath);
 
-            var texture = AssetManager.Load<ITexture>(fullTexturePath);
+            ITexture texture;
+            int sheetWidth;
+            int sheetHeight;
+            int originX = 0;
+            int originY = 0;
+
+            if (AtlasManifest.TryResolve(fullTexturePath, out string page, out var region))
+            {
+                texture = AssetManager.Load<ITexture>(page);
+
+                originX = region.Origin.X;
+                originY = region.Origin.Y;
+                sheetWidth = region.Size.X;
+                sheetHeight = region.Size.Y;
+            }
+            else
+            {
+                texture = AssetManager.Load<ITexture>(fullTexturePath);
+
+                sheetWidth = texture.Width;
+                sheetHeight = texture.Height;
+            }
 
             float fps = GetFloat(root["fps"], 12f);
             bool loop = root["loop"] is JsonValue loopValue && loopValue.TryGetValue(out bool l) ? l : true;
@@ -37,7 +58,7 @@ namespace Iris.Assets
                 {
                     if (node is JsonArray { Count: 4 } frame)
                         frames.Add(new Rectangle<int>(
-                            GetInt(frame[0], 0), GetInt(frame[1], 0),
+                            originX + GetInt(frame[0], 0), originY + GetInt(frame[1], 0),
                             GetInt(frame[2], 0), GetInt(frame[3], 0)));
                 }
 
@@ -56,15 +77,16 @@ namespace Iris.Assets
             int frameCount = GetInt(root["frameCount"], 0);
 
             if (columns <= 0)
-                columns = Math.Max(1, (texture.Width - offsetX) / frameWidth);
+                columns = Math.Max(1, (sheetWidth - offsetX) / frameWidth);
 
             if (frameCount <= 0)
             {
-                int rows = Math.Max(1, (texture.Height - offsetY) / frameHeight);
+                int rows = Math.Max(1, (sheetHeight - offsetY) / frameHeight);
                 frameCount = columns * rows;
             }
 
-            return SpriteAnimation.FromGrid(texture, frameWidth, frameHeight, frameCount, fps, loop, offsetX, offsetY, columns);
+            return SpriteAnimation.FromGrid(texture, frameWidth, frameHeight, frameCount, fps, loop,
+                originX + offsetX, originY + offsetY, columns);
         }
 
         private static float GetFloat(JsonNode node, float fallback)

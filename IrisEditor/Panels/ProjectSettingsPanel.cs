@@ -321,6 +321,20 @@ namespace IrisEditor.Panels
 
             ImGui.Spacing();
 
+            bool batch = _config.BatchByTexture;
+
+            if (ImGui.Checkbox(Loc.T("settings.batchByTexture"), ref batch))
+            {
+                _config.BatchByTexture = batch;
+                _dirty = true;
+            }
+
+            ImGui.TextDisabled(_config.BatchByTexture
+                ? Loc.T("settings.hint.batchEnabled")
+                : Loc.T("settings.hint.batchDisabled"));
+
+            ImGui.Spacing();
+
             bool stats = _config.Stats;
 
             if (ImGui.Checkbox(Loc.T("settings.stats"), ref stats))

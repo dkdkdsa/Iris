@@ -11,9 +11,20 @@ namespace Iris.Rendering
 {
     public class RenderSystem : SystemBase
     {
-        private static readonly Comparison<RenderCommand> _order = static (a, b) => a.order != b.order
+        private static readonly Comparison<RenderCommand> _bySubmission = static (a, b) => a.order != b.order
             ? a.order.CompareTo(b.order)
             : a.sequence.CompareTo(b.sequence);
+
+        private static readonly Comparison<RenderCommand> _byTexture = static (a, b) =>
+        {
+            if (a.order != b.order)
+                return a.order.CompareTo(b.order);
+
+            nint left = a.texture?.Handle ?? 0;
+            nint right = b.texture?.Handle ?? 0;
+
+            return left != right ? left.CompareTo(right) : a.sequence.CompareTo(b.sequence);
+        };
 
         private List<RenderCommand> _commands = new();
         private IRenderBackend _backend;
@@ -21,6 +32,8 @@ namespace Iris.Rendering
         public Vector2D<int> Viewport { get; internal set; }
 
         public bool CullingEnabled { get; set; } = true;
+
+        public bool SortByTexture { get; set; }
 
         internal RenderSystem(IRenderBackend backend, int viewportWidth, int viewportHeight)
         {
@@ -63,10 +76,21 @@ namespace Iris.Rendering
             }
 
             _commands.RemoveRange(kept, _commands.Count - kept);
-            _commands.Sort(_order);
+            _commands.Sort(SortByTexture ? _byTexture : _bySubmission);
+
+            int switches = 0;
+            nint bound = 0;
 
             foreach (var cmd in _commands)
             {
+                nint handle = cmd.texture?.Handle ?? 0;
+
+                if (handle != bound)
+                {
+                    switches++;
+                    bound = handle;
+                }
+
                 if (cmd.screenSpace)
                 {
                     var d = cmd.dest;
@@ -87,7 +111,7 @@ namespace Iris.Rendering
             _commands.Clear();
 
             if (measure)
-                Stats.RecordRender(submitted, kept, Stopwatch.GetElapsedTime(started));
+                Stats.RecordRender(submitted, kept, switches, Stopwatch.GetElapsedTime(started));
         }
 
         internal static bool Intersects(in Rectangle<float> dest, float rotation, in Rectangle<float> bounds)
