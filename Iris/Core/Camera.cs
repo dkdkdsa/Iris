@@ -58,6 +58,25 @@ namespace Iris.Core
             Viewport = size;
         }
 
+        public Rectangle<float> WorldBounds
+        {
+            get
+            {
+                float scale = PixelPerUnit * Zoom;
+
+                if (scale <= 0f || Viewport.X <= 0 || Viewport.Y <= 0)
+                    return default;
+
+                float halfWidth = Viewport.X * 0.5f / scale;
+                float halfHeight = Viewport.Y * 0.5f / scale;
+                var position = Transform.Position;
+
+                return new Rectangle<float>(
+                    position.X - halfWidth, position.Y - halfHeight,
+                    halfWidth * 2f, halfHeight * 2f);
+            }
+        }
+
         public Rectangle<int> WorldToScreen(in Rectangle<float> world)
         {
             float centerX = Viewport.X * 0.5f;
