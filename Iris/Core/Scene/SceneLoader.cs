@@ -55,6 +55,23 @@ namespace Iris.Core
             if (root["actors"] is not JsonArray actors)
                 return scene;
 
+            var previousScope = AssetManager.CurrentScope;
+            AssetManager.OpenScope(scene);
+
+            try
+            {
+                BuildScene(scene, actors);
+            }
+            finally
+            {
+                AssetManager.CurrentScope = previousScope;
+            }
+
+            return scene;
+        }
+
+        private static void BuildScene(Scene scene, JsonArray actors)
+        {
             var byId = new Dictionary<string, Actor>(StringComparer.OrdinalIgnoreCase);
             var parentLinks = new List<(Actor Child, string ParentId)>();
             var built = new List<Actor>();
@@ -93,8 +110,6 @@ namespace Iris.Core
 
             foreach (var actor in built)
                 actor.Awake();
-
-            return scene;
         }
 
         internal static Actor BuildActor(Scene scene, JsonObject actorObj)
