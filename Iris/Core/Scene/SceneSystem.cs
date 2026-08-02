@@ -15,6 +15,7 @@ namespace Iris.Core
             if (ActiveScene == null)
             {
                 ActiveScene = scene;
+                Assets.AssetManager.OpenScope(scene);
                 return;
             }
 
@@ -73,11 +74,21 @@ namespace Iris.Core
                 return;
 
             var next = _pendingScene;
+            var previous = ActiveScene;
+
             _pendingScene = null;
             _hasPending = false;
 
-            ActiveScene?.Dispose();
+            previous?.Dispose();
             ActiveScene = next;
+
+            Assets.AssetManager.OpenScope(next);
+
+            if (previous == null)
+                return;
+
+            Assets.AssetManager.ReleaseScope(previous);
+            Assets.AssetManager.UnloadUnused();
         }
 
         public override void Dispose()

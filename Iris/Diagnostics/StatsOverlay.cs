@@ -96,15 +96,15 @@ namespace Iris.Diagnostics
 
             var counts = new Dictionary<string, int>(StringComparer.Ordinal);
 
-            foreach (var pair in AssetManager.Cached)
+            foreach (var (type, _, asset) in AssetManager.Cached)
             {
                 _assetTotal++;
 
-                string name = pair.Key.Type.Name;
+                string name = type.Name;
                 counts.TryGetValue(name, out int count);
                 counts[name] = count + 1;
 
-                if (pair.Value is ITexture texture)
+                if (asset is ITexture texture)
                     _textureBytes += (long)texture.Width * texture.Height * 4L;
             }
 
