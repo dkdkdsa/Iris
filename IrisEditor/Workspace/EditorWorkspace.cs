@@ -26,7 +26,7 @@ namespace IrisEditor.Workspace
             [".ttf"] = typeof(IFont),
             [".otf"] = typeof(IFont),
             [".ui"] = typeof(Iris.UI.IUILayout),
-            [".anim"] = typeof(Iris.Core.SpriteAnimation),
+            [".anim"] = typeof(Iris.Core.AnimationClip),
             [".sprite"] = typeof(Iris.Core.Sprite),
             [".tile"] = typeof(Iris.Core.Tile),
             [".controller"] = typeof(Iris.Core.AnimatorController),

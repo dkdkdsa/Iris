@@ -19,7 +19,7 @@ namespace Iris.Core
     public sealed class AnimatorControllerState
     {
         public string Name { get; init; }
-        public SpriteAnimation Clip { get; init; }
+        public AnimationClip Clip { get; init; }
         public IReadOnlyList<AnimatorControllerTransition> Transitions { get; init; } = new List<AnimatorControllerTransition>();
     }
 

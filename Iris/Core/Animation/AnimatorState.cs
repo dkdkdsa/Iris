@@ -5,10 +5,10 @@ namespace Iris.Core
     internal sealed class AnimatorState
     {
         public string Name { get; }
-        public SpriteAnimation Clip { get; }
+        public AnimationClip Clip { get; }
         public List<AnimatorTransition> Transitions { get; } = new();
 
-        public AnimatorState(string name, SpriteAnimation clip)
+        public AnimatorState(string name, AnimationClip clip)
         {
             Name = name;
             Clip = clip;

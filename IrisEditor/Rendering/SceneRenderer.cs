@@ -35,7 +35,7 @@ namespace IrisEditor.Rendering
         public float ReferenceHeight = 600f;
 
         private readonly EditorContext _context;
-        private readonly Dictionary<string, SpriteAnimation> _clips = new();
+        private readonly Dictionary<string, AnimationClip> _clips = new();
         private readonly Dictionary<string, Tile> _tileAssets = new();
         private readonly Dictionary<string, Sprite> _spriteAssets = new();
         private readonly List<SpritePreview> _previews = new();
@@ -81,7 +81,7 @@ namespace IrisEditor.Rendering
                 {
                     if (comp.TargetType == typeof(SpriteRenderer))
                     {
-                        var sprite = GetSprite(comp.GetString("Sprite", null));
+                        var sprite = ResolveSprite(comp, "Sprite");
                         var texture = sprite?.Texture;
 
                         if (texture != null)
@@ -94,14 +94,17 @@ namespace IrisEditor.Rendering
                                 position, actorScale, rotation, camPos, scale, center, selected);
                         }
                     }
-                    else if (comp.TargetType == typeof(AnimatedSpriteRenderer))
+                    else if (comp.TargetType == typeof(AnimationPlayer))
                     {
-                        var clip = GetClip(comp.GetString("Clip", null));
+                        var first = FirstSprite(GetClip(comp.GetString("Clip", null)));
 
-                        if (clip != null && clip.FrameCount > 0 && clip.Texture != null)
+                        if (first?.Texture != null)
                         {
-                            var frame = clip.GetFrame(0);
-                            AddPreview(comp, clip.Texture, frame, frame.Size.X, frame.Size.Y,
+                            var frame = first.SrcRect;
+
+                            AddPreview(comp, first.Texture, frame,
+                                frame?.Size.X ?? first.Texture.Width,
+                                frame?.Size.Y ?? first.Texture.Height,
                                 position, actorScale, rotation, camPos, scale, center, selected);
                         }
                     }
@@ -395,7 +398,21 @@ namespace IrisEditor.Rendering
                 preview.Tint);
         }
 
-        public SpriteAnimation GetClip(string path)
+        private static Sprite FirstSprite(AnimationClip clip)
+        {
+            if (clip == null)
+                return null;
+
+            foreach (var track in clip.Tracks)
+            {
+                if (track is SpriteTrack sprites && sprites.KeyCount > 0)
+                    return sprites.GetKey(0).Value;
+            }
+
+            return null;
+        }
+
+        public AnimationClip GetClip(string path)
         {
             EnsureCache();
 
@@ -405,13 +422,13 @@ namespace IrisEditor.Rendering
             if (_clips.TryGetValue(path, out var cached))
                 return cached;
 
-            SpriteAnimation clip = null;
+            AnimationClip clip = null;
 
             try
             {
                 string fullPath = ResolvePath(path);
                 if (File.Exists(fullPath))
-                    clip = AssetManager.Load<SpriteAnimation>(fullPath);
+                    clip = AssetManager.Load<AnimationClip>(fullPath);
             }
             catch
             {
@@ -419,6 +436,43 @@ namespace IrisEditor.Rendering
 
             _clips[path] = clip;
             return clip;
+        }
+
+        private Sprite ResolveSprite(ComponentData comp, string property)
+        {
+            if (comp.GetPreview(property) is JsonObject inline)
+                return GetInlineSprite(inline);
+
+            return GetSprite(comp.GetString(property, null));
+        }
+
+        private Sprite GetInlineSprite(JsonObject node)
+        {
+            string texturePath = node["texture"]?.GetValue<string>();
+
+            if (string.IsNullOrWhiteSpace(texturePath))
+                return null;
+
+            var texture = GetSprite(texturePath)?.Texture;
+
+            if (texture == null)
+                return null;
+
+            int width = InlineInt(node["w"]);
+            int height = InlineInt(node["h"]);
+
+            return new Sprite
+            {
+                Texture = texture,
+                SrcRect = width > 0 && height > 0
+                    ? new Silk.NET.Maths.Rectangle<int>(InlineInt(node["x"]), InlineInt(node["y"]), width, height)
+                    : null,
+            };
+        }
+
+        private static int InlineInt(JsonNode node)
+        {
+            return node is JsonValue value && value.TryGetValue(out float f) ? (int)f : 0;
         }
 
         public Sprite GetSprite(string path)

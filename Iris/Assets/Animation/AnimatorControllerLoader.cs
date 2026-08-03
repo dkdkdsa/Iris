@@ -125,7 +125,7 @@ namespace Iris.Assets
             return result;
         }
 
-        private static SpriteAnimation LoadClip(string relativePath)
+        private static AnimationClip LoadClip(string relativePath)
         {
             if (string.IsNullOrWhiteSpace(relativePath))
                 return null;
@@ -136,7 +136,7 @@ namespace Iris.Assets
 
             try
             {
-                return AssetManager.Load<SpriteAnimation>(fullPath);
+                return AssetManager.Load<AnimationClip>(fullPath);
             }
             catch (Exception ex)
             {

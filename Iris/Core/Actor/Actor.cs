@@ -168,6 +168,22 @@ namespace Iris.Core
             return null;
         }
 
+        public Component GetComponent(Type type)
+        {
+            if (type == null)
+                return null;
+
+            for (int i = 0; i < _components.Count; i++)
+            {
+                var component = _components[i];
+
+                if (!component.DestroyFlag && type.IsInstanceOfType(component))
+                    return component;
+            }
+
+            return null;
+        }
+
         public T GetComponentInChildren<T>() where T : class
         {
             for (int i = 0; i < _children.Count; i++)
