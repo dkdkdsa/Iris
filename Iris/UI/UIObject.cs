@@ -14,13 +14,16 @@ namespace Iris.UI
 
         public Vector2D<float> Position { get; set; }
 
+        public float Width { get; set; }
+        public float Height { get; set; }
+
         public Vector2D<float> Scale { get; set; } = Vector2D<float>.One;
         public float Rotation { get; set; } = 0f;
         public int Order { get; set; } = 0;
         public bool Visible { get; set; } = true;
         public Sprite Sprite { get; set; }
 
-        public virtual Vector2D<float> GetSize()
+        protected virtual Vector2D<float> GetNativeSize()
         {
             var texture = Sprite?.Texture;
 
@@ -28,8 +31,18 @@ namespace Iris.UI
                 return Vector2D<float>.Zero;
 
             var src = Sprite.SrcRect;
-            float width = src.HasValue ? src.Value.Size.X : texture.Width;
-            float height = src.HasValue ? src.Value.Size.Y : texture.Height;
+
+            return new Vector2D<float>(
+                src.HasValue ? src.Value.Size.X : texture.Width,
+                src.HasValue ? src.Value.Size.Y : texture.Height);
+        }
+
+        public virtual Vector2D<float> GetSize()
+        {
+            var native = GetNativeSize();
+
+            float width = Width > 0f ? Width : native.X;
+            float height = Height > 0f ? Height : native.Y;
 
             return new Vector2D<float>(width * Scale.X, height * Scale.Y);
         }
