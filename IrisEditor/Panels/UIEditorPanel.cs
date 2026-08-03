@@ -39,6 +39,7 @@ namespace IrisEditor.Panels
         private int _version;
         private int _builtVersion = -1;
 
+        private ComponentData _pendingDelete;
         private ComponentData _dragEntry;
         private System.Numerics.Vector2 _dragStartMouse;
         private Vector2D<float> _dragStartPosition;
@@ -141,14 +142,24 @@ namespace IrisEditor.Panels
 
         private void DrawPanes()
         {
-            const float paletteWidth = 180f;
+            const float paletteWidth = 210f;
             const float infoWidth = 280f;
 
             float designWidth = ImGui.GetContentRegionAvail().X - paletteWidth - infoWidth
                                 - ImGui.GetStyle().ItemSpacing.X * 2f;
 
-            ImGui.BeginChild("UIPalette", new System.Numerics.Vector2(paletteWidth, 0f), ImGuiChildFlags.Borders);
+            ImGui.BeginChild("UILeft", new System.Numerics.Vector2(paletteWidth, 0f));
+
+            float paletteHeight = ImGui.GetContentRegionAvail().Y * 0.4f;
+
+            ImGui.BeginChild("UIPalette", new System.Numerics.Vector2(0f, paletteHeight), ImGuiChildFlags.Borders);
             DrawPalette();
+            ImGui.EndChild();
+
+            ImGui.BeginChild("UIHierarchy", new System.Numerics.Vector2(0f, 0f), ImGuiChildFlags.Borders);
+            DrawHierarchy();
+            ImGui.EndChild();
+
             ImGui.EndChild();
 
             ImGui.SameLine();
@@ -176,6 +187,7 @@ namespace IrisEditor.Panels
 
                 var properties = UIObjectCatalog.DefaultProperties(type);
                 properties["Anchor"] = new JsonArray(0.5f, 0.5f);
+                properties["AnchorMax"] = new JsonArray(0.5f, 0.5f);
 
                 var entry = new ComponentData
                 {
@@ -189,6 +201,113 @@ namespace IrisEditor.Panels
                 _selected = entry;
                 MarkChanged();
             }
+        }
+
+        private void DrawHierarchy()
+        {
+            ImGui.TextDisabled(Loc.T("uiEditor.hierarchy"));
+            ImGui.Separator();
+
+            if (_entries.Count == 0)
+            {
+                ImGui.TextDisabled(Loc.T("uiEditor.hierarchyEmpty"));
+                return;
+            }
+
+            foreach (var entry in _entries)
+            {
+                if (ResolveParent(entry) == null)
+                    DrawHierarchyNode(entry, 0);
+            }
+
+            if (_pendingDelete == null)
+                return;
+
+            DeleteSubtree(_pendingDelete);
+            _pendingDelete = null;
+        }
+
+        private void DrawHierarchyNode(ComponentData entry, int depth)
+        {
+            if (depth > _entries.Count)
+                return;
+
+            bool hidden = !entry.GetBool("Visible", true);
+
+            ImGui.PushID(entry.Id.ToString());
+
+            if (hidden)
+                ImGui.PushStyleColor(ImGuiCol.Text, 0xFF808080);
+
+            if (ImGui.Selectable(EntryLabel(entry), entry == _selected))
+                _selected = entry;
+
+            if (hidden)
+                ImGui.PopStyleColor();
+
+            if (ImGui.BeginPopupContextItem())
+            {
+                if (ImGui.MenuItem(Loc.T("common.delete")))
+                    _pendingDelete = entry;
+
+                ImGui.EndPopup();
+            }
+
+            ImGui.PopID();
+
+            bool indented = false;
+
+            foreach (var child in _entries)
+            {
+                if (child.ParentId is not Guid id || id != entry.Id)
+                    continue;
+
+                if (!indented)
+                {
+                    ImGui.Indent();
+                    indented = true;
+                }
+
+                DrawHierarchyNode(child, depth + 1);
+            }
+
+            if (indented)
+                ImGui.Unindent();
+        }
+
+        private ComponentData ResolveParent(ComponentData entry)
+        {
+            if (entry.ParentId is not Guid id)
+                return null;
+
+            return _entries.Find(e => e.Id == id);
+        }
+
+        private void DeleteSubtree(ComponentData root)
+        {
+            var removed = new List<ComponentData>();
+            var stack = new Stack<ComponentData>();
+            stack.Push(root);
+
+            while (stack.Count > 0)
+            {
+                var current = stack.Pop();
+                removed.Add(current);
+
+                foreach (var candidate in _entries)
+                {
+                    if (candidate.ParentId is Guid id && id == current.Id && !removed.Contains(candidate))
+                        stack.Push(candidate);
+                }
+            }
+
+            foreach (var item in removed)
+                _entries.Remove(item);
+
+            if (removed.Contains(_selected))
+                _selected = null;
+
+            MarkChanged();
         }
 
         private void DrawInfo()
@@ -209,12 +328,12 @@ namespace IrisEditor.Panels
 
             if (ImGui.Button(Loc.T("common.delete"), new System.Numerics.Vector2(-1f, 0f)))
             {
-                _entries.Remove(_selected);
-                _selected = null;
-                MarkChanged();
+                DeleteSubtree(_selected);
                 return;
             }
 
+            ImGui.Separator();
+            DrawParentPicker();
             ImGui.Separator();
 
             if (_selected.Properties is JsonObject obj)
@@ -226,6 +345,63 @@ namespace IrisEditor.Panels
                 if (PropertyDrawer.Draw(obj, assetProps, _context.Workspace, HiddenMembers.Get(_selected.TargetType)))
                     MarkChanged();
             }
+        }
+
+        private void DrawParentPicker()
+        {
+            var current = _entries.Find(e => _selected.ParentId is Guid id && e.Id == id);
+            string preview = current != null ? EntryLabel(current) : Loc.T("uiEditor.noParent");
+
+            ImGui.SetNextItemWidth(-1f);
+
+            if (!ImGui.BeginCombo(Loc.T("uiEditor.parent"), preview))
+                return;
+
+            if (ImGui.Selectable(Loc.T("uiEditor.noParent"), _selected.ParentId == null))
+            {
+                _selected.ParentId = null;
+                MarkChanged();
+            }
+
+            foreach (var entry in _entries)
+            {
+                if (entry == _selected || IsDescendantOf(entry, _selected))
+                    continue;
+
+                if (ImGui.Selectable($"{EntryLabel(entry)}##{entry.Id}", _selected.ParentId == entry.Id))
+                {
+                    _selected.ParentId = entry.Id;
+                    MarkChanged();
+                }
+            }
+
+            ImGui.EndCombo();
+        }
+
+        private bool IsDescendantOf(ComponentData candidate, ComponentData ancestor)
+        {
+            var current = candidate;
+
+            for (int guard = 0; guard < _entries.Count && current != null; guard++)
+            {
+                if (current.ParentId is not Guid parentId)
+                    return false;
+
+                if (parentId == ancestor.Id)
+                    return true;
+
+                current = _entries.Find(e => e.Id == parentId);
+            }
+
+            return false;
+        }
+
+        private static string EntryLabel(ComponentData entry)
+        {
+            string type = entry.TargetType?.Name ?? entry.TypeName ?? "?";
+            string name = entry.GetString("Name", null);
+
+            return string.IsNullOrWhiteSpace(name) ? type : $"{name} ({type})";
         }
 
         private void MarkChanged()
@@ -265,6 +441,17 @@ namespace IrisEditor.Panels
                 _instances.Add(instance);
             }
 
+            for (int i = 0; i < _entries.Count; i++)
+            {
+                if (_instances[i] == null || _entries[i].ParentId is not Guid parentId)
+                    continue;
+
+                int parentIndex = _entries.FindIndex(e => e.Id == parentId);
+
+                if (parentIndex >= 0 && _instances[parentIndex] != null)
+                    _instances[i].SetParent(_instances[parentIndex]);
+            }
+
             _builtVersion = _version;
         }
 
@@ -299,7 +486,7 @@ namespace IrisEditor.Panels
             {
                 var instance = _instances[i];
 
-                if (instance == null || !instance.Visible)
+                if (instance == null || !instance.IsVisibleInHierarchy)
                     continue;
 
                 var rect = CalculateRect(instance, screenMin, screenSize, fit);
@@ -320,18 +507,43 @@ namespace IrisEditor.Panels
         {
             var size = instance.GetSize() * fit;
 
-            float anchorX = screenMin.X + screenSize.X * instance.Anchor.X;
-            float anchorY = screenMin.Y + screenSize.Y * instance.Anchor.Y;
+            var frameMin = screenMin;
+            var frameSize = screenSize;
 
-            float width = MathF.Abs(size.X);
-            float height = MathF.Abs(size.Y);
-            float pivotX = size.X < 0f ? 1f - instance.Anchor.X : instance.Anchor.X;
-            float pivotY = size.Y < 0f ? 1f - instance.Anchor.Y : instance.Anchor.Y;
+            if (instance.Parent != null)
+            {
+                var parentRect = CalculateRect(instance.Parent, screenMin, screenSize, fit);
+                frameMin = new System.Numerics.Vector2(parentRect.Origin.X, parentRect.Origin.Y);
+                frameSize = new System.Numerics.Vector2(parentRect.Size.X, parentRect.Size.Y);
+            }
 
-            float x = anchorX + instance.Position.X * fit - width * pivotX;
-            float y = anchorY + instance.Position.Y * fit - height * pivotY;
+            ResolveAxis(frameMin.X, frameSize.X, instance.Anchor.X, instance.AnchorMax.X,
+                instance.Position.X, instance.OffsetMax.X, size.X, fit, out float x, out float width);
+
+            ResolveAxis(frameMin.Y, frameSize.Y, instance.Anchor.Y, instance.AnchorMax.Y,
+                instance.Position.Y, instance.OffsetMax.Y, size.Y, fit, out float y, out float height);
 
             return new Rectangle<float>(x, y, width, height);
+        }
+
+        private static void ResolveAxis(float frameOrigin, float frameSize, float anchorMin, float anchorMax,
+            float position, float offsetMax, float size, float fit, out float origin, out float length)
+        {
+            float minPoint = frameOrigin + frameSize * anchorMin;
+
+            if (anchorMax > anchorMin)
+            {
+                float maxPoint = frameOrigin + frameSize * anchorMax;
+
+                origin = minPoint + position * fit;
+                length = MathF.Max(0f, maxPoint - offsetMax * fit - origin);
+                return;
+            }
+
+            length = MathF.Abs(size);
+
+            float pivot = size < 0f ? 1f - anchorMin : anchorMin;
+            origin = minPoint + position * fit - length * pivot;
         }
 
         private unsafe void DrawInstance(ImDrawListPtr draw, UIObject instance, Rectangle<float> rect)
@@ -436,7 +648,7 @@ namespace IrisEditor.Panels
             {
                 var instance = _instances.Count > i ? _instances[i] : null;
 
-                if (instance == null || !instance.Visible)
+                if (instance == null || !instance.IsVisibleInHierarchy)
                     continue;
 
                 var rect = CalculateRect(instance, screenMin, screenSize, fit);

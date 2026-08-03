@@ -14,7 +14,7 @@ namespace Iris.UI
         public float FontSize { get; set; } = 24f;
         public Color Color { get; set; } = new Color(255, 255, 255, 255);
 
-        public override Vector2D<float> GetSize()
+        protected override Vector2D<float> GetNativeSize()
         {
             if (Font == null || string.IsNullOrEmpty(Text))
                 return Vector2D<float>.Zero;

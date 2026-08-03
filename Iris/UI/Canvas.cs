@@ -92,21 +92,46 @@ namespace Iris.UI
         public Rectangle<float> CalculateRect(UIObject uiObject)
         {
             float scale = UIScale;
-            var viewport = _system.Viewport;
 
             var size = uiObject.GetSize() * scale;
-            var anchorPoint = new Vector2D<float>(viewport.X * uiObject.Anchor.X, viewport.Y * uiObject.Anchor.Y);
-            var offset = uiObject.Position * scale;
+            var frame = CalculateFrame(uiObject.Parent);
 
-            float width = Math.Abs(size.X);
-            float height = Math.Abs(size.Y);
-            float pivotX = size.X < 0f ? 1f - uiObject.Anchor.X : uiObject.Anchor.X;
-            float pivotY = size.Y < 0f ? 1f - uiObject.Anchor.Y : uiObject.Anchor.Y;
+            ResolveAxis(frame.Origin.X, frame.Size.X, uiObject.Anchor.X, uiObject.AnchorMax.X,
+                uiObject.Position.X, uiObject.OffsetMax.X, size.X, scale, out float x, out float width);
 
-            float x = anchorPoint.X + offset.X - width * pivotX;
-            float y = anchorPoint.Y + offset.Y - height * pivotY;
+            ResolveAxis(frame.Origin.Y, frame.Size.Y, uiObject.Anchor.Y, uiObject.AnchorMax.Y,
+                uiObject.Position.Y, uiObject.OffsetMax.Y, size.Y, scale, out float y, out float height);
 
             return new Rectangle<float>(x, y, width, height);
+        }
+
+        private static void ResolveAxis(float frameOrigin, float frameSize, float anchorMin, float anchorMax,
+            float position, float offsetMax, float size, float scale, out float origin, out float length)
+        {
+            float minPoint = frameOrigin + frameSize * anchorMin;
+
+            if (anchorMax > anchorMin)
+            {
+                float maxPoint = frameOrigin + frameSize * anchorMax;
+
+                origin = minPoint + position * scale;
+                length = Math.Max(0f, maxPoint - offsetMax * scale - origin);
+                return;
+            }
+
+            length = Math.Abs(size);
+
+            float pivot = size < 0f ? 1f - anchorMin : anchorMin;
+            origin = minPoint + position * scale - length * pivot;
+        }
+
+        private Rectangle<float> CalculateFrame(UIObject parent)
+        {
+            if (parent != null)
+                return CalculateRect(parent);
+
+            var viewport = _system.Viewport;
+            return new Rectangle<float>(0f, 0f, viewport.X, viewport.Y);
         }
 
         public UIObject HitTest(Vector2D<float> screenPosition)
@@ -119,7 +144,7 @@ namespace Iris.UI
 
             foreach (var uiObject in _uiObjects)
             {
-                if (!uiObject.Visible)
+                if (!uiObject.IsVisibleInHierarchy)
                     continue;
 
                 var rect = CalculateRect(uiObject);
@@ -166,7 +191,7 @@ namespace Iris.UI
 
             foreach (var uiObject in _uiObjects)
             {
-                if (!uiObject.Visible)
+                if (!uiObject.IsVisibleInHierarchy)
                     continue;
 
                 uiObject.Render(CalculateRect(uiObject), _buffer);

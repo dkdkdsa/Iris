@@ -39,11 +39,15 @@ namespace IrisEditor.Serialization
                     properties["Sprite"] = textureNode;
                 }
 
+                if (properties["AnchorMax"] == null)
+                    properties["AnchorMax"] = properties["Anchor"]?.DeepClone() ?? new JsonArray(0f, 0f);
+
                 UIObjectCatalog.ApplyMissingDefaults(properties, type);
 
                 entries.Add(new ComponentData
                 {
                     Id = Guid.TryParse(obj["id"]?.GetValue<string>(), out var id) ? id : Guid.NewGuid(),
+                    ParentId = Guid.TryParse(obj["parent"]?.GetValue<string>(), out var parent) ? parent : null,
                     TargetType = type,
                     TypeName = typeName,
                     Properties = properties,
@@ -64,12 +68,18 @@ namespace IrisEditor.Serialization
                 if (typeName == null)
                     continue;
 
-                uiObjects.Add(new JsonObject
+                var obj = new JsonObject
                 {
                     ["id"] = entry.Id.ToString(),
                     ["type"] = typeName,
-                    ["properties"] = entry.Properties?.DeepClone() ?? new JsonObject(),
-                });
+                };
+
+                if (entry.ParentId is Guid parentId)
+                    obj["parent"] = parentId.ToString();
+
+                obj["properties"] = entry.Properties?.DeepClone() ?? new JsonObject();
+
+                uiObjects.Add(obj);
             }
 
             var root = new JsonObject
