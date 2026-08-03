@@ -40,6 +40,9 @@ namespace IrisEditor.Panels
         private int _draggingTrack = -1;
         private int _draggingKey = -1;
 
+        private bool _preview;
+        private ActorData _previewActor;
+
         public bool ConsumedSaveShortcut { get; private set; }
 
         public AnimationPanel(EditorContext context)
@@ -57,7 +60,10 @@ namespace IrisEditor.Panels
                 Open(pending);
 
             if (!_open)
+            {
+                ClearPreview();
                 return;
+            }
 
             ImGui.SetNextWindowSize(new Vector2(900f, 420f), ImGuiCond.FirstUseEver);
 
@@ -67,6 +73,60 @@ namespace IrisEditor.Panels
                 DrawContent();
 
             ImGui.End();
+
+            ApplyPreview();
+        }
+
+        private void ApplyPreview()
+        {
+            var actor = _context.Selected;
+
+            if (!_preview || _clip == null || actor == null)
+            {
+                ClearPreview();
+                return;
+            }
+
+            if (!ReferenceEquals(actor, _previewActor))
+            {
+                ClearPreview();
+                _previewActor = actor;
+            }
+
+            foreach (var track in _clip.Tracks)
+            {
+                var component = Find(actor, track.Component);
+
+                if (component == null)
+                    continue;
+
+                var value = AnimationSampler.Evaluate(track, _time);
+
+                if (value != null)
+                    component.SetPreview(track.Property, value);
+            }
+        }
+
+        private void ClearPreview()
+        {
+            if (_previewActor == null)
+                return;
+
+            foreach (var component in _previewActor.Components)
+                component.ClearPreview();
+
+            _previewActor = null;
+        }
+
+        private static ComponentData Find(ActorData actor, string componentType)
+        {
+            foreach (var component in actor.Components)
+            {
+                if (component.TargetType?.FullName == componentType || component.TypeName == componentType)
+                    return component;
+            }
+
+            return null;
         }
 
         public void Open(string path)
@@ -128,6 +188,20 @@ namespace IrisEditor.Panels
 
         private void DrawToolbar()
         {
+            bool preview = _preview;
+
+            if (ImGui.Checkbox(Loc.T("animation.preview"), ref preview))
+            {
+                _preview = preview;
+
+                if (!preview)
+                    ClearPreview();
+            }
+
+            if (ImGui.IsItemHovered())
+                ImGui.SetTooltip(Loc.T("animation.previewHint"));
+
+            ImGui.SameLine();
             ImGui.TextDisabled(Path.GetFileName(_path));
             ImGui.SameLine();
 

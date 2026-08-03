@@ -143,6 +143,8 @@
 
   "animation.title": "애니메이션",
   "animation.empty": "(열린 클립 없음)",
+  "animation.preview": "프리뷰",
+  "animation.previewHint": "스크러빙하는 동안 하이어라키에서 선택한 액터에 적용합니다. 씬에는 아무것도 기록되지 않습니다.",
   "animation.samples": "샘플",
   "animation.loop": "반복",
   "animation.zoom": "확대",

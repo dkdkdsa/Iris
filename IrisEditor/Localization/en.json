@@ -143,6 +143,8 @@
 
   "animation.title": "Animation",
   "animation.empty": "(no clip open)",
+  "animation.preview": "Preview",
+  "animation.previewHint": "Drives the actor selected in the Hierarchy as you scrub. Nothing is written to the scene.",
   "animation.samples": "Samples",
   "animation.loop": "Loop",
   "animation.zoom": "Zoom",

@@ -81,7 +81,7 @@ namespace IrisEditor.Rendering
                 {
                     if (comp.TargetType == typeof(SpriteRenderer))
                     {
-                        var sprite = GetSprite(comp.GetString("Sprite", null));
+                        var sprite = ResolveSprite(comp, "Sprite");
                         var texture = sprite?.Texture;
 
                         if (texture != null)
@@ -436,6 +436,43 @@ namespace IrisEditor.Rendering
 
             _clips[path] = clip;
             return clip;
+        }
+
+        private Sprite ResolveSprite(ComponentData comp, string property)
+        {
+            if (comp.GetPreview(property) is JsonObject inline)
+                return GetInlineSprite(inline);
+
+            return GetSprite(comp.GetString(property, null));
+        }
+
+        private Sprite GetInlineSprite(JsonObject node)
+        {
+            string texturePath = node["texture"]?.GetValue<string>();
+
+            if (string.IsNullOrWhiteSpace(texturePath))
+                return null;
+
+            var texture = GetSprite(texturePath)?.Texture;
+
+            if (texture == null)
+                return null;
+
+            int width = InlineInt(node["w"]);
+            int height = InlineInt(node["h"]);
+
+            return new Sprite
+            {
+                Texture = texture,
+                SrcRect = width > 0 && height > 0
+                    ? new Silk.NET.Maths.Rectangle<int>(InlineInt(node["x"]), InlineInt(node["y"]), width, height)
+                    : null,
+            };
+        }
+
+        private static int InlineInt(JsonNode node)
+        {
+            return node is JsonValue value && value.TryGetValue(out float f) ? (int)f : 0;
         }
 
         public Sprite GetSprite(string path)
