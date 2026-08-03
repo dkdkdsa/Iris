@@ -5,6 +5,8 @@ using Iris.Platform;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Reflection.Metadata;
+using System.Reflection.PortableExecutable;
 using System.Text;
 using System.Text.Json.Nodes;
 
@@ -38,6 +40,7 @@ namespace Iris
 
             var config = LoadConfig();
             ConfigureLogging(config);
+            RegisterGameAssemblies();
 
             Diagnostics.Stats.Enabled = config.Stats;
 
@@ -90,6 +93,54 @@ namespace Iris
 
             _fileSink?.Dispose();
             _fileSink = null;
+        }
+
+        private static void RegisterGameAssemblies()
+        {
+            string directory = AppContext.BaseDirectory;
+
+            if (string.IsNullOrEmpty(directory) || !Directory.Exists(directory))
+                return;
+
+            foreach (var file in Directory.EnumerateFiles(directory, "*.dll"))
+            {
+                if (!ReferencesEngine(file))
+                    continue;
+
+                try
+                {
+                    SceneLoader.RegisterAssembly(System.Reflection.Assembly.LoadFrom(file));
+                }
+                catch (Exception ex)
+                {
+                    Debug.LogExceptionOnce($"Failed to load game assembly: {Path.GetFileName(file)}", ex);
+                }
+            }
+        }
+
+        private static bool ReferencesEngine(string path)
+        {
+            try
+            {
+                using var stream = File.OpenRead(path);
+                using var reader = new PEReader(stream);
+
+                if (!reader.HasMetadata)
+                    return false;
+
+                var metadata = reader.GetMetadataReader();
+
+                foreach (var handle in metadata.AssemblyReferences)
+                {
+                    if (metadata.GetString(metadata.GetAssemblyReference(handle).Name) == "Iris")
+                        return true;
+                }
+            }
+            catch
+            {
+            }
+
+            return false;
         }
 
         private static void ConfigureLogging(ProjectConfig config)

@@ -201,6 +201,7 @@
 
   "asset.folder": "폴더",
   "asset.scene": "씬",
+  "asset.assemblyDefinition": "어셈블리 정의",
   "asset.uiLayout": "UI 레이아웃",
   "asset.animatorController": "애니메이터 컨트롤러",
   "asset.spriteAnimation": "스프라이트 애니메이션",

@@ -14,6 +14,20 @@ namespace IrisEditor.Workspace
             Directory.CreateDirectory(path);
         }
 
+        [AssetCreator("asset.assemblyDefinition", "NewAssembly.asmdef")]
+        private static void CreateAssemblyDefinition(string path)
+        {
+            string name = Path.GetFileNameWithoutExtension(path);
+
+            File.WriteAllText(path, $$"""
+                {
+                  "name": "{{name}}",
+                  "references": [],
+                  "allowUnsafeCode": false
+                }
+                """);
+        }
+
         [AssetCreator("asset.scene", "NewScene.scene")]
         private static void CreateScene(string path)
         {

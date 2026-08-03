@@ -201,6 +201,7 @@
 
   "asset.folder": "Folder",
   "asset.scene": "Scene",
+  "asset.assemblyDefinition": "Assembly Definition",
   "asset.uiLayout": "UI Layout",
   "asset.animatorController": "Animator Controller",
   "asset.spriteAnimation": "Sprite Animation",

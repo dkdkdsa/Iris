@@ -14,16 +14,16 @@ namespace IrisEditor.Data
     internal static class ComponentCatalog
     {
         private static List<Type> _types;
-        private static Assembly _gameAssembly;
+        private static IReadOnlyList<Assembly> _gameAssemblies = Array.Empty<Assembly>();
         private static Dictionary<string, Type> _byFullName;
         private static readonly Dictionary<Type, JsonObject> _templates = new();
         private static readonly Dictionary<Type, Dictionary<string, Type>> _assetProperties = new();
 
         public static IReadOnlyList<Type> Types => _types ??= Scan();
 
-        public static void SetGameAssembly(Assembly assembly)
+        public static void SetGameAssemblies(IReadOnlyList<Assembly> assemblies)
         {
-            _gameAssembly = assembly;
+            _gameAssemblies = assemblies ?? Array.Empty<Assembly>();
             _types = null;
             _byFullName = null;
             _templates.Clear();
@@ -35,8 +35,11 @@ namespace IrisEditor.Data
         {
             var assemblies = new List<Assembly> { typeof(Component).Assembly };
 
-            if (_gameAssembly != null)
-                assemblies.Add(_gameAssembly);
+            foreach (var assembly in _gameAssemblies)
+            {
+                if (assembly != null && !assemblies.Contains(assembly))
+                    assemblies.Add(assembly);
+            }
 
             var result = new List<Type>();
 

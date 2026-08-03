@@ -320,8 +320,8 @@ namespace IrisEditor
                 if (!success)
                     return;
 
-                ComponentCatalog.SetGameAssembly(Scripts.Current);
-                UIObjectCatalog.SetGameAssembly(Scripts.Current);
+                ComponentCatalog.SetGameAssemblies(Scripts.Assemblies);
+                UIObjectCatalog.SetGameAssemblies(Scripts.Assemblies);
                 ReResolveComponents();
             });
         }

@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
+using System.Reflection.Metadata;
+using System.Reflection.PortableExecutable;
 using System.Runtime.Loader;
 using System.Text;
 using Debug = Iris.Debugging.Debug;
@@ -14,16 +16,29 @@ namespace IrisEditor.Workspace
     {
         private sealed class GameLoadContext : AssemblyLoadContext
         {
-            public GameLoadContext() : base(isCollectible: true)
+            private readonly string _directory;
+
+            public GameLoadContext(string directory) : base(isCollectible: true)
             {
+                _directory = directory;
             }
 
             protected override Assembly Load(AssemblyName assemblyName)
             {
-                return null;
+                if (_directory == null || assemblyName.Name == null)
+                    return null;
+
+                string candidate = Path.Combine(_directory, assemblyName.Name + ".dll");
+
+                if (!File.Exists(candidate) || !ReferencesEngine(candidate))
+                    return null;
+
+                using var stream = new MemoryStream(File.ReadAllBytes(candidate));
+                return LoadFromStream(stream);
             }
         }
 
+        private IReadOnlyList<Assembly> _assemblies = Array.Empty<Assembly>();
         private GameLoadContext _loadContext;
         private Process _buildProcess;
         private List<string> _buildOutput;
@@ -31,6 +46,8 @@ namespace IrisEditor.Workspace
         private Action<bool> _onDone;
 
         public Assembly Current { get; private set; }
+
+        public IReadOnlyList<Assembly> Assemblies => _assemblies;
 
         public bool Building => _buildProcess != null;
 
@@ -118,20 +135,82 @@ namespace IrisEditor.Workspace
             try
             {
                 _loadContext?.Unload();
-                _loadContext = new GameLoadContext();
+                _loadContext = new GameLoadContext(Path.GetDirectoryName(dll));
 
-                using var stream = new MemoryStream(File.ReadAllBytes(dll));
-                Current = _loadContext.LoadFromStream(stream);
+                var loaded = new List<Assembly> { LoadFrom(dll) };
 
-                Debug.Log($"Game assembly loaded: {Path.GetFileName(dll)}");
+                foreach (var sibling in FindGameAssemblies(Path.GetDirectoryName(dll), dll))
+                {
+                    var assembly = LoadFrom(sibling);
+
+                    if (assembly != null)
+                        loaded.Add(assembly);
+                }
+
+                Current = loaded[0];
+                _assemblies = loaded;
+
+                Debug.Log(loaded.Count == 1
+                    ? $"Game assembly loaded: {Path.GetFileName(dll)}"
+                    : $"Game assemblies loaded: {string.Join(", ", loaded.ConvertAll(a => a.GetName().Name))}");
+
                 return true;
             }
             catch (Exception ex)
             {
                 Debug.LogException("Failed to load assembly", ex);
                 Current = null;
+                _assemblies = Array.Empty<Assembly>();
                 return false;
             }
+        }
+
+        private Assembly LoadFrom(string path)
+        {
+            using var stream = new MemoryStream(File.ReadAllBytes(path));
+            return _loadContext.LoadFromStream(stream);
+        }
+
+        private static List<string> FindGameAssemblies(string directory, string rootDll)
+        {
+            var result = new List<string>();
+            string rootName = Path.GetFileName(rootDll);
+
+            foreach (var file in Directory.GetFiles(directory, "*.dll"))
+            {
+                if (string.Equals(Path.GetFileName(file), rootName, StringComparison.OrdinalIgnoreCase))
+                    continue;
+
+                if (ReferencesEngine(file))
+                    result.Add(file);
+            }
+
+            return result;
+        }
+
+        private static bool ReferencesEngine(string path)
+        {
+            try
+            {
+                using var stream = File.OpenRead(path);
+                using var reader = new PEReader(stream);
+
+                if (!reader.HasMetadata)
+                    return false;
+
+                var metadata = reader.GetMetadataReader();
+
+                foreach (var handle in metadata.AssemblyReferences)
+                {
+                    if (metadata.GetString(metadata.GetAssemblyReference(handle).Name) == "Iris")
+                        return true;
+                }
+            }
+            catch
+            {
+            }
+
+            return false;
         }
 
         private string FindOutputDll()
