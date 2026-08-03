@@ -8,7 +8,7 @@ namespace Iris.UI
 {
     internal class UILayout : IUILayout
     {
-        private readonly List<(string TypeName, JsonObject Properties)> _entries = new();
+        private readonly List<(string TypeName, string Id, string ParentId, JsonObject Properties)> _entries = new();
 
         public UILayout(string json)
         {
@@ -36,15 +36,17 @@ namespace Iris.UI
                     properties["Sprite"] = textureNode;
                 }
 
-                _entries.Add((typeName, properties));
+                _entries.Add((typeName, obj["id"]?.GetValue<string>(), obj["parent"]?.GetValue<string>(), properties));
             }
         }
 
         public IReadOnlyList<UIObject> Instantiate()
         {
             var result = new List<UIObject>();
+            var byId = new Dictionary<string, UIObject>(StringComparer.OrdinalIgnoreCase);
+            var links = new List<(UIObject Child, string ParentId)>();
 
-            foreach (var (typeName, properties) in _entries)
+            foreach (var (typeName, id, parentId, properties) in _entries)
             {
                 var type = RuntimeTypeResolver.ResolveUIObject(typeName);
 
@@ -59,11 +61,25 @@ namespace Iris.UI
                     var uiObject = (UIObject)Activator.CreateInstance(type);
                     JsonPropertyMapper.ApplyProperties(uiObject, properties);
                     result.Add(uiObject);
+
+                    if (!string.IsNullOrEmpty(id))
+                        byId[id] = uiObject;
+
+                    if (!string.IsNullOrEmpty(parentId))
+                        links.Add((uiObject, parentId));
                 }
                 catch (Exception ex)
                 {
                     Debug.LogExceptionOnce($"Failed to create UI object ({typeName})", ex);
                 }
+            }
+
+            foreach (var (child, parentId) in links)
+            {
+                if (byId.TryGetValue(parentId, out var parent))
+                    child.SetParent(parent);
+                else
+                    Debug.LogOnce(LogLevel.Warning, $"UI parent not found; keeping at root: {child.Name}");
             }
 
             return result;

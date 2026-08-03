@@ -140,6 +140,8 @@
   "uiEditor.addObject": "UI 오브젝트 추가",
   "uiEditor.objectInfo": "UI 오브젝트 정보",
   "uiEditor.selectHint": "(디자인 창에서 선택)",
+  "uiEditor.parent": "부모",
+  "uiEditor.noParent": "(캔버스)",
 
   "animation.title": "애니메이션",
   "animation.empty": "(열린 클립 없음)",

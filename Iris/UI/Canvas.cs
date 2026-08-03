@@ -92,10 +92,13 @@ namespace Iris.UI
         public Rectangle<float> CalculateRect(UIObject uiObject)
         {
             float scale = UIScale;
-            var viewport = _system.Viewport;
 
             var size = uiObject.GetSize() * scale;
-            var anchorPoint = new Vector2D<float>(viewport.X * uiObject.Anchor.X, viewport.Y * uiObject.Anchor.Y);
+            var frame = CalculateFrame(uiObject.Parent);
+            var anchorPoint = frame.Origin + new Vector2D<float>(
+                frame.Size.X * uiObject.Anchor.X,
+                frame.Size.Y * uiObject.Anchor.Y);
+
             var offset = uiObject.Position * scale;
 
             float width = Math.Abs(size.X);
@@ -109,6 +112,15 @@ namespace Iris.UI
             return new Rectangle<float>(x, y, width, height);
         }
 
+        private Rectangle<float> CalculateFrame(UIObject parent)
+        {
+            if (parent != null)
+                return CalculateRect(parent);
+
+            var viewport = _system.Viewport;
+            return new Rectangle<float>(0f, 0f, viewport.X, viewport.Y);
+        }
+
         public UIObject HitTest(Vector2D<float> screenPosition)
         {
             if (_system == null)
@@ -119,7 +131,7 @@ namespace Iris.UI
 
             foreach (var uiObject in _uiObjects)
             {
-                if (!uiObject.Visible)
+                if (!uiObject.IsVisibleInHierarchy)
                     continue;
 
                 var rect = CalculateRect(uiObject);
@@ -166,7 +178,7 @@ namespace Iris.UI
 
             foreach (var uiObject in _uiObjects)
             {
-                if (!uiObject.Visible)
+                if (!uiObject.IsVisibleInHierarchy)
                     continue;
 
                 uiObject.Render(CalculateRect(uiObject), _buffer);

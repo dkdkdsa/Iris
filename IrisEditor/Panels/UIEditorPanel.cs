@@ -216,6 +216,8 @@ namespace IrisEditor.Panels
             }
 
             ImGui.Separator();
+            DrawParentPicker();
+            ImGui.Separator();
 
             if (_selected.Properties is JsonObject obj)
             {
@@ -226,6 +228,63 @@ namespace IrisEditor.Panels
                 if (PropertyDrawer.Draw(obj, assetProps, _context.Workspace, HiddenMembers.Get(_selected.TargetType)))
                     MarkChanged();
             }
+        }
+
+        private void DrawParentPicker()
+        {
+            var current = _entries.Find(e => _selected.ParentId is Guid id && e.Id == id);
+            string preview = current != null ? EntryLabel(current) : Loc.T("uiEditor.noParent");
+
+            ImGui.SetNextItemWidth(-1f);
+
+            if (!ImGui.BeginCombo(Loc.T("uiEditor.parent"), preview))
+                return;
+
+            if (ImGui.Selectable(Loc.T("uiEditor.noParent"), _selected.ParentId == null))
+            {
+                _selected.ParentId = null;
+                MarkChanged();
+            }
+
+            foreach (var entry in _entries)
+            {
+                if (entry == _selected || IsDescendantOf(entry, _selected))
+                    continue;
+
+                if (ImGui.Selectable($"{EntryLabel(entry)}##{entry.Id}", _selected.ParentId == entry.Id))
+                {
+                    _selected.ParentId = entry.Id;
+                    MarkChanged();
+                }
+            }
+
+            ImGui.EndCombo();
+        }
+
+        private bool IsDescendantOf(ComponentData candidate, ComponentData ancestor)
+        {
+            var current = candidate;
+
+            for (int guard = 0; guard < _entries.Count && current != null; guard++)
+            {
+                if (current.ParentId is not Guid parentId)
+                    return false;
+
+                if (parentId == ancestor.Id)
+                    return true;
+
+                current = _entries.Find(e => e.Id == parentId);
+            }
+
+            return false;
+        }
+
+        private static string EntryLabel(ComponentData entry)
+        {
+            string type = entry.TargetType?.Name ?? entry.TypeName ?? "?";
+            string name = entry.GetString("Name", null);
+
+            return string.IsNullOrWhiteSpace(name) ? type : $"{name} ({type})";
         }
 
         private void MarkChanged()
@@ -265,6 +324,17 @@ namespace IrisEditor.Panels
                 _instances.Add(instance);
             }
 
+            for (int i = 0; i < _entries.Count; i++)
+            {
+                if (_instances[i] == null || _entries[i].ParentId is not Guid parentId)
+                    continue;
+
+                int parentIndex = _entries.FindIndex(e => e.Id == parentId);
+
+                if (parentIndex >= 0 && _instances[parentIndex] != null)
+                    _instances[i].SetParent(_instances[parentIndex]);
+            }
+
             _builtVersion = _version;
         }
 
@@ -299,7 +369,7 @@ namespace IrisEditor.Panels
             {
                 var instance = _instances[i];
 
-                if (instance == null || !instance.Visible)
+                if (instance == null || !instance.IsVisibleInHierarchy)
                     continue;
 
                 var rect = CalculateRect(instance, screenMin, screenSize, fit);
@@ -320,8 +390,18 @@ namespace IrisEditor.Panels
         {
             var size = instance.GetSize() * fit;
 
-            float anchorX = screenMin.X + screenSize.X * instance.Anchor.X;
-            float anchorY = screenMin.Y + screenSize.Y * instance.Anchor.Y;
+            var frameMin = screenMin;
+            var frameSize = screenSize;
+
+            if (instance.Parent != null)
+            {
+                var parentRect = CalculateRect(instance.Parent, screenMin, screenSize, fit);
+                frameMin = new System.Numerics.Vector2(parentRect.Origin.X, parentRect.Origin.Y);
+                frameSize = new System.Numerics.Vector2(parentRect.Size.X, parentRect.Size.Y);
+            }
+
+            float anchorX = frameMin.X + frameSize.X * instance.Anchor.X;
+            float anchorY = frameMin.Y + frameSize.Y * instance.Anchor.Y;
 
             float width = MathF.Abs(size.X);
             float height = MathF.Abs(size.Y);
@@ -436,7 +516,7 @@ namespace IrisEditor.Panels
             {
                 var instance = _instances.Count > i ? _instances[i] : null;
 
-                if (instance == null || !instance.Visible)
+                if (instance == null || !instance.IsVisibleInHierarchy)
                     continue;
 
                 var rect = CalculateRect(instance, screenMin, screenSize, fit);

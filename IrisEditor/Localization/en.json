@@ -140,6 +140,8 @@
   "uiEditor.addObject": "Add UI Object",
   "uiEditor.objectInfo": "UI Object Info",
   "uiEditor.selectHint": "(select in the design view)",
+  "uiEditor.parent": "Parent",
+  "uiEditor.noParent": "(canvas)",
 
   "animation.title": "Animation",
   "animation.empty": "(no clip open)",

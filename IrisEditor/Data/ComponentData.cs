@@ -11,6 +11,7 @@ namespace IrisEditor.Data
         public Type TargetType { get; set; }
         public string TypeName { get; set; }
         public bool Enabled { get; set; } = true;
+        public Guid? ParentId { get; set; }
         public JsonNode Properties { get; set; }
 
         private Dictionary<string, JsonNode> _preview;
