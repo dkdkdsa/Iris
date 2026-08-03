@@ -32,6 +32,7 @@ namespace IrisEditor.Workspace
             [".controller"] = typeof(Iris.Core.AnimatorController),
             [".prefab"] = typeof(Iris.Core.Prefab),
             [".scene"] = typeof(SceneData),
+            [AssemblyDefinitions.Extension] = typeof(AssemblyDefinition),
         };
 
         private List<AssetEntry> _assets = new();

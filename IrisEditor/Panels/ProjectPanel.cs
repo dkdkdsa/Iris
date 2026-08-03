@@ -211,6 +211,9 @@ namespace IrisEditor.Panels
 
                 _context.HandlePathDeleted(absolute, _deleteIsDirectory);
                 workspace.Refresh();
+
+                if (_deleteIsDirectory || absolute.EndsWith(AssemblyDefinitions.Extension, StringComparison.OrdinalIgnoreCase))
+                    _context.RefreshAssemblies();
                 Debug.Log($"Deleted: {_deletePath}");
             }
             catch (Exception ex)
@@ -277,6 +280,9 @@ namespace IrisEditor.Panels
 
                         picked.Create(path);
                         workspace.Refresh();
+
+                        if (path.EndsWith(AssemblyDefinitions.Extension, StringComparison.OrdinalIgnoreCase))
+                            _context.RefreshAssemblies();
                     }
                     catch (Exception ex)
                     {
@@ -472,6 +478,12 @@ namespace IrisEditor.Panels
             if (asset.Path.EndsWith(".anim", StringComparison.OrdinalIgnoreCase))
             {
                 _context.RequestOpenAnimation(workspace.ToAbsolute(asset.Path));
+                return;
+            }
+
+            if (asset.Path.EndsWith(AssemblyDefinitions.Extension, StringComparison.OrdinalIgnoreCase))
+            {
+                _context.RequestOpenAssemblyDefinition(workspace.ToAbsolute(asset.Path));
                 return;
             }
 

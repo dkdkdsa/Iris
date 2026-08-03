@@ -30,6 +30,7 @@ namespace IrisEditor
         private readonly SpriteSlicerPanel _spriteSlicer;
         private readonly ProjectSettingsPanel _projectSettings;
         private readonly AnimatorPanel _animator;
+        private readonly AssemblyDefinitionPanel _assemblyDefinition;
         private readonly AnimationPanel _animation;
         private bool _resetLayout;
 
@@ -48,6 +49,7 @@ namespace IrisEditor
             _spriteSlicer = new SpriteSlicerPanel(context);
             _projectSettings = new ProjectSettingsPanel(context);
             _animator = new AnimatorPanel(context);
+            _assemblyDefinition = new AssemblyDefinitionPanel(context);
             _animation = new AnimationPanel(context);
             _console = new ConsolePanel(context);
 
@@ -82,6 +84,7 @@ namespace IrisEditor
             _spriteSlicer.Draw();
             _projectSettings.Draw();
             _animator.Draw();
+            _assemblyDefinition.Draw();
             _animation.Draw();
 
             if (!_animator.ConsumedSaveShortcut && !_animation.ConsumedSaveShortcut &&

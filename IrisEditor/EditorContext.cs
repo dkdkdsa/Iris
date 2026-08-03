@@ -73,6 +73,26 @@ namespace IrisEditor
             return path;
         }
 
+        public string PendingAssemblyDefinitionPath { get; private set; }
+
+        public void RequestOpenAssemblyDefinition(string absolutePath)
+        {
+            PendingAssemblyDefinitionPath = absolutePath;
+        }
+
+        public string ConsumePendingAssemblyDefinition()
+        {
+            var path = PendingAssemblyDefinitionPath;
+            PendingAssemblyDefinitionPath = null;
+            return path;
+        }
+
+        public void RefreshAssemblies()
+        {
+            RefreshEngineReferences();
+            RefreshScripts();
+        }
+
         public string PendingAnimatorPath { get; private set; }
 
         public void RequestOpenAnimator(string absolutePath)
