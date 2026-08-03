@@ -39,6 +39,9 @@ namespace IrisEditor.Serialization
                     properties["Sprite"] = textureNode;
                 }
 
+                if (properties["AnchorMax"] == null)
+                    properties["AnchorMax"] = properties["Anchor"]?.DeepClone() ?? new JsonArray(0f, 0f);
+
                 UIObjectCatalog.ApplyMissingDefaults(properties, type);
 
                 entries.Add(new ComponentData

@@ -176,6 +176,7 @@ namespace IrisEditor.Panels
 
                 var properties = UIObjectCatalog.DefaultProperties(type);
                 properties["Anchor"] = new JsonArray(0.5f, 0.5f);
+                properties["AnchorMax"] = new JsonArray(0.5f, 0.5f);
 
                 var entry = new ComponentData
                 {
@@ -400,18 +401,33 @@ namespace IrisEditor.Panels
                 frameSize = new System.Numerics.Vector2(parentRect.Size.X, parentRect.Size.Y);
             }
 
-            float anchorX = frameMin.X + frameSize.X * instance.Anchor.X;
-            float anchorY = frameMin.Y + frameSize.Y * instance.Anchor.Y;
+            ResolveAxis(frameMin.X, frameSize.X, instance.Anchor.X, instance.AnchorMax.X,
+                instance.Position.X, instance.OffsetMax.X, size.X, fit, out float x, out float width);
 
-            float width = MathF.Abs(size.X);
-            float height = MathF.Abs(size.Y);
-            float pivotX = size.X < 0f ? 1f - instance.Anchor.X : instance.Anchor.X;
-            float pivotY = size.Y < 0f ? 1f - instance.Anchor.Y : instance.Anchor.Y;
-
-            float x = anchorX + instance.Position.X * fit - width * pivotX;
-            float y = anchorY + instance.Position.Y * fit - height * pivotY;
+            ResolveAxis(frameMin.Y, frameSize.Y, instance.Anchor.Y, instance.AnchorMax.Y,
+                instance.Position.Y, instance.OffsetMax.Y, size.Y, fit, out float y, out float height);
 
             return new Rectangle<float>(x, y, width, height);
+        }
+
+        private static void ResolveAxis(float frameOrigin, float frameSize, float anchorMin, float anchorMax,
+            float position, float offsetMax, float size, float fit, out float origin, out float length)
+        {
+            float minPoint = frameOrigin + frameSize * anchorMin;
+
+            if (anchorMax > anchorMin)
+            {
+                float maxPoint = frameOrigin + frameSize * anchorMax;
+
+                origin = minPoint + position * fit;
+                length = MathF.Max(0f, maxPoint - offsetMax * fit - origin);
+                return;
+            }
+
+            length = MathF.Abs(size);
+
+            float pivot = size < 0f ? 1f - anchorMin : anchorMin;
+            origin = minPoint + position * fit - length * pivot;
         }
 
         private unsafe void DrawInstance(ImDrawListPtr draw, UIObject instance, Rectangle<float> rect)

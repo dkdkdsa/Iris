@@ -19,10 +19,14 @@ namespace Iris.UI
 
         public Vector2D<float> Anchor { get; set; }
 
+        public Vector2D<float> AnchorMax { get; set; }
+
         public Vector2D<float> Position { get; set; }
 
+        public Vector2D<float> OffsetMax { get; set; }
+
         public float Width { get; set; }
-        public float { get; set; }
+        public float Height { get; set; }
 
         public Vector2D<float> Scale { get; set; } = Vector2D<float>.One;
         public float Rotation { get; set; } = 0f;
@@ -43,6 +47,10 @@ namespace Iris.UI
                 return true;
             }
         }
+
+        public bool StretchesHorizontally => AnchorMax.X > Anchor.X;
+
+        public bool StretchesVertically => AnchorMax.Y > Anchor.Y;
 
         public void SetParent(UIObject parent)
         {

@@ -36,6 +36,9 @@ namespace Iris.UI
                     properties["Sprite"] = textureNode;
                 }
 
+                if (properties != null && properties["AnchorMax"] == null)
+                    properties["AnchorMax"] = properties["Anchor"]?.DeepClone() ?? new JsonArray(0f, 0f);
+
                 _entries.Add((typeName, obj["id"]?.GetValue<string>(), obj["parent"]?.GetValue<string>(), properties));
             }
         }
