@@ -30,6 +30,7 @@ namespace IrisEditor
         private readonly SpriteSlicerPanel _spriteSlicer;
         private readonly ProjectSettingsPanel _projectSettings;
         private readonly AnimatorPanel _animator;
+        private readonly AnimationPanel _animation;
         private bool _resetLayout;
 
         public EditorApp(EditorContext context)
@@ -47,6 +48,7 @@ namespace IrisEditor
             _spriteSlicer = new SpriteSlicerPanel(context);
             _projectSettings = new ProjectSettingsPanel(context);
             _animator = new AnimatorPanel(context);
+            _animation = new AnimationPanel(context);
             _console = new ConsolePanel(context);
 
             var io = ImGui.GetIO();
@@ -80,8 +82,9 @@ namespace IrisEditor
             _spriteSlicer.Draw();
             _projectSettings.Draw();
             _animator.Draw();
+            _animation.Draw();
 
-            if (!_animator.ConsumedSaveShortcut &&
+            if (!_animator.ConsumedSaveShortcut && !_animation.ConsumedSaveShortcut &&
                 ImGui.GetIO().KeyCtrl && ImGui.IsKeyPressed(ImGuiKey.S) && _context.Dirty)
                 SaveScene(saveAs: false);
         }

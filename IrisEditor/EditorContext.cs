@@ -59,6 +59,20 @@ namespace IrisEditor
             return path;
         }
 
+        public string PendingAnimationPath { get; private set; }
+
+        public void RequestOpenAnimation(string absolutePath)
+        {
+            PendingAnimationPath = absolutePath;
+        }
+
+        public string ConsumePendingAnimation()
+        {
+            var path = PendingAnimationPath;
+            PendingAnimationPath = null;
+            return path;
+        }
+
         public string PendingAnimatorPath { get; private set; }
 
         public void RequestOpenAnimator(string absolutePath)

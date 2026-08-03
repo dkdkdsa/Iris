@@ -11,12 +11,15 @@ namespace Iris.Core
 
         protected override void OnAttached()
         {
-            system = SystemManager.Instance.GetSystem<RenderSystem>();
+            system = SystemManager.Instance?.GetSystem<RenderSystem>();
         }
 
         public override void LateUpdate()
         {
-            Render();   
+            if (system == null)
+                return;
+
+            Render();
         }
 
         protected abstract void Render();

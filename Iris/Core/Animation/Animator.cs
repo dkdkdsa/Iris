@@ -20,7 +20,7 @@ namespace Iris.Core
         private AnimatorState _current;
         private bool _started;
 
-        public AnimatedSpriteRenderer Renderer { get; private set; }
+        public AnimationPlayer Renderer { get; private set; }
 
         [Show]
         public AnimatorController Controller { get; set; }
@@ -29,8 +29,8 @@ namespace Iris.Core
 
         protected override void Awake()
         {
-            Renderer = GetComponent<AnimatedSpriteRenderer>()
-                       ?? OwnerActor.AddComponent<AnimatedSpriteRenderer>();
+            Renderer = GetComponent<AnimationPlayer>()
+                       ?? OwnerActor.AddComponent<AnimationPlayer>();
 
             Build(Controller);
         }
@@ -104,7 +104,7 @@ namespace Iris.Core
             return result;
         }
 
-        public void AddState(string name, SpriteAnimation clip)
+        public void AddState(string name, AnimationClip clip)
         {
             var state = new AnimatorState(name, clip);
             _states[name] = state;

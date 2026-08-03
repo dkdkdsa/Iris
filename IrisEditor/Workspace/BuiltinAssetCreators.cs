@@ -44,20 +44,20 @@ namespace IrisEditor.Workspace
         }
 
         [AssetCreator("asset.spriteAnimation", "NewAnimation.anim")]
-        private static void CreateSpriteAnimation(string path)
+        private static void CreateAnimationClip(string path)
         {
             File.WriteAllText(path, """
                 {
-                  "texture": "",
-                  "fps": 12,
+                  "sampleRate": 12,
                   "loop": true,
-                  "frameWidth": 0,
-                  "frameHeight": 0,
-                  "frameCount": 0,
-                  "offsetX": 0,
-                  "offsetY": 0,
-                  "columns": 0,
-                  "frames": []
+                  "tracks": [
+                    {
+                      "component": "Iris.Core.SpriteRenderer",
+                      "property": "Sprite",
+                      "type": "sprite",
+                      "keys": []
+                    }
+                  ]
                 }
                 """);
         }

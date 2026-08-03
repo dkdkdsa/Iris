@@ -469,8 +469,13 @@ namespace IrisEditor.Panels
                 return;
             }
 
+            if (asset.Path.EndsWith(".anim", StringComparison.OrdinalIgnoreCase))
+            {
+                _context.RequestOpenAnimation(workspace.ToAbsolute(asset.Path));
+                return;
+            }
+
             if (asset.Path.EndsWith(".cs", StringComparison.OrdinalIgnoreCase) ||
-                asset.Path.EndsWith(".anim", StringComparison.OrdinalIgnoreCase) ||
                 asset.Path.EndsWith(".tile", StringComparison.OrdinalIgnoreCase) ||
                 asset.Path.EndsWith(".sprite", StringComparison.OrdinalIgnoreCase) ||
                 asset.Path.EndsWith(".prefab", StringComparison.OrdinalIgnoreCase))

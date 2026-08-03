@@ -653,7 +653,7 @@ namespace IrisEditor.Panels
             }
 
             ImGui.SetNextItemWidth(-70f);
-            var picked = AssetPicker.Draw(Loc.T("animator.clip"), state.Clip, typeof(SpriteAnimation), _context.Workspace);
+            var picked = AssetPicker.Draw(Loc.T("animator.clip"), state.Clip, typeof(AnimationClip), _context.Workspace);
 
             if (picked is JsonValue value && value.TryGetValue(out string clipPath))
             {
