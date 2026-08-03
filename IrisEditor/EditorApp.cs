@@ -14,7 +14,7 @@ namespace IrisEditor
 {
     internal sealed unsafe class EditorApp
     {
-        private const int LayoutVersion = 1;
+        private const int LayoutVersion = 2;
 
         private readonly EditorContext _context;
         private readonly HierarchyPanel _hierarchy;

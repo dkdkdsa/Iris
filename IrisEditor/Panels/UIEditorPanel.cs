@@ -39,6 +39,7 @@ namespace IrisEditor.Panels
         private int _version;
         private int _builtVersion = -1;
 
+        private ComponentData _pendingDelete;
         private ComponentData _dragEntry;
         private System.Numerics.Vector2 _dragStartMouse;
         private Vector2D<float> _dragStartPosition;
@@ -141,14 +142,24 @@ namespace IrisEditor.Panels
 
         private void DrawPanes()
         {
-            const float paletteWidth = 180f;
+            const float paletteWidth = 210f;
             const float infoWidth = 280f;
 
             float designWidth = ImGui.GetContentRegionAvail().X - paletteWidth - infoWidth
                                 - ImGui.GetStyle().ItemSpacing.X * 2f;
 
-            ImGui.BeginChild("UIPalette", new System.Numerics.Vector2(paletteWidth, 0f), ImGuiChildFlags.Borders);
+            ImGui.BeginChild("UILeft", new System.Numerics.Vector2(paletteWidth, 0f));
+
+            float paletteHeight = ImGui.GetContentRegionAvail().Y * 0.4f;
+
+            ImGui.BeginChild("UIPalette", new System.Numerics.Vector2(0f, paletteHeight), ImGuiChildFlags.Borders);
             DrawPalette();
+            ImGui.EndChild();
+
+            ImGui.BeginChild("UIHierarchy", new System.Numerics.Vector2(0f, 0f), ImGuiChildFlags.Borders);
+            DrawHierarchy();
+            ImGui.EndChild();
+
             ImGui.EndChild();
 
             ImGui.SameLine();
@@ -192,6 +203,113 @@ namespace IrisEditor.Panels
             }
         }
 
+        private void DrawHierarchy()
+        {
+            ImGui.TextDisabled(Loc.T("uiEditor.hierarchy"));
+            ImGui.Separator();
+
+            if (_entries.Count == 0)
+            {
+                ImGui.TextDisabled(Loc.T("uiEditor.hierarchyEmpty"));
+                return;
+            }
+
+            foreach (var entry in _entries)
+            {
+                if (ResolveParent(entry) == null)
+                    DrawHierarchyNode(entry, 0);
+            }
+
+            if (_pendingDelete == null)
+                return;
+
+            DeleteSubtree(_pendingDelete);
+            _pendingDelete = null;
+        }
+
+        private void DrawHierarchyNode(ComponentData entry, int depth)
+        {
+            if (depth > _entries.Count)
+                return;
+
+            bool hidden = !entry.GetBool("Visible", true);
+
+            ImGui.PushID(entry.Id.ToString());
+
+            if (hidden)
+                ImGui.PushStyleColor(ImGuiCol.Text, 0xFF808080);
+
+            if (ImGui.Selectable(EntryLabel(entry), entry == _selected))
+                _selected = entry;
+
+            if (hidden)
+                ImGui.PopStyleColor();
+
+            if (ImGui.BeginPopupContextItem())
+            {
+                if (ImGui.MenuItem(Loc.T("common.delete")))
+                    _pendingDelete = entry;
+
+                ImGui.EndPopup();
+            }
+
+            ImGui.PopID();
+
+            bool indented = false;
+
+            foreach (var child in _entries)
+            {
+                if (child.ParentId is not Guid id || id != entry.Id)
+                    continue;
+
+                if (!indented)
+                {
+                    ImGui.Indent();
+                    indented = true;
+                }
+
+                DrawHierarchyNode(child, depth + 1);
+            }
+
+            if (indented)
+                ImGui.Unindent();
+        }
+
+        private ComponentData ResolveParent(ComponentData entry)
+        {
+            if (entry.ParentId is not Guid id)
+                return null;
+
+            return _entries.Find(e => e.Id == id);
+        }
+
+        private void DeleteSubtree(ComponentData root)
+        {
+            var removed = new List<ComponentData>();
+            var stack = new Stack<ComponentData>();
+            stack.Push(root);
+
+            while (stack.Count > 0)
+            {
+                var current = stack.Pop();
+                removed.Add(current);
+
+                foreach (var candidate in _entries)
+                {
+                    if (candidate.ParentId is Guid id && id == current.Id && !removed.Contains(candidate))
+                        stack.Push(candidate);
+                }
+            }
+
+            foreach (var item in removed)
+                _entries.Remove(item);
+
+            if (removed.Contains(_selected))
+                _selected = null;
+
+            MarkChanged();
+        }
+
         private void DrawInfo()
         {
             ImGui.TextDisabled(Loc.T("uiEditor.objectInfo"));
@@ -210,9 +328,7 @@ namespace IrisEditor.Panels
 
             if (ImGui.Button(Loc.T("common.delete"), new System.Numerics.Vector2(-1f, 0f)))
             {
-                _entries.Remove(_selected);
-                _selected = null;
-                MarkChanged();
+                DeleteSubtree(_selected);
                 return;
             }
 
